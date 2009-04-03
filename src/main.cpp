@@ -17,6 +17,7 @@
 
 //Project includes
 #include <skeleton.hpp>
+#include <skin.hpp>
 
 using namespace std;
 using namespace Eigen;
@@ -50,13 +51,6 @@ void init()
 
 void draw()
 {
-	//Extract matrices
-	vector<Transform3d> xform( mocap.skeleton.size() );
-	mocap.skeleton.interpret_pose(
-		xform.begin(), 
-		mocap.frames[1].pose.begin(),
-		mocap.frames[1].pose.end());
-	
 	//Draw a floor grid
 	glColor3f(1.,1.,1.);
 	glBegin(GL_LINES);
@@ -68,17 +62,16 @@ void draw()
 			glVertex3f( 100., 0., t);
 		}
 	glEnd();
-	
-	//Draw origin for each coordinate system
-	glPointSize(5);
-	glBegin(GL_POINTS);
-	glColor3f(1, 0, 0);
-	for(int i=0; i<xform.size(); i++)
-	{
-		Matrix4d m = xform[i].matrix();
-		glVertex3f(m(0, 3), m(1, 3), m(2, 3));
-	}
-	glEnd();
+
+	//Extract matrices
+	vector<Transform3d> xform( mocap.skeleton.size() );
+	mocap.skeleton.interpret_pose(
+		xform.begin(), 
+		mocap.frames[0].pose.begin(),
+		mocap.frames[0].pose.end());
+
+	//Draw the line skeleton
+	draw_line_skeleton(mocap.skeleton, xform.begin(), xform.end());
 }
 
 
