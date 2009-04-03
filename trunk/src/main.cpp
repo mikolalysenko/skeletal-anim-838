@@ -40,12 +40,31 @@ Vector3d	object_center;
 Quaterniond camera_rot;
 
 //Motion capture data
-Motion mocap;
+Motion mocap, mocap_quat;
+
+void print_skeleton(const Joint& skel, int t = 0)
+{
+	for(int i=0; i<t; i++)
+		cout << '\t';
+		
+	cout << skel.name << ":";
+	for(int i=0; i<skel.channels.size(); i++)
+		cout << skel.channels[i] << ", ";
+	cout << endl;
+	
+	for(int i=0; i<skel.children.size(); i++)
+		print_skeleton(skel.children[i], t+1);
+}
+
 
 void init()
 {
 	//Parse out motion capture data
 	mocap = parseBVH(cin);
+	//print_skeleton(mocap.skeleton);
+	
+	mocap_quat = mocap.convert_quat();
+	//print_skeleton(mocap_quat.skeleton);	
 }
 
 
@@ -64,14 +83,14 @@ void draw()
 	glEnd();
 
 	//Extract matrices
-	vector<Transform3d> xform( mocap.skeleton.size() );
-	mocap.skeleton.interpret_pose(
+	vector<Transform3d> xform( mocap_quat.skeleton.size() );
+	mocap_quat.skeleton.interpret_pose(
 		xform.begin(), 
-		mocap.frames[0].pose.begin(),
-		mocap.frames[0].pose.end());
+		mocap_quat.frames[0].pose.begin(),
+		mocap_quat.frames[0].pose.end());
 
 	//Draw the line skeleton
-	draw_line_skeleton(mocap.skeleton, xform.begin(), xform.end());
+	draw_line_skeleton(mocap_quat.skeleton, xform.begin(), xform.end());
 }
 
 

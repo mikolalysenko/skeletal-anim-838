@@ -6,6 +6,9 @@
 //Eigen
 #include <Eigen/Core>
 #include <Eigen/StdVector>
+#include <Eigen/LU>
+#include <Eigen/SVD>
+#include <Eigen/QR>
 
 //Project
 #include <skeleton.hpp>
@@ -202,7 +205,7 @@ Joint Joint::convert_quat() const
 
 
 //Performs the actual reparameterization from pose base to target
-
+//Currently assumes consistent topology
 void reparameterize_impl(
 	vector<double>& n_params, 
 	Transform3d*& cur_xform,
@@ -213,7 +216,49 @@ void reparameterize_impl(
 	//Parse out parameters
 	for(int i=0; i<target.channels.size(); i++)
 	{
-		//TODO: Implement this
+		string chan = target.channels[i];
+		
+		if(chan == "Quaternion")
+		{
+			Matrix3d rot = xform.rotation();
+			xform = xform.rotate(rot.inverse());
+			
+			Quaterniond q(rot);
+			n_params.push_back(q.w());
+			n_params.push_back(q.x());
+			n_params.push_back(q.y());
+			n_params.push_back(q.z());
+		}
+		else if(chan == "Xrotation")
+		{
+			//TODO: Implement this
+		}
+		else if(chan == "Yrotation")
+		{
+			//TODO: Implement this
+		}
+		else if(chan == "Zrotation")
+		{
+			//TODO: Implement this
+		}
+		else if(chan == "Xposition")
+		{
+			double x = xform.translation().x();
+			xform.translate(Vector3d(-x, 0., 0.));
+			n_params.push_back(x);
+		}
+		else if(chan == "Yposition")
+		{
+			double x = xform.translation().y();
+			xform.translate(Vector3d(0., -x, 0.));
+			n_params.push_back(x);
+		}
+		else if(chan == "Zposition")
+		{
+			double x = xform.translation().z();
+			xform.translate(Vector3d(0., 0., -x));
+			n_params.push_back(x);
+		}
 	}
 	
 	//Recursively adjust children
