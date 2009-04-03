@@ -11,6 +11,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+
 namespace Skeletal
 {
 	using namespace std;
@@ -31,11 +32,26 @@ namespace Skeletal
 		//Count number of joints in skeleton
 		int size() const;
 		
+		//Reparameterizes a skeleton in terms of quaternions
+		Joint convert_quat() const;
+		
+		//Constructs a pose from parameters
+		template<class XformIter, class ParamIter>
+			void interpret_pose(XformIter result, ParamIter pbegin, ParamIter pend) const
+		{
+			_interpret_pose_impl(result, pbegin, pend);
+		}
+
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		
+	private:
+	
 		//Interprets the pose
 		template<class XformIter, class ParamIter>
-			void _interpret_pose_impl(Transform3d xform, XformIter& result, ParamIter& pbegin, ParamIter pend) const
+			void _interpret_pose_impl(XformIter& result, ParamIter& pbegin, ParamIter pend) const
 		{
-			xform.translate(offset);
+			Transform3d xform;
+			xform.setIdentity();
 			
 			//Interpret parameters
 			for(int i=0; i<channels.size(); i++)
@@ -58,6 +74,17 @@ namespace Skeletal
 					xform.translate(Vector3d(0, p, 0));
 				else if(channels[i] == "Zposition")
 					xform.translate(Vector3d(0, 0, p));
+				else if(channels[i] == "Quaternion")
+				{
+					Quaterniond quat(p, 0., 0., 0.);
+					assert(pbegin != pend);
+					quat.x() = *(pbegin++);
+					assert(pbegin != pend);
+					quat.y() = *(pbegin++);
+					assert(pbegin != pend);
+					quat.z() = *(pbegin++);
+					xform.rotate(quat);
+				}
 				else assert(false);
 			}
 			
@@ -66,25 +93,17 @@ namespace Skeletal
 			
 			//Compute transforms for children
 			for(int i=0; i<children.size(); i++)
-				children[i]._interpret_pose_impl(xform, result, pbegin, pend);
+				children[i]._interpret_pose_impl(result, pbegin, pend);
 		}
-		
-		
-		template<class XformIter, class ParamIter>
-			void interpret_pose(XformIter result, ParamIter pbegin, ParamIter pend) const
-		{
-			Transform3d xform;
-			xform.setIdentity();
-			_interpret_pose_impl(xform, result, pbegin, pend);
-		}
-
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 	
 	//A single fame in the animation
 	struct Frame
 	{
 		vector<double>	pose;
+		
+		//Reparemterizes the pose from base to target
+		Frame reparameterize(const Joint& base, const Joint& target) const;
 	};
 	
 	//Motion capture data structure
@@ -93,6 +112,9 @@ namespace Skeletal
 		double 			frame_time;
 		vector<Frame>	frames;
 		Joint			skeleton;
+		
+		//Converts the motion to a quaternion parameterized motion
+		Motion convert_quat() const;
 	};
 	
 	//Parses a BVH file from some input stream

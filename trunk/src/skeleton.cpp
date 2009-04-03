@@ -142,7 +142,16 @@ Motion parseBVH(istream& bvh_file)
 //Counts the number of parameters for this joint
 int Joint::num_parameters() const
 {
-	int s = channels.size();
+	int s = 0;
+	
+	//Need to handle special case for quaternions
+	for(int i=0; i<channels.size(); i++)
+	{	if(channels[i] == "Quaternion")
+			s += 4;
+		else
+			s++;
+	}
+	
 	for(int i=0; i<children.size(); i++)
 		s += children[i].num_parameters();
 	return s;
@@ -155,6 +164,90 @@ int Joint::size() const
 	for(int i=0; i<children.size(); i++)
 		s += children[i].size();
 	return s;
+}
+
+//Changes parameterization to quaternion
+Joint Joint::convert_quat() const
+{
+	Joint res;
+	res.name = name;
+	res.offset = offset;
+
+	//Scan through channels, factor out groups of rotations
+	res.channels.resize(0);
+	int last_rot = 0;
+	for(int i=0; i<channels.size(); i++)
+	{
+		if( channels[i] != "Xrotation" &&
+			channels[i] != "Yrotation" &&
+			channels[i] != "Zrotation" )
+		{
+			//Got non-rotation channel
+			if(last_rot < i)
+				res.channels.push_back("Quaternion");
+			last_rot = i + 1;
+			res.channels.push_back(channels[i]);
+		}
+	}
+	if(last_rot < channels.size())
+		res.channels.push_back("Quaternion");
+	
+	//Convert children
+	res.children.resize(children.size());
+	for(int i=0; i<children.size(); i++)
+		res.children[i] = children[i].convert_quat();
+	
+	return res;
+}
+
+
+//Performs the actual reparameterization from pose base to target
+
+void reparameterize_impl(
+	vector<double>& n_params, 
+	Transform3d*& cur_xform,
+	const Joint& target)
+{
+	Transform3d xform = *(cur_xform++);
+	
+	//Parse out parameters
+	for(int i=0; i<target.channels.size(); i++)
+	{
+		//TODO: Implement this
+	}
+	
+	//Recursively adjust children
+	for(int i=0; i<target.children.size(); i++)
+		reparameterize_impl(n_params, cur_xform, target.children[i]);	
+}
+
+//Converts the parameterization of the pose from base to target
+Frame Frame::reparameterize(const Joint& base, const Joint& target) const
+{
+	//Check sizes
+	assert(base.size() == target.size());
+
+	//Interpret pose
+	vector<Transform3d> target_xform(base.size());
+	base.interpret_pose(target_xform.begin(), pose.begin(), pose.end());
+
+	//Construct result
+	Frame result;
+	Transform3d* ptr = &target_xform[0];
+	reparameterize_impl(result.pose, ptr, target);
+	return result;
+}
+
+//Converts the motion into a quaternion parameterized motion, thus removing the dependency on Euler angles
+Motion Motion::convert_quat() const
+{
+	Motion result;
+	result.frame_time = frame_time;
+	result.skeleton = skeleton.convert_quat();
+	result.frames.resize(frames.size());
+	for(int i=0; i<frames.size(); i++)
+		result.frames[i] = frames[i].reparameterize(skeleton, result.skeleton);
+	return result;
 }
 
 
