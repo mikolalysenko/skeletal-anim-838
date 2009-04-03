@@ -67,6 +67,41 @@ void init()
 	//print_skeleton(mocap_quat.skeleton);	
 }
 
+void draw_skeleton(double t)
+{
+	//Figure interpolate current pose
+	Frame c_frame = interpolate_frames(
+		mocap_quat.skeleton, 
+		mocap_quat.frames[0], 
+		mocap_quat.frames[1], t);
+
+	//Extract matrices
+	vector<Transform3d> xform( mocap_quat.skeleton.size() );
+	mocap_quat.skeleton.interpret_pose(
+		xform.begin(), 
+		c_frame.pose.begin(),
+		c_frame.pose.end());
+
+	//Draw the line skeleton
+	draw_ellipsoid_skeleton(mocap_quat.skeleton, xform.begin(), xform.end());
+}
+
+
+void draw_frame(int f)
+{
+	//Figure interpolate current pose
+	Frame c_frame = mocap_quat.frames[f];
+
+	//Extract matrices
+	vector<Transform3d> xform( mocap_quat.skeleton.size() );
+	mocap_quat.skeleton.interpret_pose(
+		xform.begin(), 
+		c_frame.pose.begin(),
+		c_frame.pose.end());
+
+	//Draw the line skeleton
+	draw_ellipsoid_skeleton(mocap_quat.skeleton, xform.begin(), xform.end());
+}
 
 void draw()
 {
@@ -81,16 +116,22 @@ void draw()
 			glVertex3f( 100., 0., t);
 		}
 	glEnd();
+	
+	static float t = 0.;
+	t += 0.01;
+	if(t > 1.) t -= 1.;
 
-	//Extract matrices
-	vector<Transform3d> xform( mocap_quat.skeleton.size() );
-	mocap_quat.skeleton.interpret_pose(
-		xform.begin(), 
-		mocap_quat.frames[0].pose.begin(),
-		mocap_quat.frames[0].pose.end());
-
-	//Draw the line skeleton
-	draw_line_skeleton(mocap_quat.skeleton, xform.begin(), xform.end());
+	glEnable(GL_BLEND);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	glColor4f(1, 0, 0, 0.5);
+	draw_frame(0);
+	
+	glColor4f(0, 1, 0, 0.5);
+	draw_frame(1);
+	
+	glColor4f(1., 1., 1., 1.);
+	draw_skeleton(t);
 }
 
 

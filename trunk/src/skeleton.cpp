@@ -296,4 +296,72 @@ Motion Motion::convert_quat() const
 }
 
 
+//Recursive implementation of interpolate
+void _interpolate_impl(
+	double*& result, 
+	const Joint& skel,
+	const double*& pa,
+	const double*& pb,
+	double t)
+{
+	for(int i=0; i<skel.channels.size(); i++)
+	{
+		string pname = skel.channels[i];
+		
+		if(pname == "Quaternion")
+		{
+			Quaterniond qa(pa[0], pa[1], pa[2], pa[3]),
+						qb(pb[0], pb[1], pb[2], pb[3]);
+						
+			pa += 4;
+			pb += 4;
+			
+			Quaterniond qr = qa.slerp(t, qb);
+			
+			*(result++) = qr.w();
+			*(result++) = qr.x();
+			*(result++) = qr.y();
+			*(result++) = qr.z();
+		}
+		else if(pname == "Xrotation")
+		{
+			//TODO: Implement this
+		}
+		else if(pname == "Yrotation")
+		{
+			//TODO: Implement this
+		}
+		else if(pname == "Zrotation")
+		{
+			//TODO: Implement this
+		}
+		else if(pname == "Xposition" ||
+				pname == "Yposition" ||
+				pname == "Zposition")
+		{
+			*(result++) = (1. - t) * (*(pa++)) + t * (*(pb++));
+		}
+	}
+	
+	for(int i=0; i<skel.children.size(); i++)
+		_interpolate_impl(result, skel.children[i], pa, pb, t);
+}
+
+//Interpolate two poses
+Frame interpolate_frames(const Joint& skel, const Frame& a, const Frame& b, double t)
+{
+	assert(a.pose.size() == b.pose.size());
+	assert(skel.num_parameters() == a.pose.size());
+
+	Frame result;
+	result.pose.resize(a.pose.size());
+	const double *pa = &a.pose[0], *pb = &b.pose[0];
+	double *pr = &result.pose[0];
+	
+	_interpolate_impl(pr, skel, pa, pb, t);
+	
+	return result;
+}
+
+
 }

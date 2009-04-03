@@ -104,6 +104,7 @@ namespace Skeletal
 		
 		//Reparemterizes the pose from base to target
 		Frame reparameterize(const Joint& base, const Joint& target) const;
+		
 	};
 	
 	//Motion capture data structure
@@ -119,6 +120,9 @@ namespace Skeletal
 	
 	//Parses a BVH file from some input stream
 	Motion parseBVH(istream& bvh_file);
+
+	//Interpolate two poses
+	Frame interpolate_frames(const Joint& skel, const Frame& a, const Frame& b, double t);
 };
 
 #endif
