@@ -70,10 +70,7 @@ void init()
 void draw_skeleton(double t)
 {
 	//Figure interpolate current pose
-	Frame c_frame = interpolate_frames(
-		mocap_quat.skeleton, 
-		mocap_quat.frames[0], 
-		mocap_quat.frames[1], t);
+	Frame c_frame = mocap_quat.get_frame(t, true);
 
 	//Extract matrices
 	vector<Transform3d> xform( mocap_quat.skeleton.size() );
@@ -119,7 +116,6 @@ void draw()
 	
 	static float t = 0.;
 	t += 0.01;
-	if(t > 1.) t -= 1.;
 
 	glEnable(GL_BLEND);
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

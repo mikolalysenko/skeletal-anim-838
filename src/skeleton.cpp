@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cmath>
 
 //Eigen
 #include <Eigen/Core>
@@ -361,6 +362,51 @@ Frame interpolate_frames(const Joint& skel, const Frame& a, const Frame& b, doub
 	_interpolate_impl(pr, skel, pa, pb, t);
 	
 	return result;
+}
+
+//Retrieves an intermediate frame
+Frame Motion::get_frame(double t, bool loop) const
+{
+	int start_frame, end_frame;
+
+	//Get int/fract parts of the frame time
+	double frame_num;
+	double tau = modf(t / frame_time, &frame_num);
+	
+	if(loop)
+	{
+		//Handle looping case
+		start_frame = frame_num;
+		if(start_frame < 0)
+			start_frame = frames.size() - ((-start_frame) % frames.size());
+		start_frame %= frames.size();
+		end_frame = (start_frame + 1) % frames.size();
+	}
+	else
+	{
+		//For non-looping, just clamp end points
+		if(t < 0)
+		{
+			start_frame = end_frame = tau = 0.;
+		}
+		else if(frame_num >= frames.size() - 1) 
+		{
+			start_frame = end_frame = frames.size() - 1;
+			tau = 0.;
+		}
+		else
+		{
+			start_frame = frame_num;
+			end_frame = (start_frame + 1) % frames.size();
+		}	
+	}
+	
+	assert(start_frame >= 0 && start_frame < frames.size());
+	assert(end_frame >= 0 && end_frame < frames.size());
+	
+	
+	//Interpolate frames
+	return interpolate_frames(skeleton, frames[start_frame], frames[end_frame], tau);
 }
 
 

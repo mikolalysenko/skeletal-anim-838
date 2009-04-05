@@ -106,6 +106,9 @@ namespace Skeletal
 		Frame reparameterize(const Joint& base, const Joint& target) const;
 		
 	};
+
+	//Interpolate two poses
+	Frame interpolate_frames(const Joint& skel, const Frame& a, const Frame& b, double t);
 	
 	//Motion capture data structure
 	struct Motion
@@ -116,13 +119,14 @@ namespace Skeletal
 		
 		//Converts the motion to a quaternion parameterized motion
 		Motion convert_quat() const;
+		
+		//Returns the frame at time t, with optional looping
+		Frame get_frame(double t, bool loop = false) const;
 	};
 	
 	//Parses a BVH file from some input stream
 	Motion parseBVH(istream& bvh_file);
 
-	//Interpolate two poses
-	Frame interpolate_frames(const Joint& skel, const Frame& a, const Frame& b, double t);
 };
 
 #endif
