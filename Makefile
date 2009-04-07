@@ -1,6 +1,8 @@
 # Makefile for C++ project with auto-dependencies and multiple build options
 # Copyright (C) 2000-2003 Marc Mongenet
 
+
+
 ###############################################################################
 # USER DEFINED VARIABLES
 # The following variable values must be suited to the build environment.
