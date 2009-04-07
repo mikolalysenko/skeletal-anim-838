@@ -4,6 +4,7 @@
 
 //STL includes
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
+#include <Eigen/LU>
 
 //OpenGL
 #include <GL/glut.h>
@@ -35,12 +37,22 @@ double	fov = 45.,
 		z_near = 0.1,
 		z_far = 10000.;
 
+double colors[6][4] =
+{
+	{1., 0., 0., 0.5},
+	{0., 1., 0., 0.5},
+	{0., 0., 1., 0.5},
+	{1., 1., 0., 0.5},
+	{0., 1., 1., 0.5},
+	{1., 0., 1., 0.5},
+};
+
 //Camera transformation
 Vector3d	object_center;
 Quaterniond camera_rot;
 
 //Motion capture data
-Motion mocap, mocap_quat;
+Motion mocap_quat;
 
 void print_skeleton(const Joint& skel, int t = 0)
 {
@@ -59,12 +71,39 @@ void print_skeleton(const Joint& skel, int t = 0)
 
 void init()
 {
-	//Parse out motion capture data
-	mocap = parseBVH(cin);
-	//print_skeleton(mocap.skeleton);
+	double a_start = 2.,
+			b_start = 0.,
+			duration = 0.2;
+
+	ifstream a_in("data/p1-test/walk.bvh");
+	ifstream b_in("data/Example1.bvh");
+
+	Motion a = parseBVH(a_in).convert_quat(),
+		   b = parseBVH(b_in).convert_quat();
+
+	b.frame_time = 0.5;
+
+	vector<Transform3d> xform_a( a.skeleton.size() ),
+						xform_b( b.skeleton.size() );
+						
+	Frame fa = a.get_frame(a_start),
+		  fb = b.get_frame(b_start);
 	
-	mocap_quat = mocap.convert_quat();
-	//print_skeleton(mocap_quat.skeleton);	
+	
+	a.skeleton.interpret_pose(
+		xform_a.begin(), 
+		fa.pose.begin(),
+		fb.pose.end());
+
+	b.skeleton.interpret_pose(
+		xform_b.begin(), 
+		fb.pose.begin(),
+		fb.pose.end());
+		
+	Transform3d relative_xform(xform_b[0].inverse());
+	relative_xform = xform_a[0] * relative_xform;
+	
+	mocap_quat = combine_motions(a, b, relative_xform, a_start, b_start, duration, 1);
 }
 
 void draw_skeleton(double t)
@@ -120,12 +159,12 @@ void draw()
 	glEnable(GL_BLEND);
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	glColor4f(1, 0, 0, 0.5);
-	draw_frame(0);
-	
-	glColor4f(0, 1, 0, 0.5);
-	draw_frame(1);
-	
+	for(int i=0; i<6; i++)
+	{
+		glColor4dv(colors[i]);
+		draw_frame(i * mocap_quat.frames.size() / 6);
+	}
+		
 	glColor4f(1., 1., 1., 1.);
 	draw_skeleton(t);
 }

@@ -105,6 +105,8 @@ namespace Skeletal
 		//Reparemterizes the pose from base to target
 		Frame reparameterize(const Joint& base, const Joint& target) const;
 		
+		//Apply a transformation to this pose
+		Frame apply_transform(const Joint& skeleton, const Transform3d xform) const;
 	};
 
 	//Interpolate two poses
@@ -117,6 +119,12 @@ namespace Skeletal
 		vector<Frame>	frames;
 		Joint			skeleton;
 		
+		//Returns the total duration of the animation
+		double duration() const
+		{
+			return frames.size() * frame_time;
+		}
+		
 		//Converts the motion to a quaternion parameterized motion
 		Motion convert_quat() const;
 		
@@ -126,6 +134,13 @@ namespace Skeletal
 	
 	//Parses a BVH file from some input stream
 	Motion parseBVH(istream& bvh_file);
+	
+	//Combines two motions together
+	Motion combine_motions(
+		const Motion& a, const Motion& b, 
+		const Transform3d& relative_xform, 
+		double a_start, double b_start, double duration, 
+		int deg);
 
 };
 
