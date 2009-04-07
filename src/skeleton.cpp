@@ -245,19 +245,19 @@ void reparameterize_impl(
 		else if(chan == "Xposition")
 		{
 			double x = xform.translation().x();
-			xform.translate(Vector3d(-x, 0., 0.));
+			xform.pretranslate(Vector3d(x, 0., 0.));
 			n_params.push_back(x);
 		}
 		else if(chan == "Yposition")
 		{
 			double x = xform.translation().y();
-			xform.translate(Vector3d(0., -x, 0.));
+			xform.pretranslate(Vector3d(0., x, 0.));
 			n_params.push_back(x);
 		}
 		else if(chan == "Zposition")
 		{
 			double x = xform.translation().z();
-			xform.translate(Vector3d(0., 0., -x));
+			xform.pretranslate(Vector3d(0., 0., x));
 			n_params.push_back(x);
 		}
 	}
@@ -324,15 +324,9 @@ void _interpolate_impl(
 			*(result++) = qr.y();
 			*(result++) = qr.z();
 		}
-		else if(pname == "Xrotation")
-		{
-			//TODO: Implement this
-		}
-		else if(pname == "Yrotation")
-		{
-			//TODO: Implement this
-		}
-		else if(pname == "Zrotation")
+		else if(pname == "Xrotation" ||
+				pname == "Yrotation" ||
+				pname == "Zrotation")
 		{
 			//TODO: Implement this
 		}
@@ -407,6 +401,130 @@ Frame Motion::get_frame(double t, bool loop) const
 	
 	//Interpolate frames
 	return interpolate_frames(skeleton, frames[start_frame], frames[end_frame], tau);
+}
+
+
+//The interpolation function
+double interp_func(double t, int deg)
+{
+	return t;
+}
+
+//Combines two motions to synthesize a new motion
+Motion combine_motions(
+	const Motion& a, 
+	const Motion& b, 
+	const Transform3d& relative_xform, 
+	double a_start, 
+	double b_start, 
+	double duration, 
+	int deg)
+{
+	assert(a_start >= 0. && a_start + duration <= a.duration());
+	assert(b_start >= 0. && b_start + duration <= b.duration());
+	assert(a.skeleton.size() == b.skeleton.size());
+	assert(a.skeleton.num_parameters() == b.skeleton.num_parameters());
+
+	Motion result;
+	result.skeleton = a.skeleton;
+	result.frame_time = min(a.frame_time, b.frame_time);
+	result.frames.resize(0);
+	
+	for(double t = 0.; t<=a_start; t+=result.frame_time)
+		result.frames.push_back(a.get_frame(t));
+	
+	for(double t = 0.; t<=duration; t+=result.frame_time)
+	{
+		Frame fa = a.get_frame(a_start + t),
+			  fb = b.get_frame(b_start + t).apply_transform(result.skeleton, relative_xform);
+		result.frames.push_back(interpolate_frames(a.skeleton, fa, fb, interp_func(t / duration, deg)));
+	}
+
+	for(double t=b_start+duration; t<=b.duration(); t+=result.frame_time)
+		result.frames.push_back(b.get_frame(t).apply_transform(result.skeleton, relative_xform));
+	
+	return result;	
+}
+
+
+//Applies a transformation to this pose
+void apply_transform_impl(
+	const Joint& skeleton,
+	Transform3d xform,
+	const double*& params,
+	double *& result)
+{
+	for(int i=0; i<skeleton.channels.size(); i++)
+	{
+		string chan = skeleton.channels[i];
+		
+		if(chan == "Quaternion")
+		{
+			Matrix3d rot = xform.rotation();
+			xform = xform.rotate(rot.inverse());
+			
+			Quaterniond q(params[0], params[1], params[2], params[3]);
+			q = Quaterniond(rot) * q;
+			
+			result[0] = q.w();
+			result[1] = q.x();
+			result[2] = q.y();
+			result[3] = q.z();
+			
+			result += 4;
+			params += 4;
+		}
+		else if(chan == "Xrotation" ||
+				chan == "Yrotation" ||
+				chan == "Zrotation")
+		{
+			//TODO: Implement this
+			*(result++) = *(params++);
+		}
+		else if(chan == "Xposition" ||
+				chan == "Yposition" ||
+				chan == "Zposition")
+		{
+			//HACK: Need to use a 3-vector to represent position, not enough DOF to do it componentwise
+			assert(skeleton.channels.size() >= i + 3);
+			assert(skeleton.channels[i] == "Xposition");
+			assert(skeleton.channels[i+1] == "Yposition");
+			assert(skeleton.channels[i+2] == "Zposition");
+		
+			Vector3d t = Vector3d(params[0], params[1], params[2]);
+			Vector3d p = xform * t;
+			xform.pretranslate(-xform.translation());
+			
+			result[0] = p[0];
+			result[1] = p[1];
+			result[2] = p[2];
+			
+			//Skip ahead
+			params += 3;
+			result += 3;
+			i += 3;
+		}
+	}
+
+	//Recurse
+	for(int i=0; i<skeleton.children.size(); i++)
+	{
+		apply_transform_impl(skeleton.children[i], xform, params, result);
+	}
+}
+
+
+//Applies a transformation to a frame/skeleton pair
+Frame Frame::apply_transform(const Joint& skeleton, const Transform3d xform) const
+{
+	Frame result;
+	result.pose.resize(pose.size());
+	
+	const double *pa = &pose[0];
+	double *pr = &result.pose[0];
+	
+	apply_transform_impl(skeleton, xform, pa, pr);
+	return result;
 }
 
 
