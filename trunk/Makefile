@@ -1,8 +1,6 @@
 # Makefile for C++ project with auto-dependencies and multiple build options
 # Copyright (C) 2000-2003 Marc Mongenet
 
-
-
 ###############################################################################
 # USER DEFINED VARIABLES
 # The following variable values must be suited to the build environment.
@@ -30,7 +28,7 @@ builddir = out
 INC_PATH = -I$(srcdir) -I$(EIGENPATH)
 
 # libraries link options ('-lm' is common to link with the math library)
-LNK_LIBS = -lglut -lm
+LNK_LIBS = -lglut -lm -lfltk -lfltk_gl
 
 # other compilation options
 COMPILE_OPTS = 

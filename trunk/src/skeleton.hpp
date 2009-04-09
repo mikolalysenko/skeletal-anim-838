@@ -106,7 +106,7 @@ namespace Skeletal
 		Frame reparameterize(const Joint& base, const Joint& target) const;
 		
 		//Apply a transformation to this pose
-		Frame apply_transform(const Joint& skeleton, const Transform3d xform) const;
+		Frame apply_transform(const Joint& skeleton, const Transform3d& xform) const;
 	};
 
 	//Interpolate two poses

@@ -450,10 +450,11 @@ Motion combine_motions(
 //Applies a transformation to this pose
 void apply_transform_impl(
 	const Joint& skeleton,
-	Transform3d xform,
+	const Transform3d& xform,
 	const double*& params,
 	double *& result)
 {
+  Transform3d xform_tmp = xform;
 	for(int i=0; i<skeleton.channels.size(); i++)
 	{
 		string chan = skeleton.channels[i];
@@ -461,7 +462,7 @@ void apply_transform_impl(
 		if(chan == "Quaternion")
 		{
 			Matrix3d rot = xform.rotation();
-			xform = xform.rotate(rot.inverse());
+			xform_tmp = xform_tmp.rotate(rot.inverse());
 			
 			Quaterniond q(params[0], params[1], params[2], params[3]);
 			q = Quaterniond(rot) * q;
@@ -493,7 +494,7 @@ void apply_transform_impl(
 		
 			Vector3d t = Vector3d(params[0], params[1], params[2]);
 			Vector3d p = xform * t;
-			xform.pretranslate(-xform.translation());
+			xform_tmp.pretranslate(-xform_tmp.translation());
 			
 			result[0] = p[0];
 			result[1] = p[1];
@@ -509,13 +510,13 @@ void apply_transform_impl(
 	//Recurse
 	for(int i=0; i<skeleton.children.size(); i++)
 	{
-		apply_transform_impl(skeleton.children[i], xform, params, result);
+		apply_transform_impl(skeleton.children[i], xform_tmp, params, result);
 	}
 }
 
 
 //Applies a transformation to a frame/skeleton pair
-Frame Frame::apply_transform(const Joint& skeleton, const Transform3d xform) const
+Frame Frame::apply_transform(const Joint& skeleton, const Transform3d& xform) const
 {
 	Frame result;
 	result.pose.resize(pose.size());
