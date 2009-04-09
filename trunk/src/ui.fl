@@ -1,0 +1,168 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0109 
+header_name {.h} 
+code_name {.cpp}
+class UserInterface {open
+} {
+  Function {UserInterface()} {open
+  } {
+    Fl_Window mainWindow {
+      label {Skeletal Anim} open
+      xywh {481 174 600 700} type Double resizable visible
+    } {
+      Fl_Group {} {open
+        xywh {-5 0 830 697}
+      } {
+        Fl_Group {} {open
+          xywh {0 0 800 400} resizable
+        } {
+          Fl_Box view {
+            label {This is the OpenGL view}
+            xywh {0 0 600 400} box BORDER_BOX align 16
+            code0 {\#include "gl_view.h"}
+            code1 {view->set_ui(this);}
+            class glView
+          }
+        }
+        Fl_Group {} {open
+          xywh {-5 400 807 297}
+        } {
+          Fl_Button btn_play {
+            label {@-1>}
+            callback {view->toggle_play(((Fl_Button *)o)->value());}
+            tooltip {Play/Stop Animation} xywh {0 401 24 18} type Toggle color 89 selection_color 78 align 64
+          }
+          Fl_Value_Slider m_slider {
+            callback {view->move_frame_to(((Fl_Value_Slider *)o)->value());}
+            xywh {25 401 515 18} type Horizontal selection_color 180 maximum 100 step 1 resizable
+          }
+          Fl_Button {} {
+            label {@-1refresh}
+            callback {view->toggle_repeat(((Fl_Button *)o)->value());}
+            tooltip {Enable/Disable Repeat} xywh {541 401 24 18} type Toggle selection_color 0 labelcolor 16
+          }
+          Fl_Spinner edit_desired_fps {
+            label FPS
+            callback {view->set_desired_fps(((Fl_Spinner *)o)->value());}
+            xywh {565 401 35 19} labelfont 1 labelsize 10 align 2 when 1 maximum 360 value 30 textsize 10
+          }
+          Fl_Group {} {open
+            xywh {0 434 565 263}
+          } {
+            Fl_Box {} {
+              label {Current Animation}
+              xywh {3 436 358 40} box ENGRAVED_FRAME labelsize 10 align 5
+            }
+            Fl_Box {} {
+              xywh {518 456 40 20} resizable
+            }
+            Fl_Box {} {
+              label Name
+              xywh {6 438 64 13} labelsize 10 align 20
+            }
+            Fl_Box {} {
+              label {\# Joints}
+              xywh {205 438 50 13} labelsize 10 align 16
+            }
+            Fl_Box {} {
+              label {\# Frames}
+              xywh {255 438 50 13} labelsize 10 align 16
+            }
+            Fl_Box {} {
+              label FPS
+              xywh {305 438 50 13} labelsize 10 align 16
+            }
+            Fl_Group {} {open
+              xywh {3 487 517 210}
+            } {
+              Fl_Box {} {
+                label {Animation Files}
+                xywh {3 489 467 208} box ENGRAVED_FRAME labelsize 10 align 5
+              }
+              Fl_Box {} {
+                xywh {365 509 155 20} resizable
+              }
+              Fl_Browser m_browser_file {
+                callback {view->update_selection();}
+                xywh {10 520 198 170} type Hold labelsize 10 when 3 textsize 10
+              }
+              Fl_Button {} {
+                label {@-2+  Load}
+                callback {view->load_file();}
+                xywh {10 495 55 22} color 70 labelsize 10
+              }
+              Fl_Button {} {
+                label Remove
+                callback {view->remove_file();}
+                xywh {70 495 55 22} color 89 labelsize 10
+              }
+              Fl_Browser m_browser_file_comb {
+                label {Animation Concatenation Files}
+                xywh {260 530 198 100} type Hold labelsize 10 align 5 when 3 textsize 10
+              }
+              Fl_Button {} {
+                label {@->}
+                callback {view->add_animation_list();}
+                xywh {215 558 35 22} labelsize 10
+              }
+              Fl_Button {} {
+                label {@<-}
+                callback {view->del_animation_list();}
+                xywh {215 583 35 22} labelsize 10
+              }
+              Fl_Button radio_single {
+                label {Single File}
+                callback {view->mode_single();}
+                xywh {215 495 70 22} type Radio value 1 selection_color 231 labelsize 10
+              }
+              Fl_Button radio_mutliple {
+                label {Multiple Files}
+                callback {view->mode_multiple();}
+                xywh {290 495 70 22} type Radio selection_color 231 labelsize 10
+              }
+              Fl_Spinner edit_num_blend_frames {
+                label {\# blend frames}
+                callback {// update the multiple mode if necessary
+  if(radio_mutliple->value() == 1)
+  {
+    view->mode_multiple();
+  }} selected
+                xywh {337 634 35 19} labelfont 1 labelsize 10 when 1 maximum 360 value 6 textsize 10
+              }
+              Fl_Box lbl_blend_time {
+                xywh {375 634 45 20} box DOWN_FRAME labelsize 10 align 16
+              }
+              Fl_Box {} {
+                label sec
+                xywh {420 637 30 13} labelsize 10 align 20
+              }
+            }
+            Fl_Box lbl_name {
+              xywh {10 450 195 20} box DOWN_FRAME labelsize 10 align 20
+            }
+            Fl_Box lbl_joints {
+              xywh {209 450 45 20} box DOWN_FRAME labelsize 10 align 16
+            }
+            Fl_Box lbl_frames {
+              xywh {258 450 45 20} box DOWN_FRAME labelsize 10 align 16
+            }
+            Fl_Box lbl_fps {
+              xywh {307 450 45 20} box DOWN_FRAME labelsize 10 align 16
+            }
+          }
+        }
+      }
+    }
+  }
+  Function {show(int argc, char **argv)} {open
+  } {
+    code {mainWindow->show(argc, argv);
+
+  // set up callback on idle
+  Fl::add_idle((void (*)(void*))idleCB, this);} {}
+  }
+  Function {idleCB(UserInterface* gv)} {open return_type {static void}
+  } {
+    code {gv->view->redraw();} {}
+  }
+} 
