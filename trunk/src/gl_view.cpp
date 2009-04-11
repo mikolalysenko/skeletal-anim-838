@@ -27,8 +27,8 @@
 #define PAN_RATE        100.
 
 //Window parameters
-int     width = 800,
-        height = 800;
+//int     width = 800,
+//        height = 800;
 
 //Perspective matrix
 double  fov = 45., 
@@ -38,11 +38,19 @@ double  fov = 45.,
 double colors[6][4] =
 {
         {1., 0., 0., 0.5},
-        {0., 1., 0., 0.5},
+        {.2, .2, .2, 0.5},
         {0., 0., 1., 0.5},
         {1., 1., 0., 0.5},
         {0., 1., 1., 0.5},
         {1., 0., 1., 0.5},
+};
+
+static float floorLength = 200;
+static GLfloat floorVertex[4][3] = {
+  { -floorLength, 0.0,  floorLength },
+  {  floorLength, 0.0,  floorLength },
+  {  floorLength, 0.0, -floorLength },
+  { -floorLength, 0.0, -floorLength },
 };
 
 //Camera transformation
@@ -58,8 +66,67 @@ int rotation_pos[2], pan_base[2], zoom_base[2];
 Quaterniond previous_rotation;
 
 
+// project shadow matrix calculation function taken from
+// http://www.bluevoid.com/opengl/sig00/advanced00/notes/node199.html
+static void
+projectShadowMatrix(float ground[4], float light[4])
+{
+  float  dot;
+  float  shadowMat[4][4];
 
+  dot = ground[0] * light[0] +
+        ground[1] * light[1] +
+        ground[2] * light[2] +
+        ground[3] * light[3];
+  
+  shadowMat[0][0] = dot - light[0] * ground[0];
+  shadowMat[1][0] = 0.0 - light[0] * ground[1];
+  shadowMat[2][0] = 0.0 - light[0] * ground[2];
+  shadowMat[3][0] = 0.0 - light[0] * ground[3];
+  
+  shadowMat[0][1] = 0.0 - light[1] * ground[0];
+  shadowMat[1][1] = dot - light[1] * ground[1];
+  shadowMat[2][1] = 0.0 - light[1] * ground[2];
+  shadowMat[3][1] = 0.0 - light[1] * ground[3];
+  
+  shadowMat[0][2] = 0.0 - light[2] * ground[0];
+  shadowMat[1][2] = 0.0 - light[2] * ground[1];
+  shadowMat[2][2] = dot - light[2] * ground[2];
+  shadowMat[3][2] = 0.0 - light[2] * ground[3];
+  
+  shadowMat[0][3] = 0.0 - light[3] * ground[0];
+  shadowMat[1][3] = 0.0 - light[3] * ground[1];
+  shadowMat[2][3] = 0.0 - light[3] * ground[2];
+  shadowMat[3][3] = dot - light[3] * ground[3];
 
+  glMultMatrixf((const GLfloat*)shadowMat);
+}
+
+// find the plane equation given 3 points
+// below are links that explains the math
+// http://www.jtaylor1142001.net/calcjat/Solutions/VPlanes/VP3Pts.htm
+// http://easyweb.easynet.co.uk/~mrmeanie/plane/planes.htm
+void findPlane(GLfloat plane[4], GLfloat vertex1[3], GLfloat vertex2[3], GLfloat vertex3[3])
+{
+  GLfloat vector1[3], vector2[3];
+
+  // get the vector differences
+  vector1[0] = vertex2[0] - vertex1[0];
+  vector1[1] = vertex2[1] - vertex1[1];
+  vector1[2] = vertex2[2] - vertex1[2];
+
+  vector2[0] = vertex3[0] - vertex1[0];
+  vector2[1] = vertex3[1] - vertex1[1];
+  vector2[2] = vertex3[2] - vertex1[2];
+
+  // compute A, B, C by computing the cross product
+  plane[0] = vector1[1] * vector2[2] - vector1[2] * vector2[1];
+  plane[1] = -(vector1[0] * vector2[2] - vector1[2] * vector2[0]);
+  plane[2] = vector1[0] * vector2[1] - vector1[1] * vector2[0];
+
+  // compute D
+  plane[3] = -(plane[0] * vertex1[0] + plane[1] * vertex1[1] + plane[2] * vertex1[2]);
+}
 
 void glView::print_skeleton(const Joint& skel, int t)
 {
@@ -78,62 +145,50 @@ void glView::print_skeleton(const Joint& skel, int t)
 
 void glView::initScene()
 {
-  //Clear camera rotation
-  object_center = Vector3d(30, 150, 500);
+  // camera position
+  object_center = Vector3d(0, 50, 400);
   camera_rot.setIdentity();
 
+  // light position from above the origin
+  lightPosition[0] = 0;
+  lightPosition[1] = 200;
+  lightPosition[2] = 0;
+  lightPosition[3] = 0;
 
-  /*
-  ifstream a_in("walkLoop.bvh");
-
-  //Parse out motion capture data
-  mocap_quat = parseBVH(a_in).convert_quat();
-  //print_skeleton(mocap.skeleton);
   
-  mocap_quat = mocap_quat.convert_quat();
-  */
+  //Fl_Shared_Image* img = Fl_Shared_Image::get("/afs/cs.wisc.edu/u/y/a/yangk/Desktop/p2/a/uw_logo.png");
+//Fl_Shared_Image* img = Fl_Shared_Image::get((const char*)m_ui->boxImageLogo->image()->data(),
+//  m_ui->boxImageLogo->image()->w(),
+//m_ui->boxImageLogo->image()->h());
+Fl_Image* img = m_ui->boxImageLogo->image();
+  idFloor = 0;
+  if(img)
+  {
+//exit(0);
+    //::MessageBox(0 , "hsdf", "sk", 0);
+	  glGenTextures(1, &idFloor);
+	  glBindTexture(GL_TEXTURE_2D, idFloor);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, img->w(), img->h(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img->data()[0]);
+    //img->release();
+  }
 
-/*
-  
-  double a_start = 2.,
-         b_start = 0.,
-         duration = 0.2;
+  glEnable(GL_DEPTH_TEST);
 
-  ifstream a_in("walkLoop.bvh");
-  ifstream b_in("PETE.bvh");
-
-  Motion a = parseBVH(a_in).convert_quat(),
-         b = parseBVH(b_in).convert_quat();
-
-  b.frame_time = 0.5;
-
-  vector<Transform3d> xform_a( a.skeleton.size() ),
-                      xform_b( b.skeleton.size() );
-                                          
-  Frame fa = a.get_frame(a_start),
-        fb = b.get_frame(b_start);
-  
-  
-  a.skeleton.interpret_pose(
-          xform_a.begin(), 
-          fa.pose.begin(),
-          fb.pose.end());
-
-  b.skeleton.interpret_pose(
-          xform_b.begin(), 
-          fb.pose.begin(),
-          fb.pose.end());
-          
-  Transform3d relative_xform(xform_b[0].inverse());
-  relative_xform = xform_a[0] * relative_xform;
-  
-  mocap_quat = combine_motions(a, b, relative_xform, a_start, b_start, duration, 1);
-  */
+ // if(mode( FL_STENCIL) == true)
+ //   ::MessageBox(0, "stencil", "", 0);
 }
 
 void glView::draw_skeleton(double t)
 {
   if(!mocap_selected) return;
+
+  glDisable(GL_DEPTH_TEST);
 
   //Figure interpolate current pose
   Frame c_frame = mocap_selected->get_frame(t, true);
@@ -168,8 +223,54 @@ void glView::draw_frame(int f)
   draw_ellipsoid_skeleton(mocap_selected->skeleton, xform.begin(), xform.end());
 }
 
-void glView::drawScene()
+
+
+
+//*************************************************************************
+//
+// the two colors for the floor for the check board
+//
+//*************************************************************************
+float floorColor1[3] = { .9f, .9f, .9f }; // Light color
+float floorColor2[3] = { .3f, .3f, 1.0f }; // Dark color
+
+//*************************************************************************
+//
+// Draw the check board floor without texturing it
+// Taken from the CS559 train sample code
+//===============================================================================
+void drawCheckeredFloor(float size, int nSquares)
+//===============================================================================
 {
+	// parameters:
+	float maxX = size/2, maxY = size/2;
+	float minX = -size/2, minY = -size/2;
+
+	int x,y,v[3],i;
+	float xp,yp,xd,yd;
+	v[2] = 0;
+	xd = (maxX - minX) / ((float) nSquares);
+	yd = (maxY - minY) / ((float) nSquares);
+	glBegin(GL_QUADS);
+	for(x=0,xp=minX; x<nSquares; x++,xp+=xd) {
+		for(y=0,yp=minY,i=x; y<nSquares; y++,i++,yp+=yd) {
+			glColor4fv(i%2==1 ? floorColor1:floorColor2);
+			glNormal3f(0, 1, 0); 
+			glVertex3d(xp,      0, yp);
+			glVertex3d(xp,      0, yp + yd);
+			glVertex3d(xp + xd, 0, yp + yd);
+			glVertex3d(xp + xd, 0, yp);
+
+		} // end of for j
+	}// end of for i
+	glEnd();
+}
+
+
+void glView::drawFloor()
+{
+
+  /*
   //Draw a floor grid
   glColor3f(1.,1.,1.);
   glBegin(GL_LINES);
@@ -181,9 +282,58 @@ void glView::drawScene()
       glVertex3f( 100., 0., t);
     }
   glEnd();
+  */
 
   
-  if(!mocap_selected) return;
+
+
+
+	//glEnable(GL_COLOR_MATERIAL);
+  glDisable(GL_LIGHTING);
+
+  // draw the checkered floor
+  drawCheckeredFloor(abs(floorVertex[0][0]-floorVertex[1][0]),20);
+
+  // draw the uw logo
+  if(idFloor)
+  {
+    glDisable(GL_DEPTH_TEST);
+		glEnable(GL_NORMALIZE);
+		glEnable(GL_BLEND);
+		glDepthMask(GL_FALSE);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glEnable(GL_TEXTURE_2D);
+	  glBindTexture(GL_TEXTURE_2D, idFloor);
+    glColor3f(1.,1.,1.);
+	  glBegin(GL_QUADS);
+		  glNormal3f(0, 1, 0); 
+      glTexCoord2f(0, 0); glVertex3fv(floorVertex[0]);
+      glTexCoord2f(1, 0); glVertex3fv(floorVertex[1]);
+      glTexCoord2f(1, 1); glVertex3fv(floorVertex[2]);
+      glTexCoord2f(0, 1); glVertex3fv(floorVertex[3]);
+	  glEnd();
+    glDisable(GL_TEXTURE_2D);
+
+    glDisable(GL_NORMALIZE);
+		glDepthMask(GL_TRUE);
+		glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+  }
+
+  glEnable(GL_LIGHTING);
+}
+
+void glView::drawScene()
+{
+
+
+  // return if no animation is selected
+  if(!mocap_selected) 
+  {
+    drawFloor();
+    return;
+  }
 
 
 #ifdef WIN32
@@ -197,8 +347,6 @@ void glView::drawScene()
   lastClock = clock();
 #else
   static struct timeval start, end;
-
-
   long mtime, seconds, useconds;    
   gettimeofday(&end, NULL);
   seconds  = end.tv_sec  - start.tv_sec;
@@ -217,7 +365,6 @@ void glView::drawScene()
 #endif
 
   // check if the repeat mode is on
-  
   if(m_time >= mocap_selected->duration())
   {
     if(!m_repeat)
@@ -233,24 +380,138 @@ void glView::drawScene()
   }
   
 
-  glEnable(GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  
-  for(int i=0; i<6; i++)
+
+  // if we need to draw the reflection
+  if(m_draw_reflection) 
   {
-    glColor4dv(colors[i]);
-    //draw_frame(i * mocap_selected->frames.size() / 6);
+
+    // setup the stencil buffer to only draw on the floor
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 0xffffffff);
+
+    // draw the floor with depth test off so we can blend the floor
+    // with the reflection skeleton
+    glDisable(GL_DEPTH_TEST);
+    drawFloor();
+
+    // only draw on the floor
+    glStencilFunc(GL_EQUAL, 1, 0xffffffff); 
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glEnable(GL_DEPTH_TEST);
+
+
+    // reflect the scene on the y axis so that we can draw the skeleton upside down
+    glPushMatrix();
+    glScalef(1.0, -1.0, 1.0);
+
+    glEnable(GL_NORMALIZE);
+    glCullFace(GL_FRONT);
+
+    // blend with the ground
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // draw the skeleton
+    glDisable(GL_LIGHTING);
+    glColor4f(.2, 1., .2, .25);
+    draw_skeleton(m_time);
+
+    glDisable(GL_BLEND);
+    glDisable(GL_NORMALIZE);
+    glCullFace(GL_BACK);
+
+    glPopMatrix();
+
+    glDisable(GL_STENCIL_TEST);
+
   }
-          
-  glColor4f(1., 1., 1., 1.);
+
+  // setup the stencil buffer for the projection shadow
+  if(m_draw_shadow)
+  {
+    // set the floor object stencil buffer location to 3
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_ALWAYS, 3, 0xffffffff);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+  }
+  
+
+  // draw the floor
+  // if reflection is on, only update the depth buffer since we already drew the floor
+  if(m_draw_reflection) glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+  drawFloor();
+  if(m_draw_reflection) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  glDisable(GL_STENCIL_TEST);
+
+
+
+  glDisable(GL_LIGHTING);
+  // if we need to draw the colored preview
+  if(m_draw_preview)
+  {
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for(int i=0; i<6; i++)
+    {
+      glColor4dv(colors[i]);
+      draw_frame(i * mocap_selected->frames.size() / 6);
+    }
+    glDisable(GL_BLEND);
+  }
+
+  // draw the skeleton
+  glColor4f(.2, 1., .2, 1.);
   draw_skeleton(m_time);
+
+
+  if(m_draw_shadow)
+  {
+    glPushMatrix();
+
+
+    // if 2 < stencil value, draw so only draw on the floor
+    // always replace the stencil value so we don't redraw more than once
+    glStencilFunc(GL_LESS, 2, 0xffffffff);  /* draw if ==1 */
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+
+    // use polygon offset to resolve any z buffer fighting issues
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0, -1.0);
+
+
+    // set the color of the shadow to be 50% black
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_LIGHTING);  
+    glColor4f(0.0, 0.0, 0.0, 0.5);
+
+    // project the object to the ground plane and draw
+    findPlane(floorPlaneEquation, floorVertex[0], floorVertex[1], floorVertex[2]);
+    projectShadowMatrix(floorPlaneEquation, lightPosition);
+    draw_skeleton(m_time);
+
+
+    glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glDisable(GL_STENCIL_TEST);
+    glPopMatrix();
+  }
+     
+
+
+
 
   // update the slider
 	double frame_num;
 	double tau = modf(m_time / mocap_selected->frame_time, &frame_num);
   m_ui->m_slider->value(frame_num);
   m_frame_num = (unsigned int)frame_num;
+
 
   
 
@@ -261,16 +522,18 @@ void glView::drawScene()
 void glView::display()
 {
   //Set window bounds
-  glViewport(0, 0, width, height);
+  glViewport(0, 0, w(), h());
+
+  
 
   //Clear buffer
   glClearColor(0., 0., 0., 0.);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
   //Set up camera
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(fov, (double)width / (double)height, z_near, z_far);
+  gluPerspective(fov, (double)w() / (double)h(), z_near, z_far);
 
   //Create base camer matrix from mouse controls
   glMatrixMode(GL_MODELVIEW);
@@ -279,20 +542,11 @@ void glView::display()
   Matrix4d tr = Transform3d(camera_rot).matrix().transpose();
   glMultMatrixd(tr.data());
 
-  //Set other flags....
 
   //Do actual drawing code
   drawScene();
 
-  
-  //glDisable(GL_DEPTH_TEST);
-  //glLoadIdentity();
-  //gl_draw(true ? "Cube: wire" : "Cube: flat", -4.5f, -4.5f );
-  //glEnable(GL_DEPTH_TEST);
 
-  //Finish up drawing
-  //glFlush();
-  //glutSwapBuffers();
 }
 
 
@@ -311,16 +565,20 @@ glView::glView(int x,int y,int w,int h,const char *l)
   mocap_list.clear();
   mocap_selected = NULL;
   m_drawing = false;
+  m_draw_reflection = true;
+  m_draw_shadow = true;
+  m_draw_preview = false;
+  m_draw_fps = false;
+
+  fl_register_images();
+
+  mode(FL_RGB | FL_DOUBLE | FL_DEPTH | FL_STENCIL);
 
 
-  initScene(); 
 
   
   // Make the file chooser...
-#ifdef WIN32
-  Fl::scheme(NULL);
   Fl_File_Icon::load_system_icons();
-#endif
   file_chooser = new Fl_File_Chooser(".", "*", Fl_File_Chooser::SINGLE, "Select Motion File");
 
 
@@ -330,6 +588,14 @@ glView::glView(int x,int y,int w,int h,const char *l)
 
 void glView::draw() 
 {
+  // initialize stuff
+  static bool firstTime = true;
+  if(firstTime)
+  {
+    initScene();
+    firstTime = false;
+  }
+
   m_drawing = true;
 
 
@@ -342,18 +608,23 @@ void glView::draw()
   static int fpscount = 0;
   static int fps = 0;
 
-  // get ready to draw FPS
-  glLoadIdentity();
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0.0, w(), 0.0, h());
+  // draw the fps if necessary
+  if(m_draw_fps)
+  {
+    // get ready to draw FPS
+    glDisable(GL_LIGHTING);
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, w(), 0.0, h());
 
-  // draw FPS
-  sprintf(buf, "FPS=%d", fps);
-  glColor3f(1.0f, 1.0f, 0.0f);
-  gl_font(FL_HELVETICA, 12);
-  gl_draw(buf, 10, 10);
-
+    // draw FPS
+    sprintf(buf, "FPS=%d", fps);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    gl_font(FL_HELVETICA_BOLD, 10);
+    gl_draw(buf, 10, 10);
+    glEnable(GL_LIGHTING);
+  }
 
   
   // Use glFinish() instead of glFlush() to avoid getting many frames
@@ -442,11 +713,11 @@ int glView::handle(int event)
         camera_rot *= previous_rotation.inverse().normalized();
         
         Vector3d A = Vector3d(
-                        -0.5 + (double)x / (double)width, 
-                         0.5 - (double)y / (double)height, 0.5),
+                        -0.5 + (double)x / (double)w(), 
+                         0.5 - (double)y / (double)h(), 0.5),
                  B = Vector3d(
-                        -0.5 + (double)rotation_pos[0] / (double)width, 
-                         0.5 - (double)rotation_pos[1] / (double)height, 0.5);
+                        -0.5 + (double)rotation_pos[0] / (double)w(), 
+                         0.5 - (double)rotation_pos[1] / (double)h(), 0.5);
                         
         Quaterniond next;
         next.setFromTwoVectors(A, B).normalize();
@@ -462,8 +733,8 @@ int glView::handle(int event)
         int x = Fl::event_x_root(),
             y = Fl::event_y_root();
         Vector3d delta = 
-          Vector3d((double)(pan_base[0] - x) / width, 
-                    -(double)(pan_base[1] - y) / (double)height,
+          Vector3d((double)(pan_base[0] - x) / w(), 
+                    -(double)(pan_base[1] - y) / (double)h(),
                     0.0);
         
         object_center += delta * PAN_RATE;
@@ -479,9 +750,9 @@ int glView::handle(int event)
         int x = Fl::event_x_root(),
             y = Fl::event_y_root();
         Vector3d delta = 
-          Vector3d((double)(zoom_base[0] - x) / width, 
+          Vector3d((double)(zoom_base[0] - x) / w(), 
                     0.,
-                    -(double)(zoom_base[1] - y) / (double)height);
+                    -(double)(zoom_base[1] - y) / (double)h());
         
         object_center += delta * PAN_RATE;
         

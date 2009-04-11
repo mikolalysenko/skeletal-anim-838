@@ -8,20 +8,49 @@ class UserInterface {open
   } {
     Fl_Window mainWindow {
       label {Skeletal Anim} open
-      xywh {481 174 600 700} type Double resizable visible
+      xywh {387 47 600 690} type Double resizable visible
     } {
       Fl_Group {} {open
         xywh {-5 0 830 697}
       } {
         Fl_Group {} {open
-          xywh {0 0 800 400} resizable
+          xywh {0 0 800 401} resizable
         } {
           Fl_Box view {
             label {This is the OpenGL view}
-            xywh {0 0 600 400} box BORDER_BOX align 16
+            xywh {0 19 601 381} box BORDER_BOX align 16 resizable
             code0 {\#include "gl_view.h"}
             code1 {view->set_ui(this);}
             class glView
+          }
+          Fl_Menu_Bar {} {open
+            xywh {0 0 600 18} selection_color 49 labelsize 10 textsize 10
+          } {
+            Submenu {} {
+              label {Render Options} open
+              xywh {5 5 100 20} labelsize 10
+            } {
+              MenuItem menuShowShadow {
+                label {Show Shadow}
+                callback {view->m_draw_shadow = !view->m_draw_shadow;}
+                xywh {10 10 100 20} type Toggle value 1 labelsize 10
+              }
+              MenuItem menuShowReflection {
+                label {Show Reflection}
+                callback {view->m_draw_reflection = !view->m_draw_reflection;}
+                xywh {15 15 100 20} type Toggle value 1 labelsize 10
+              }
+              MenuItem menuShowPreview {
+                label {Show Colored Preview}
+                callback {view->m_draw_preview = !view->m_draw_preview;}
+                xywh {25 25 100 20} type Toggle labelsize 10
+              }
+              MenuItem menuShowFPS {
+                label {Show FPS}
+                callback {view->m_draw_fps = !view->m_draw_fps;}
+                xywh {35 35 100 20} type Toggle labelsize 10
+              }
+            }
           }
         }
         Fl_Group {} {open
@@ -126,7 +155,7 @@ class UserInterface {open
   if(radio_mutliple->value() == 1)
   {
     view->mode_multiple();
-  }} selected
+  }}
                 xywh {337 634 35 19} labelfont 1 labelsize 10 when 1 maximum 360 value 6 textsize 10
               }
               Fl_Box lbl_blend_time {
@@ -148,6 +177,9 @@ class UserInterface {open
             }
             Fl_Box lbl_fps {
               xywh {307 450 45 20} box DOWN_FRAME labelsize 10 align 16
+            }
+            Fl_Box boxImageLogo {selected
+              image {../uw_logo.png} xywh {365 450 25 25} hide
             }
           }
         }
