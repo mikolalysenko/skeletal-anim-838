@@ -7,6 +7,7 @@
 #include <FL/gl.h>
 #include <FL/Fl_File_Icon.H>
 #include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Shared_Image.H>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
@@ -39,6 +40,7 @@ public:
   void initScene();
   void draw_skeleton(double t);
   void draw_frame(int f);
+  void drawFloor();
 
   void set_ui(UserInterface* ui){m_ui = ui;};
   void select_animation(int index);
@@ -57,10 +59,14 @@ public:
   void mode_single();
   void mode_multiple();
 
-private:
+public:
   bool m_drawing;
   bool m_play;
   bool m_repeat;
+  bool m_draw_shadow;
+  bool m_draw_reflection;
+  bool m_draw_preview;
+  bool m_draw_fps;
   unsigned int m_frame_num;
   UserInterface* m_ui;
   float m_time;
@@ -70,6 +76,10 @@ private:
   vector<Motion> mocap_list;
   Motion* mocap_selected;
   Motion mocap_combine;
+
+  GLuint idFloor;
+  GLfloat lightPosition[4];
+  GLfloat floorPlaneEquation[4];
 
 };
 

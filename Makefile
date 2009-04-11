@@ -28,7 +28,8 @@ builddir = out
 INC_PATH = -I$(srcdir) -I$(EIGENPATH)
 
 # libraries link options ('-lm' is common to link with the math library)
-LNK_LIBS = -lglut -lm -lfltk -lfltk_gl
+LNK_LIBS = -lglut -lm -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl
+
 
 # other compilation options
 COMPILE_OPTS = 

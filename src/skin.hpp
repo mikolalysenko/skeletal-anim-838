@@ -79,9 +79,11 @@ namespace Skeletal
 
 	//Draws the line skeleton
 	template<class XformIter>
-		void _draw_ellipsoid_skeleton_impl(Transform3d xform, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end)
+		void _draw_ellipsoid_skeleton_impl(Transform3d& xform_ref, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end)
 		{
 			assert(pose_begin != pose_end);
+
+      Transform3d xform = xform_ref;
 
 			//Construct joint transform
 			Transform3d base_xform = *(pose_begin++);

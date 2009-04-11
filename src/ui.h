@@ -6,6 +6,7 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Group.H>
 #include "gl_view.h"
+#include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Value_Slider.H>
 #include <FL/Fl_Spinner.H>
@@ -17,6 +18,27 @@ public:
   UserInterface();
   Fl_Double_Window *mainWindow;
   glView *view;
+  static Fl_Menu_Item menu_[];
+  static Fl_Menu_Item *menuShowShadow;
+private:
+  void cb_menuShowShadow_i(Fl_Menu_*, void*);
+  static void cb_menuShowShadow(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *menuShowReflection;
+private:
+  void cb_menuShowReflection_i(Fl_Menu_*, void*);
+  static void cb_menuShowReflection(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *menuShowPreview;
+private:
+  void cb_menuShowPreview_i(Fl_Menu_*, void*);
+  static void cb_menuShowPreview(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *menuShowFPS;
+private:
+  void cb_menuShowFPS_i(Fl_Menu_*, void*);
+  static void cb_menuShowFPS(Fl_Menu_*, void*);
+public:
   Fl_Button *btn_play;
 private:
   void cb_btn_play_i(Fl_Button*, void*);
@@ -70,6 +92,7 @@ public:
   Fl_Box *lbl_joints;
   Fl_Box *lbl_frames;
   Fl_Box *lbl_fps;
+  Fl_Box *boxImageLogo;
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);
 };
