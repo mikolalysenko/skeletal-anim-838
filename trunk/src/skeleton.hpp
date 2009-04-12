@@ -142,6 +142,8 @@ namespace Skeletal
 		double a_start, double b_start, double duration, 
 		int deg);
 
+
+
 };
 
 #endif

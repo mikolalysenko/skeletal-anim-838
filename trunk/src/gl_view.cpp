@@ -11,6 +11,8 @@
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 #include <Eigen/LU>
+#include <Eigen/QR>
+#include <Eigen/SVD>
 
 //OpenGL
 #include <GL/glut.h>
@@ -986,6 +988,31 @@ void glView::mode_single()
   update_selection();
 }
 
+
+//Fixes the y=0 plane to a constant -Mik
+Transform3d constrain_xform(const Transform3d& xform)
+{
+	Matrix3d m = xform.rotation(), r;
+	
+	//Zero out y part
+	for(int i=0; i<3; i++)
+		m(i,1) = m(1,i) = 0.;
+	m(1,1) = 1.	;
+	
+	//Compute closest orthonormal matrix
+	r = m.svd().matrixU() * m.svd().matrixV().transpose();
+	
+	//Reconstruct final matrix
+	Matrix4d v = Matrix4d::Identity();
+	v.block(0,0,3,3) = r;
+	v.block(0,3,3,1) = xform.translation();
+	
+	//Cancel y translation
+	v(1,3) = 0.;
+	
+	return Transform3d(v);
+}
+
 void glView::mode_multiple()
 {
   // stop playing
@@ -1065,6 +1092,9 @@ void glView::mode_multiple()
     
     Transform3d relative_xform(xform_b[0].inverse());
     relative_xform = xform_a[0] * relative_xform;
+    
+    //Add constraint to fix y=0 plane (necessary to avoid the silly walking on air bug) -Mik
+    relative_xform = constrain_xform(relative_xform);
     
     mocap_combine = combine_motions(*a, *b, relative_xform, a_start, b_start, duration, 1);
   }
