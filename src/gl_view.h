@@ -41,6 +41,7 @@ public:
   void draw_skeleton(double t);
   void draw_frame(int f);
   void drawFloor();
+  void updateCamera();
 
   void set_ui(UserInterface* ui){m_ui = ui;};
   void select_animation(int index);

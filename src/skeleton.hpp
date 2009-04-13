@@ -118,6 +118,9 @@ namespace Skeletal
 		double 			frame_time;
 		vector<Frame>	frames;
 		Joint			skeleton;
+    double bound_sphere_radius;
+    Vector3d bound_box_min;
+    Vector3d bound_box_max;
 		
 		//Returns the total duration of the animation
 		double duration() const
@@ -142,7 +145,19 @@ namespace Skeletal
 		double a_start, double b_start, double duration, 
 		int deg);
 
+  // compute the bounding box for a skeleton
+  void compute_bounding_box(
+    Vector3d offset, 
+    const Joint &skeleton, 
+    Vector3d &min_pt, 
+    Vector3d &max_pt);
 
+  
+  // compute the bounding box for a motion
+  void compute_bounding_box(
+    const Motion& motion, 
+    Vector3d &min_pt, 
+    Vector3d &max_pt);
 
 };
 
