@@ -96,6 +96,7 @@ Joint parseJoint(istream& bvh_file)
 }
 
 
+
 //Parses a complete BVH file from some input stream
 Motion parseBVH(istream& bvh_file)
 {
@@ -138,7 +139,25 @@ Motion parseBVH(istream& bvh_file)
 				throw string("Invalid number of parameters");
 		}
 	}
-	
+
+  // compute the bounding box for the skeleton
+  Vector3d offset = result.skeleton.offset;
+  Vector3d min_pt = offset;
+  Vector3d max_pt = offset;
+  compute_bounding_box(offset, 
+                       result.skeleton, 
+                       min_pt, 
+                       max_pt);
+
+  // compute the bounding box for the motion
+  compute_bounding_box(result,
+                       result.bound_box_min,
+                       result.bound_box_max);
+
+  // compute the bounding sphere radius
+  result.bound_sphere_radius = sqrt(max(min_pt.dot(min_pt), max_pt.dot(max_pt)));
+
+
 	return result;
 }
 
@@ -291,6 +310,10 @@ Motion Motion::convert_quat() const
 	result.frame_time = frame_time;
 	result.skeleton = skeleton.convert_quat();
 	result.frames.resize(frames.size());
+  result.bound_sphere_radius = bound_sphere_radius;
+  result.bound_box_min = bound_box_min;
+  result.bound_box_max = bound_box_max;
+
 	for(int i=0; i<frames.size(); i++)
 		result.frames[i] = frames[i].reparameterize(skeleton, result.skeleton);
 	return result;
@@ -526,6 +549,62 @@ Frame Frame::apply_transform(const Joint& skeleton, const Transform3d& xform) co
 	
 	apply_transform_impl(skeleton, xform, pa, pr);
 	return result;
+}
+
+
+// compute the bounding box for a skeleton
+void compute_bounding_box(Vector3d offset, 
+                          const Joint &skeleton, 
+                          Vector3d &min_pt, 
+                          Vector3d &max_pt)
+{
+  
+  // update the min and max point if necessary
+  offset += skeleton.offset;
+  if ( offset[0] < min_pt[0] ) min_pt[0] = offset[0];
+  if ( offset[1] < min_pt[1] ) min_pt[1] = offset[1];
+  if ( offset[2] < min_pt[2] ) min_pt[2] = offset[2];
+  if ( offset[0] > max_pt[0] ) max_pt[0] = offset[0];
+  if ( offset[1] > max_pt[1] ) max_pt[1] = offset[1];
+  if ( offset[2] > max_pt[2] ) max_pt[2] = offset[2];
+
+  // loop through all the joints
+  for(int i=0; i<skeleton.children.size(); i++)
+		compute_bounding_box(offset, 
+                         skeleton.children[i], 
+                         min_pt, 
+                         max_pt);
+
+}
+	
+
+// compute the bounding box for a motion
+void compute_bounding_box(
+    const Motion& motion, 
+    Vector3d &min_pt, 
+    Vector3d &max_pt)
+{
+  Vector3d offset;
+  min_pt[0] = motion.frames[0].pose[0];
+  min_pt[1] = motion.frames[0].pose[1];
+  min_pt[2] = motion.frames[0].pose[2];
+  max_pt[0] = motion.frames[0].pose[0];
+  max_pt[1] = motion.frames[0].pose[1];
+  max_pt[2] = motion.frames[0].pose[2];
+
+  // loop through all the joints
+  for(int i=0; i<motion.frames.size(); i++)
+  {
+    offset[0] = motion.frames[i].pose[0];
+    offset[1] = motion.frames[i].pose[1];
+    offset[2] = motion.frames[i].pose[2];
+    if ( offset[0] < min_pt[0] ) min_pt[0] = offset[0];
+    if ( offset[1] < min_pt[1] ) min_pt[1] = offset[1];
+    if ( offset[2] < min_pt[2] ) min_pt[2] = offset[2];
+    if ( offset[0] > max_pt[0] ) max_pt[0] = offset[0];
+    if ( offset[1] > max_pt[1] ) max_pt[1] = offset[1];
+    if ( offset[2] > max_pt[2] ) max_pt[2] = offset[2];
+  }
 }
 
 

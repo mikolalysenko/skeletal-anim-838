@@ -204,6 +204,64 @@ void glView::draw_skeleton(double t)
 
   //Draw the line skeleton
   draw_ellipsoid_skeleton(mocap_selected->skeleton, xform.begin(), xform.end());
+
+
+
+
+/*
+  //display the bounding sphere
+  Transform3d xform2;
+  xform2.setIdentity();
+  Transform3d base_xform = xform[0];
+  xform2.translate(mocap_selected->skeleton.offset);
+  xform2 = xform2 * base_xform;
+  glPushMatrix();
+  Matrix4d tr = xform2.matrix();
+  glMultMatrixd(tr.data());
+  glDisable(GL_LIGHTING);
+  glColor3f(1., 1., 0.);
+  glutWireSphere(mocap_selected->bound_sphere_radius, 8, 8);
+  glPopMatrix();
+*/
+
+/*
+  //display the bounding box
+  glDisable(GL_LIGHTING);
+  Vector3d minPt;
+  Vector3d maxPt;
+  minPt = mocap_selected->bound_box_min;
+  maxPt = mocap_selected->bound_box_max;
+  glColor3f(1., 0., 0.);
+  glBegin(GL_QUADS);							// Start Drawing Quads
+	// Bottom Face
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Top Left Of The Texture and Quad
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
+	// Front Face
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], maxPt[2]);	// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], maxPt[2]);	// Top Left Of The Texture and Quad
+	// Back Face
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], minPt[2]);	// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], minPt[2]);	// Top Left Of The Texture and Quad
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Bottom Left Of The Texture and Quad
+	// Right face
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], minPt[2]);	// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], maxPt[2]);	// Top Left Of The Texture and Quad
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
+	// Left Face
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Bottom Left Of The Texture and Quad
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], maxPt[2]);	// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], minPt[2]);	// Top Left Of The Texture and Quad
+	glEnd();	
+
+*/ 
+
 }
 
 
@@ -271,7 +329,39 @@ void drawCheckeredFloor(float size, int nSquares)
 
 void glView::drawFloor()
 {
+/*
+  glDisable(GL_LIGHTING);
 
+glColor3f(1., 0., 0.);
+glBegin(GL_QUADS);							// Start Drawing Quads
+			// Bottom Face
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);	// Top Right Of The Texture and Quad
+			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);	// Top Left Of The Texture and Quad
+			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);	// Bottom Left Of The Texture and Quad
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
+			// Front Face
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);	// Bottom Left Of The Texture and Quad
+			glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
+			glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);	// Top Right Of The Texture and Quad
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);	// Top Left Of The Texture and Quad
+			// Back Face
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);	// Bottom Right Of The Texture and Quad
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);	// Top Right Of The Texture and Quad
+			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);	// Top Left Of The Texture and Quad
+			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);	// Bottom Left Of The Texture and Quad
+			// Right face
+			glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);	// Bottom Right Of The Texture and Quad
+			glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);	// Top Right Of The Texture and Quad
+			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);	// Top Left Of The Texture and Quad
+			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);	// Bottom Left Of The Texture and Quad
+			// Left Face
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);	// Bottom Left Of The Texture and Quad
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);	// Top Right Of The Texture and Quad
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);	// Top Left Of The Texture and Quad
+		glEnd();
+return;
+*/
   /*
   //Draw a floor grid
   glColor3f(1.,1.,1.);
@@ -929,6 +1019,9 @@ void glView::select_animation(int index)
   m_time = 0.;
   m_play = false;
   m_ui->btn_play->clear();
+
+  // update the default camera position
+  updateCamera();
 }
 
 
@@ -1117,35 +1210,47 @@ void glView::mode_multiple()
   m_ui->mainWindow->redraw();
   m_ui->edit_desired_fps->value((int)(1. / mocap_selected->frame_time));
 
+  // update the default camera position
+  updateCamera();
 
-/*
 
-  Motion* a = (Motion*)m_ui->m_browser_file_comb->data(1);
-  Motion* b = (Motion*)m_ui->m_browser_file_comb->data(2);
+}
 
-  vector<Transform3d> xform_a( a->skeleton.size() ),
-                      xform_b( b->skeleton.size() );
-                                          
-  Frame fa = a->get_frame(a_start),
-        fb = b->get_frame(b_start);
-  
-  
-  a->skeleton.interpret_pose(
-          xform_a.begin(), 
-          fa.pose.begin(),
-          fb.pose.end());
+// update the default camera to a distance away from the motion's bounding sphere
+void glView::updateCamera()
+{
 
-  b->skeleton.interpret_pose(
-          xform_b.begin(), 
-          fb.pose.begin(),
-          fb.pose.end());
+  if(!mocap_selected) return;
+
+  //Figure interpolate current pose
+  Frame c_frame = mocap_selected->frames[0];
+
+  //Extract matrices
+  vector<Transform3d> xform( mocap_selected->skeleton.size() );
+  mocap_selected->skeleton.interpret_pose(
+          xform.begin(), 
+          c_frame.pose.begin(),
+          c_frame.pose.end());
+
+  // set the x y z center to be the center of the bounding box
+  Transform3d xform_sphere;
+  xform_sphere.setIdentity();
+  Vector3d mid_pt = (mocap_selected->bound_box_max + mocap_selected->bound_box_min) / 2.;
+  xform_sphere.translate(mid_pt);
+
   
-          
+  // calculate the radius of half the diagonal of the bounding box
+  Vector3d diag_box = (mocap_selected->bound_box_max - mocap_selected->bound_box_min) / 2.;
+  double radius = sqrt(diag_box.dot(diag_box));
+  xform_sphere.translate(Vector3d(0, 10, 0));
+
+  // move the z back 5 times the bounding sphere + radius
+  Vector3d offset = xform_sphere.translation();
+  offset[2] += mocap_selected->bound_sphere_radius * 5. + radius;
   
-  Transform3d relative_xform(xform_b[0].inverse());
-  relative_xform = xform_a[0] * relative_xform;
-  
-  mocap_combine = combine_motions(*a, *b, relative_xform, a_start, b_start, duration, 1);
-*/
+  // update the object center and camera rotation
+  object_center = offset;
+  camera_rot.setIdentity();
+
 
 }
