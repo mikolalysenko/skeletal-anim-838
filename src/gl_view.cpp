@@ -190,8 +190,6 @@ void glView::draw_skeleton(double t)
 {
   if(!mocap_selected) return;
 
-  glDisable(GL_DEPTH_TEST);
-
   //Figure interpolate current pose
   Frame c_frame = mocap_selected->get_frame(t, true);
 
@@ -462,6 +460,7 @@ void glView::drawScene()
     if(!m_repeat)
     {
       m_time = 0.;
+      m_frame_num = 0;
       m_play = false;
       m_ui->btn_play->clear();
     }
@@ -481,7 +480,7 @@ void glView::drawScene()
     // setup the stencil buffer to only draw on the floor
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-    glStencilFunc(GL_ALWAYS, 1, 0xffffffff);
+    glStencilFunc(GL_ALWAYS, 3, 0xffffffff);
 
     // draw the floor with depth test off so we can blend the floor
     // with the reflection skeleton
@@ -489,8 +488,8 @@ void glView::drawScene()
     drawFloor();
 
     // only draw on the floor
-    glStencilFunc(GL_EQUAL, 1, 0xffffffff); 
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilFunc(GL_LESS, 2, 0xffffffff); 
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
     glEnable(GL_DEPTH_TEST);
 
 
@@ -507,6 +506,7 @@ void glView::drawScene()
 
     // draw the skeleton
     glDisable(GL_LIGHTING);
+    //glDisable(GL_DEPTH_TEST);
     glColor4f(.2, 1., .2, .25);
     draw_skeleton(m_time);
 
@@ -554,11 +554,6 @@ void glView::drawScene()
     glDisable(GL_BLEND);
   }
 
-  // draw the skeleton
-  glColor4f(.2, 1., .2, 1.);
-  draw_skeleton(m_time);
-
-
   if(m_draw_shadow)
   {
     glPushMatrix();
@@ -584,6 +579,7 @@ void glView::drawScene()
     // project the object to the ground plane and draw
     findPlane(floorPlaneEquation, floorVertex[0], floorVertex[1], floorVertex[2]);
     projectShadowMatrix(floorPlaneEquation, lightPosition);
+    glDisable(GL_DEPTH_TEST);
     draw_skeleton(m_time);
 
 
@@ -594,6 +590,13 @@ void glView::drawScene()
     glPopMatrix();
   }
      
+
+  // draw the skeleton
+  glColor4f(.2, 1., .2, 1.);
+  glDisable(GL_LIGHTING);
+  glEnable(GL_DEPTH_TEST);
+  draw_skeleton(m_time);
+
 
 
 
@@ -661,6 +664,7 @@ glView::glView(int x,int y,int w,int h,const char *l)
   m_draw_shadow = true;
   m_draw_preview = false;
   m_draw_fps = false;
+  m_camera_mode = CAMERA_FREE;
 
   fl_register_images();
 
@@ -724,6 +728,9 @@ void glView::draw()
   //
   glFinish();
 
+  // update the camera if necessary
+  updateAutoCamera();
+
   // Update frames-per-second
   fpscount ++;
   curtime = time(NULL);
@@ -749,31 +756,34 @@ int glView::handle(int event)
 	switch(event) {
     // handle the mouse down event
 		case FL_PUSH:
-			last_push = Fl::event_button();
-      if(last_push == 1)
+      if(m_camera_mode != CAMERA_AUTO)
       {
-        moving_arcball = true;
-        previous_rotation.setIdentity();
-        rotation_pos[0] = Fl::event_x_root();
-        rotation_pos[1] = Fl::event_y_root();
-				damage(1);
-				return 1;
-      }
-      if(last_push == 3)
-      {
-        pan_camera = true;
-        pan_base[0] = Fl::event_x_root();
-        pan_base[1] = Fl::event_y_root();
-				damage(1);
-				return 1;
-      }
-      if(last_push == 2)
-      {
-        zoom_camera = true;
-        zoom_base[0] = Fl::event_x_root();
-        zoom_base[1] = Fl::event_y_root();
-				damage(1);
-				return 1;
+			  last_push = Fl::event_button();
+        if(last_push == 1)
+        {
+          moving_arcball = true;
+          previous_rotation.setIdentity();
+          rotation_pos[0] = Fl::event_x_root();
+          rotation_pos[1] = Fl::event_y_root();
+				  damage(1);
+				  return 1;
+        }
+        if(last_push == 3)
+        {
+          pan_camera = true;
+          pan_base[0] = Fl::event_x_root();
+          pan_base[1] = Fl::event_y_root();
+				  damage(1);
+				  return 1;
+        }
+        if(last_push == 2)
+        {
+          zoom_camera = true;
+          zoom_base[0] = Fl::event_x_root();
+          zoom_base[1] = Fl::event_y_root();
+				  damage(1);
+				  return 1;
+        }
       }
 			break;
     
@@ -1003,7 +1013,7 @@ void glView::select_animation(int index)
 
   // display some info about the active object
   char text[256];
-  m_ui->m_slider->range(0., (double)mocap_selected->frames.size());
+  m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1.);
   m_ui->lbl_name->copy_label(m_ui->m_browser_file->text(index+1));
   sprintf(text, "%i", mocap_selected->skeleton.size());
   m_ui->lbl_joints->copy_label(text);
@@ -1017,6 +1027,7 @@ void glView::select_animation(int index)
 
   // stop playing
   m_time = 0.;
+  m_frame_num = 0;
   m_play = false;
   m_ui->btn_play->clear();
 
@@ -1063,6 +1074,7 @@ void glView::mode_single()
 {
   // stop playing
   m_time = 0.;
+  m_frame_num = 0;
   m_play = false;
   m_ui->btn_play->clear();
 
@@ -1110,6 +1122,7 @@ void glView::mode_multiple()
 {
   // stop playing
   m_time = 0.;
+  m_frame_num = 0;
   m_play = false;
   m_ui->btn_play->clear();
 
@@ -1222,8 +1235,9 @@ void glView::updateCamera()
 
   if(!mocap_selected) return;
 
+
   //Figure interpolate current pose
-  Frame c_frame = mocap_selected->frames[0];
+  Frame c_frame = mocap_selected->frames[m_frame_num];
 
   //Extract matrices
   vector<Transform3d> xform( mocap_selected->skeleton.size() );
@@ -1232,25 +1246,99 @@ void glView::updateCamera()
           c_frame.pose.begin(),
           c_frame.pose.end());
 
-  // set the x y z center to be the center of the bounding box
+  
   Transform3d xform_sphere;
   xform_sphere.setIdentity();
-  Vector3d mid_pt = (mocap_selected->bound_box_max + mocap_selected->bound_box_min) / 2.;
-  xform_sphere.translate(mid_pt);
 
-  
-  // calculate the radius of half the diagonal of the bounding box
-  Vector3d diag_box = (mocap_selected->bound_box_max - mocap_selected->bound_box_min) / 2.;
-  double radius = sqrt(diag_box.dot(diag_box));
-  xform_sphere.translate(Vector3d(0, 10, 0));
 
-  // move the z back 5 times the bounding sphere + radius
-  Vector3d offset = xform_sphere.translation();
-  offset[2] += mocap_selected->bound_sphere_radius * 5. + radius;
+  if(m_camera_mode == CAMERA_AUTO)
+  {
+    // fix the center to be the skeleton center
+    xform_sphere.translate(mocap_selected->skeleton.offset);
+    xform_sphere = xform_sphere * xform[0];
+    //xform_sphere.translate(Vector3d(0, 0, 0));
+
+    // move the z back 5 times the bounding sphere
+    Vector3d offset = xform_sphere.translation();
+    offset[2] += mocap_selected->bound_sphere_radius * 5.;
+    
+    // update the object center and camera rotation
+    object_center = offset;
+    camera_rot.setIdentity();
+  }
+  else
+  {
+    // fix the center to be the center of the bounding box of the motion
+    Vector3d mid_pt = (mocap_selected->bound_box_max + mocap_selected->bound_box_min) / 2.;
+    xform_sphere.translate(mid_pt);
+
+    // calculate the radius of half the diagonal of the bounding box
+    Vector3d diag_box = (mocap_selected->bound_box_max - mocap_selected->bound_box_min) / 2.;
+    double radius = sqrt(diag_box.dot(diag_box));
+    xform_sphere.translate(Vector3d(0, 10, radius));
+
+    // move the z back 5 times the bounding sphere + radius
+    Vector3d offset = xform_sphere.translation();
+    offset[2] += mocap_selected->bound_sphere_radius * 5.;
+    
+    // update the object center and camera rotation
+    object_center = offset;
+    camera_rot.setIdentity();
+
+  }
+}
+
+
+// update the camera position automatically
+void glView::updateAutoCamera()
+{
+  // make sure we need to update the camera
+  if(m_camera_mode == CAMERA_FREE) return;
+  if(!mocap_selected) return;
   
-  // update the object center and camera rotation
-  object_center = offset;
-  camera_rot.setIdentity();
+ 
+
+  if(m_camera_mode == CAMERA_AUTO)
+  {
+
+    //Figure interpolate current pose
+    Frame c_frame = mocap_selected->frames[m_frame_num];
+
+    //Extract matrices
+    vector<Transform3d> xform( mocap_selected->skeleton.size() );
+    mocap_selected->skeleton.interpret_pose(
+            xform.begin(), 
+            c_frame.pose.begin(),
+            c_frame.pose.end());
+
+    Transform3d xform_sphere;
+    xform_sphere.setIdentity();
+
+    
+    // fix the center to be the skeleton center
+    xform_sphere.translate(mocap_selected->skeleton.offset);
+    xform_sphere = xform_sphere * xform[0];
+    //xform_sphere.translate(Vector3d(0, 0, 0));
+
+    // move the z back 5 times the bounding sphere
+    Vector3d offset = xform_sphere.translation();
+    offset[2] += mocap_selected->bound_sphere_radius * 5.;
+    
+    // update the object center and camera rotation
+    Vector3d diff = offset - object_center;
+    float diff_length = sqrt(diff.dot(diff));
+    float radius = mocap_selected->bound_sphere_radius;
+    if(diff_length > radius)
+    {
+      // add the difference from the offset to the point on the sphere
+      diff.normalize();
+      diff *= radius;
+      object_center += (offset - (object_center + diff));
+    }
+    camera_rot.setIdentity();
+  }
 
 
 }
+
+

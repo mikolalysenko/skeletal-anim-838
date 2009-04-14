@@ -8,7 +8,7 @@ class UserInterface {open
   } {
     Fl_Window mainWindow {
       label {Skeletal Anim} open
-      xywh {387 47 600 690} type Double resizable visible
+      xywh {697 230 600 690} type Double resizable visible
     } {
       Fl_Group {} {open
         xywh {-5 0 830 697}
@@ -49,6 +49,21 @@ class UserInterface {open
                 label {Show FPS}
                 callback {view->m_draw_fps = !view->m_draw_fps;}
                 xywh {35 35 100 20} type Toggle labelsize 10
+              }
+            }
+            Submenu {} {
+              label Camera open selected
+              xywh {0 0 100 20} labelsize 10
+            } {
+              MenuItem menuCameraFree {
+                label Free
+                callback {view->m_camera_mode = glView::CAMERA_FREE;}
+                xywh {0 0 100 20} type Radio value 1 labelsize 10
+              }
+              MenuItem menuCameraAuto {
+                label Auto
+                callback {view->m_camera_mode = glView::CAMERA_AUTO;}
+                xywh {20 20 100 20} type Radio labelsize 10
               }
             }
           }
@@ -178,7 +193,7 @@ class UserInterface {open
             Fl_Box lbl_fps {
               xywh {307 450 45 20} box DOWN_FRAME labelsize 10 align 16
             }
-            Fl_Box boxImageLogo {selected
+            Fl_Box boxImageLogo {
               image {../uw_logo.png} xywh {365 450 25 25} hide
             }
           }
