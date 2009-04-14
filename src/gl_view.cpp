@@ -47,12 +47,13 @@ double colors[6][4] =
         {1., 0., 1., 0.5},
 };
 
+static float floorHeight = 0.0;
 static float floorLength = 200;
 static GLfloat floorVertex[4][3] = {
-  { -floorLength, 0.0,  floorLength },
-  {  floorLength, 0.0,  floorLength },
-  {  floorLength, 0.0, -floorLength },
-  { -floorLength, 0.0, -floorLength },
+  { -floorLength, floorHeight,  floorLength },
+  {  floorLength, floorHeight,  floorLength },
+  {  floorLength, floorHeight, -floorLength },
+  { -floorLength, floorHeight, -floorLength },
 };
 
 //Camera transformation
@@ -314,10 +315,10 @@ void drawCheckeredFloor(float size, int nSquares)
 		for(y=0,yp=minY,i=x; y<nSquares; y++,i++,yp+=yd) {
 			glColor4fv(i%2==1 ? floorColor1:floorColor2);
 			glNormal3f(0, 1, 0); 
-			glVertex3d(xp,      0, yp);
-			glVertex3d(xp,      0, yp + yd);
-			glVertex3d(xp + xd, 0, yp + yd);
-			glVertex3d(xp + xd, 0, yp);
+			glVertex3d(xp,      floorHeight, yp);
+			glVertex3d(xp,      floorHeight, yp + yd);
+			glVertex3d(xp + xd, floorHeight, yp + yd);
+			glVertex3d(xp + xd, floorHeight, yp);
 
 		} // end of for j
 	}// end of for i
@@ -327,39 +328,7 @@ void drawCheckeredFloor(float size, int nSquares)
 
 void glView::drawFloor()
 {
-/*
-  glDisable(GL_LIGHTING);
 
-glColor3f(1., 0., 0.);
-glBegin(GL_QUADS);							// Start Drawing Quads
-			// Bottom Face
-			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);	// Top Right Of The Texture and Quad
-			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);	// Top Left Of The Texture and Quad
-			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);	// Bottom Left Of The Texture and Quad
-			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
-			// Front Face
-			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);	// Bottom Left Of The Texture and Quad
-			glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
-			glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);	// Top Right Of The Texture and Quad
-			glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);	// Top Left Of The Texture and Quad
-			// Back Face
-			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);	// Bottom Right Of The Texture and Quad
-			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);	// Top Right Of The Texture and Quad
-			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);	// Top Left Of The Texture and Quad
-			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);	// Bottom Left Of The Texture and Quad
-			// Right face
-			glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);	// Bottom Right Of The Texture and Quad
-			glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);	// Top Right Of The Texture and Quad
-			glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);	// Top Left Of The Texture and Quad
-			glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);	// Bottom Left Of The Texture and Quad
-			// Left Face
-			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);	// Bottom Left Of The Texture and Quad
-			glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);	// Bottom Right Of The Texture and Quad
-			glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);	// Top Right Of The Texture and Quad
-			glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);	// Top Left Of The Texture and Quad
-		glEnd();
-return;
-*/
   /*
   //Draw a floor grid
   glColor3f(1.,1.,1.);
@@ -496,6 +465,7 @@ void glView::drawScene()
     // reflect the scene on the y axis so that we can draw the skeleton upside down
     glPushMatrix();
     glScalef(1.0, -1.0, 1.0);
+    glTranslatef(0.0, -floorHeight * 2., 0.0);
 
     glEnable(GL_NORMALIZE);
     glCullFace(GL_FRONT);
@@ -1022,7 +992,7 @@ void glView::select_animation(int index)
   sprintf(text, "%.1f", 1. / mocap_selected->frame_time);
   m_ui->lbl_fps->copy_label(text);
   m_ui->mainWindow->redraw();
-  m_ui->edit_desired_fps->value((int)(1. / mocap_selected->frame_time));
+  m_ui->edit_desired_fps->value((int)(1. / mocap_selected->frame_time + .5));
 
 
   // stop playing
@@ -1221,7 +1191,7 @@ void glView::mode_multiple()
   sprintf(text, "%.2f", duration);
   m_ui->lbl_blend_time->copy_label(text);
   m_ui->mainWindow->redraw();
-  m_ui->edit_desired_fps->value((int)(1. / mocap_selected->frame_time));
+  m_ui->edit_desired_fps->value((int)(1. / mocap_selected->frame_time + .5));
 
   // update the default camera position
   updateCamera();
@@ -1286,6 +1256,24 @@ void glView::updateCamera()
     camera_rot.setIdentity();
 
   }
+
+  // update the floor height
+  Vector3d min_pt = Vector3d(0., 0., 0.);
+  Vector3d max_pt = Vector3d(0., 0., 0.);
+  Transform3d xformPose;
+	xformPose.setIdentity();
+  compute_bounding_box( xformPose, 
+                        mocap_selected->skeleton, 
+                        xform.begin(), 
+                        xform.end(),
+                        min_pt, 
+                        max_pt);
+  floorHeight = min_pt[1];
+  floorVertex[0][1] = floorHeight;
+  floorVertex[1][1] = floorHeight;
+  floorVertex[2][1] = floorHeight;
+  floorVertex[3][1] = floorHeight;
+
 }
 
 

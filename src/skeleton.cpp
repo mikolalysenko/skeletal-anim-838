@@ -1,8 +1,3 @@
-//STL
-#include <iostream>
-#include <vector>
-#include <string>
-#include <cmath>
 
 //Eigen
 #include <Eigen/Core>
@@ -10,6 +5,12 @@
 #include <Eigen/LU>
 #include <Eigen/SVD>
 #include <Eigen/QR>
+
+//STL
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cmath>
 
 //Project
 #include <skeleton.hpp>
@@ -579,10 +580,9 @@ void compute_bounding_box(Vector3d offset,
 	
 
 // compute the bounding box for a motion
-void compute_bounding_box(
-    const Motion& motion, 
-    Vector3d &min_pt, 
-    Vector3d &max_pt)
+void compute_bounding_box(const Motion& motion, 
+                          Vector3d &min_pt, 
+                          Vector3d &max_pt)
 {
   Vector3d offset;
   min_pt[0] = motion.frames[0].pose[0];
@@ -607,5 +607,37 @@ void compute_bounding_box(
   }
 }
 
+/*
+// compute the bounding box for a pose
+template<class XformIter>
+void compute_bounding_box2(Transform3d& xform_ref, 
+                          const Joint& skeleton, 
+                          XformIter& pose_begin, 
+                          XformIter& pose_end,
+                          Vector3d &min_pt, 
+                          Vector3d &max_pt)
+{
+	assert(pose_begin != pose_end);
+
+  Transform3d xform = xform_ref;
+
+	//Construct joint transform
+	Transform3d base_xform = *(pose_begin++);
+	xform.translate(skeleton.offset);
+	xform = xform * base_xform;
+
+  Vector3d offset = xform.translation();
+  if ( offset[0] < min_pt[0] ) min_pt[0] = offset[0];
+  if ( offset[1] < min_pt[1] ) min_pt[1] = offset[1];
+  if ( offset[2] < min_pt[2] ) min_pt[2] = offset[2];
+  if ( offset[0] > max_pt[0] ) max_pt[0] = offset[0];
+  if ( offset[1] > max_pt[1] ) max_pt[1] = offset[1];
+  if ( offset[2] > max_pt[2] ) max_pt[2] = offset[2];
+		
+  for(int i=0; i<skeleton.children.size(); i++)
+	  compute_bounding_box2(xform, skeleton.children[i], pose_begin, pose_end, min_pt, max_pt);
+}
+*/
+  
 
 }
