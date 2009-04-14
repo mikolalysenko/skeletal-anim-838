@@ -471,6 +471,47 @@ Motion combine_motions(
 }
 
 
+//Combines two sections of motions together
+Motion combine_motions(
+	const Motion& a, 
+  const Motion& b, 
+	const Transform3d& relative_xform, 
+	double a_start, 
+  double a_end,
+  double b_start, 
+  double b_end, 
+  double duration, 
+	int deg)
+{
+  assert(a_end > a_start);
+  assert(b_end > b_start);
+	assert(a_end >= 0. && a_end + duration <= a.duration());
+	assert(b_start >= 0. && b_start + duration <= b.duration());
+	assert(a.skeleton.size() == b.skeleton.size());
+	assert(a.skeleton.num_parameters() == b.skeleton.num_parameters());
+
+	Motion result;
+	result.skeleton = a.skeleton;
+	result.frame_time = min(a.frame_time, b.frame_time);
+	result.frames.resize(0);
+	
+	for(double t = a_start; t<=a_end - duration; t+=result.frame_time)
+		result.frames.push_back(a.get_frame(t));
+	
+	for(double t = 0.; t<duration; t+=result.frame_time)
+	{
+		Frame fa = a.get_frame(a_end + t),
+			  fb = b.get_frame(b_start + t).apply_transform(result.skeleton, relative_xform);
+		result.frames.push_back(interpolate_frames(a.skeleton, fa, fb, interp_func(t / duration, deg)));
+	}
+
+	for(double t=b_start+duration; t<=b_end; t+=result.frame_time)
+		result.frames.push_back(b.get_frame(t).apply_transform(result.skeleton, relative_xform));
+	
+	return result;	
+}
+
+
 //Applies a transformation to this pose
 void apply_transform_impl(
 	const Joint& skeleton,
@@ -607,37 +648,6 @@ void compute_bounding_box(const Motion& motion,
   }
 }
 
-/*
-// compute the bounding box for a pose
-template<class XformIter>
-void compute_bounding_box2(Transform3d& xform_ref, 
-                          const Joint& skeleton, 
-                          XformIter& pose_begin, 
-                          XformIter& pose_end,
-                          Vector3d &min_pt, 
-                          Vector3d &max_pt)
-{
-	assert(pose_begin != pose_end);
-
-  Transform3d xform = xform_ref;
-
-	//Construct joint transform
-	Transform3d base_xform = *(pose_begin++);
-	xform.translate(skeleton.offset);
-	xform = xform * base_xform;
-
-  Vector3d offset = xform.translation();
-  if ( offset[0] < min_pt[0] ) min_pt[0] = offset[0];
-  if ( offset[1] < min_pt[1] ) min_pt[1] = offset[1];
-  if ( offset[2] < min_pt[2] ) min_pt[2] = offset[2];
-  if ( offset[0] > max_pt[0] ) max_pt[0] = offset[0];
-  if ( offset[1] > max_pt[1] ) max_pt[1] = offset[1];
-  if ( offset[2] > max_pt[2] ) max_pt[2] = offset[2];
-		
-  for(int i=0; i<skeleton.children.size(); i++)
-	  compute_bounding_box2(xform, skeleton.children[i], pose_begin, pose_end, min_pt, max_pt);
-}
-*/
   
 
 }

@@ -8,10 +8,10 @@ class UserInterface {open
   } {
     Fl_Window mainWindow {
       label {Skeletal Anim} open
-      xywh {697 230 600 690} type Double resizable visible
+      xywh {697 230 600 711} type Double resizable visible
     } {
       Fl_Group {} {open
-        xywh {-5 0 830 697}
+        xywh {-5 0 830 709}
       } {
         Fl_Group {} {open
           xywh {0 0 800 401} resizable
@@ -52,7 +52,7 @@ class UserInterface {open
               }
             }
             Submenu {} {
-              label Camera open selected
+              label Camera open
               xywh {0 0 100 20} labelsize 10
             } {
               MenuItem menuCameraFree {
@@ -69,7 +69,7 @@ class UserInterface {open
           }
         }
         Fl_Group {} {open
-          xywh {-5 400 807 297}
+          xywh {-5 400 807 309}
         } {
           Fl_Button btn_play {
             label {@-1>}
@@ -91,7 +91,7 @@ class UserInterface {open
             xywh {565 401 35 19} labelfont 1 labelsize 10 align 2 when 1 maximum 360 value 30 textsize 10
           }
           Fl_Group {} {open
-            xywh {0 434 565 263}
+            xywh {0 434 565 275}
           } {
             Fl_Box {} {
               label {Current Animation}
@@ -117,18 +117,18 @@ class UserInterface {open
               xywh {305 438 50 13} labelsize 10 align 16
             }
             Fl_Group {} {open
-              xywh {3 487 517 210}
+              xywh {3 487 557 222}
             } {
               Fl_Box {} {
                 label {Animation Files}
-                xywh {3 489 467 208} box ENGRAVED_FRAME labelsize 10 align 5
+                xywh {3 489 557 216} box ENGRAVED_FRAME labelsize 10 align 5
               }
               Fl_Box {} {
                 xywh {365 509 155 20} resizable
               }
               Fl_Browser m_browser_file {
                 callback {view->update_selection();}
-                xywh {10 520 198 170} type Hold labelsize 10 when 3 textsize 10
+                xywh {10 520 198 175} type Hold labelsize 10 when 3 textsize 10
               }
               Fl_Button {} {
                 label {@-2+  Load}
@@ -142,7 +142,12 @@ class UserInterface {open
               }
               Fl_Browser m_browser_file_comb {
                 label {Animation Concatenation Files}
-                xywh {260 530 198 100} type Hold labelsize 10 align 5 when 3 textsize 10
+                callback {view->reload_concat_times();}
+                xywh {260 530 293 100} type Hold labelsize 10 align 5 when 3 textsize 10
+                code0 {static int widths[] = { 120, 50, 50, 50};}
+                code1 {m_browser_file_comb->column_widths(widths);}
+                code2 {m_browser_file_comb->column_char('\\t');}
+                code3 {m_browser_file_comb->add("@B12@C7@b@.Motion File\\t@B12@C7@b@.Start\\t@B12@C7@b@.End\\t@B12@C7@b@.Blend\\t");}
               }
               Fl_Button {} {
                 label {@->}
@@ -164,21 +169,59 @@ class UserInterface {open
                 callback {view->mode_multiple();}
                 xywh {290 495 70 22} type Radio selection_color 231 labelsize 10
               }
+              Fl_Spinner edit_start_frame {
+                label {start frame}
+                callback {// update the multiple mode if necessary
+  if(radio_mutliple->value() == 1)
+  {
+    view->mode_multiple();
+  }
+  
+  view->update_concat_times();}
+                xywh {337 633 35 19} labelfont 1 labelsize 10 when 1 minimum 0 maximum 360 textsize 10
+              }
+              Fl_Box lbl_start_time {
+                xywh {375 633 45 20} box DOWN_FRAME labelsize 10 align 16
+              }
+              Fl_Box {} {
+                label sec
+                xywh {420 636 30 13} labelsize 10 align 20
+              }
+              Fl_Spinner edit_end_frame {
+                label {end frame}
+                callback {// update the multiple mode if necessary
+  if(radio_mutliple->value() == 1)
+  {
+    view->mode_multiple();
+  }
+  
+  view->update_concat_times();} selected
+                xywh {337 655 35 19} labelfont 1 labelsize 10 when 1 minimum 0 maximum 360 textsize 10
+              }
+              Fl_Box lbl_end_time {
+                xywh {375 655 45 20} box DOWN_FRAME labelsize 10 align 16
+              }
+              Fl_Box {} {
+                label sec
+                xywh {420 658 30 13} labelsize 10 align 20
+              }
               Fl_Spinner edit_num_blend_frames {
                 label {\# blend frames}
                 callback {// update the multiple mode if necessary
   if(radio_mutliple->value() == 1)
   {
     view->mode_multiple();
-  }}
-                xywh {337 634 35 19} labelfont 1 labelsize 10 when 1 maximum 360 value 6 textsize 10
+  }
+  
+  view->update_concat_times();}
+                xywh {337 677 35 19} labelfont 1 labelsize 10 when 1 minimum 0 maximum 360 value 6 textsize 10
               }
               Fl_Box lbl_blend_time {
-                xywh {375 634 45 20} box DOWN_FRAME labelsize 10 align 16
+                xywh {375 677 45 20} box DOWN_FRAME labelsize 10 align 16
               }
               Fl_Box {} {
                 label sec
-                xywh {420 637 30 13} labelsize 10 align 20
+                xywh {420 680 30 13} labelsize 10 align 20
               }
             }
             Fl_Box lbl_name {

@@ -64,6 +64,8 @@ public:
   void del_animation_list();
   void mode_single();
   void mode_multiple();
+  void update_concat_times();
+  void reload_concat_times();
 
 public:
   enum CAMERA_MODE

@@ -147,6 +147,15 @@ namespace Skeletal
 		double a_start, double b_start, double duration, 
 		int deg);
 
+	//Combines two sections of motions together
+	Motion combine_motions(
+		const Motion& a, const Motion& b, 
+		const Transform3d& relative_xform, 
+		double a_start, double a_end,
+    double b_start, double b_end, 
+    double duration, 
+		int deg);
+
   // compute the bounding box for a skeleton
   void compute_bounding_box(
     Vector3d offset, 
