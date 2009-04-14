@@ -39,6 +39,16 @@ private:
   void cb_menuShowFPS_i(Fl_Menu_*, void*);
   static void cb_menuShowFPS(Fl_Menu_*, void*);
 public:
+  static Fl_Menu_Item *menuCameraFree;
+private:
+  void cb_menuCameraFree_i(Fl_Menu_*, void*);
+  static void cb_menuCameraFree(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *menuCameraAuto;
+private:
+  void cb_menuCameraAuto_i(Fl_Menu_*, void*);
+  static void cb_menuCameraAuto(Fl_Menu_*, void*);
+public:
   Fl_Button *btn_play;
 private:
   void cb_btn_play_i(Fl_Button*, void*);

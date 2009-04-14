@@ -42,6 +42,7 @@ public:
   void draw_frame(int f);
   void drawFloor();
   void updateCamera();
+  void updateAutoCamera();
 
   void set_ui(UserInterface* ui){m_ui = ui;};
   void select_animation(int index);
@@ -61,6 +62,13 @@ public:
   void mode_multiple();
 
 public:
+  enum CAMERA_MODE
+  {
+    CAMERA_FREE,
+    CAMERA_AUTO
+  };
+
+public:
   bool m_drawing;
   bool m_play;
   bool m_repeat;
@@ -68,6 +76,7 @@ public:
   bool m_draw_reflection;
   bool m_draw_preview;
   bool m_draw_fps;
+  int m_camera_mode;
   unsigned int m_frame_num;
   UserInterface* m_ui;
   float m_time;
@@ -81,6 +90,7 @@ public:
   GLuint idFloor;
   GLfloat lightPosition[4];
   GLfloat floorPlaneEquation[4];
+
 
 };
 
