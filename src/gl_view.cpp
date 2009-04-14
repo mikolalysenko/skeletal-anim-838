@@ -203,7 +203,7 @@ void glView::draw_skeleton(double t)
 
   //Draw the line skeleton
   draw_ellipsoid_skeleton(mocap_selected->skeleton, xform.begin(), xform.end());
-
+  //draw_line_skeleton(mocap_selected->skeleton, xform.begin(), xform.end());
 
 
 
@@ -258,8 +258,8 @@ void glView::draw_skeleton(double t)
 	glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], maxPt[2]);	// Top Right Of The Texture and Quad
 	glTexCoord2f(0.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], minPt[2]);	// Top Left Of The Texture and Quad
 	glEnd();	
-
-*/ 
+*/
+ 
 
 }
 
@@ -647,6 +647,7 @@ glView::glView(int x,int y,int w,int h,const char *l)
   Fl_File_Icon::load_system_icons();
   file_chooser = new Fl_File_Chooser(".", "*", Fl_File_Chooser::SINGLE, "Select Motion File");
 
+  
 
 }
 
@@ -660,6 +661,7 @@ void glView::draw()
   {
     initScene();
     firstTime = false;
+    reload_concat_times();
   }
 
   m_drawing = true;
@@ -909,13 +911,25 @@ void glView::load_file()
       // get the relative path
       fl_filename_relative(relative, sizeof(relative), file_chooser->value(i));
 
-      // add the filename to the list
-      m_ui->m_browser_file->add(fl_filename_name(file_chooser->value(i)));
 
       // Parse out motion capture data
       ifstream c_in(relative);
-      Motion mocap = parseBVH(c_in).convert_quat();
+      Motion mocap;
+      try
+      {
+         mocap = parseBVH(c_in).convert_quat();
+      }
+      catch(...)
+      {
+        
+        fl_message("Error: An error occured trying to read the file %s", relative);
+        continue;
+      }
       mocap_list.push_back(mocap); 
+
+      
+      // add the filename to the list
+      m_ui->m_browser_file->add(fl_filename_name(file_chooser->value(i)));
 
       // save  the first selected file index
       if(!found)
@@ -967,6 +981,8 @@ void glView::remove_file()
 
 void glView::update_selection()
 {
+
+  if(m_ui->radio_mutliple->value() == 1) return;
   int index = m_ui->m_browser_file->value() - 1;
   select_animation(index);
 
@@ -989,10 +1005,10 @@ void glView::select_animation(int index)
   m_ui->lbl_joints->copy_label(text);
   sprintf(text, "%i", mocap_selected->frames.size());
   m_ui->lbl_frames->copy_label(text);
-  sprintf(text, "%.1f", 1. / mocap_selected->frame_time);
+  sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
   m_ui->lbl_fps->copy_label(text);
   m_ui->mainWindow->redraw();
-  m_ui->edit_desired_fps->value((int)(1. / mocap_selected->frame_time + .5));
+  //m_ui->edit_desired_fps->value((int)(1. / mocap_selected->frame_time + .5));
 
 
   // stop playing
@@ -1011,10 +1027,26 @@ void glView::add_animation_list()
   // make sure index is valid
   int index = m_ui->m_browser_file->value() - 1;
   if(index < 0 || index >= mocap_list.size()) return;
+
+  // validate motion have same number of joints
+  if(m_ui->m_browser_file_comb->size() >= 2)
+  {
+    Motion* ptrMotion = (Motion*)m_ui->m_browser_file_comb->data(2);
+    if( !ptrMotion || (ptrMotion->skeleton.size() != mocap_list[index].skeleton.size()) )
+    {
+      fl_message("Error: The number of joints in the motion did not match.");
+      return;
+    }
+  }
   
   // add the item to the list of animation to contatenate
-  m_ui->m_browser_file_comb->add(
+  char text[256];
+  sprintf(text, 
+    "%s\t0\t%i\t0",
     m_ui->m_browser_file->text(index + 1),
+    mocap_list[index].frames.size()-1);
+  m_ui->m_browser_file_comb->add(
+    text,
     &mocap_list[index]
     );
 
@@ -1023,19 +1055,26 @@ void glView::add_animation_list()
   {
     mode_multiple();
   }
+
+  reload_concat_times();
 }
 
 
 void glView::del_animation_list()
 {
+  int index = m_ui->m_browser_file_comb->value();
+  if(index <= 1) return;
+
   // delete the item from the list
-  m_ui->m_browser_file_comb->remove(m_ui->m_browser_file_comb->value());
+  m_ui->m_browser_file_comb->remove(index);
 
   // update the multiple mode if necessary
   if(m_ui->radio_mutliple->value() == 1)
   {
     mode_multiple();
   }
+
+  reload_concat_times();
 }
 
 
@@ -1112,52 +1151,73 @@ void glView::mode_multiple()
 
   // active the selected file 
   mocap_selected = NULL;
- 
-  Motion* ptrMotion;
+
 
   // set the first item to be the start of the motion
-  ptrMotion = (Motion*)m_ui->m_browser_file_comb->data(1);
+  Motion*  ptrMotion = (Motion*)m_ui->m_browser_file_comb->data(2);
   if(ptrMotion == NULL) return;  // TODO add error message
-  mocap_combine = *ptrMotion;
 
-  
-  double a_start = 2.,
-         b_start = 0.,
-         duration = 0.2;
 
-  duration = m_ui->edit_num_blend_frames->value() * mocap_combine.frame_time;
-  
+  string str;
+  char *word;
+  double next_duration;
+  double a_start, a_end, b_start, b_end;
+  double duration;
 
-  //ifstream a_in("walkLoop.bvh");
-  //ifstream b_in("PETE.bvh");
+  // parse the string text from the row for first motion
+  Motion* a = (Motion*)m_ui->m_browser_file_comb->data(2);
+  str = m_ui->m_browser_file_comb->text(2);
+  word = strtok((char*)str.c_str(), "\t");
+  word = strtok(NULL, "\t");
+  a_start = atof(word) * a->frame_time;
+  word = strtok(NULL, "\t");
+  a_end = atof(word) * a->frame_time;
+  word = strtok(NULL, "\t");
+  duration = atof(word) * a->frame_time;
 
-  //Motion a = parseBVH(a_in).convert_quat(),
-  //       b = parseBVH(b_in).convert_quat();
+  // copy the first motion section
+	mocap_combine.skeleton = ptrMotion->skeleton;
+	mocap_combine.frame_time = ptrMotion->frame_time;
+	mocap_combine.frames.resize(0);
+	for(double t = a_start; t<=a_end; t+=mocap_combine.frame_time)
+		mocap_combine.frames.push_back(ptrMotion->get_frame(t));
 
-  //b.frame_time = 0.5;
 
-  
+
   // loop through the list of animation to contatenate
-  for(int i = 1; i < num_files; i++)
+  for(int i = 2; i < num_files; i++)
   {
 
     Motion* a = &mocap_combine;
     Motion* b = (Motion*)m_ui->m_browser_file_comb->data(i+1);
     if(b == NULL) return;  // TODO add error message
 
-    a_start = a->duration() - duration;
+
+    a_start = 0.;
+    a_end = a->frames.size() * a->frame_time;
+
+
+    // parse the string text from the row for second motion
+    str = m_ui->m_browser_file_comb->text(i+1);
+    word = strtok((char*)str.c_str(), "\t");
+    word = strtok(NULL, "\t");
+    b_start = atof(word) * b->frame_time;
+    word = strtok(NULL, "\t");
+    b_end = atof(word) * b->frame_time;
+    word = strtok(NULL, "\t");
+    next_duration = atof(word) * b->frame_time;
 
     vector<Transform3d> xform_a( a->skeleton.size() ),
                         xform_b( b->skeleton.size() );
                                             
-    Frame fa = a->get_frame(a_start),
+    Frame fa = a->get_frame(a_end),
           fb = b->get_frame(b_start);
     
     
     a->skeleton.interpret_pose(
             xform_a.begin(), 
             fa.pose.begin(),
-            fb.pose.end());
+            fa.pose.end());
 
     b->skeleton.interpret_pose(
             xform_b.begin(), 
@@ -1172,7 +1232,12 @@ void glView::mode_multiple()
     //Add constraint to fix y=0 plane (necessary to avoid the silly walking on air bug) -Mik
     relative_xform = constrain_xform(relative_xform);
     
-    mocap_combine = combine_motions(*a, *b, relative_xform, a_start, b_start, duration, 1);
+    mocap_combine = combine_motions(*a, *b, relative_xform, 
+                                    a_start, a_end,
+                                    b_start, b_end,
+                                    duration, 1);
+
+    duration = next_duration;
   }
 
   
@@ -1180,18 +1245,33 @@ void glView::mode_multiple()
   
   // display some info about the active object
   char text[256];
-  m_ui->m_slider->range(0., (double)mocap_selected->frames.size());
+  m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1);
   m_ui->lbl_name->copy_label("Animation Contatenation");
   sprintf(text, "%i", mocap_selected->skeleton.size());
   m_ui->lbl_joints->copy_label(text);
   sprintf(text, "%i", mocap_selected->frames.size());
   m_ui->lbl_frames->copy_label(text);
-  sprintf(text, "%.1f", 1. / mocap_selected->frame_time);
+  sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
   m_ui->lbl_fps->copy_label(text);
-  sprintf(text, "%.2f", duration);
-  m_ui->lbl_blend_time->copy_label(text);
   m_ui->mainWindow->redraw();
-  m_ui->edit_desired_fps->value((int)(1. / mocap_selected->frame_time + .5));
+
+  
+  // compute the bounding box for the skeleton
+  Vector3d offset = mocap_selected->skeleton.offset;
+  Vector3d min_pt = offset;
+  Vector3d max_pt = offset;
+  compute_bounding_box(offset, 
+                       mocap_selected->skeleton, 
+                       min_pt, 
+                       max_pt);
+
+  // compute the bounding box for the motion
+  compute_bounding_box(*mocap_selected,
+                       mocap_selected->bound_box_min,
+                       mocap_selected->bound_box_max);
+
+  // compute the bounding sphere radius
+  mocap_selected->bound_sphere_radius = sqrt(max(min_pt.dot(min_pt), max_pt.dot(max_pt)));
 
   // update the default camera position
   updateCamera();
@@ -1242,10 +1322,13 @@ void glView::updateCamera()
     Vector3d mid_pt = (mocap_selected->bound_box_max + mocap_selected->bound_box_min) / 2.;
     xform_sphere.translate(mid_pt);
 
-    // calculate the radius of half the diagonal of the bounding box
+    // calculate the distance to move back
     Vector3d diag_box = (mocap_selected->bound_box_max - mocap_selected->bound_box_min) / 2.;
-    double radius = sqrt(diag_box.dot(diag_box));
-    xform_sphere.translate(Vector3d(0, 10, radius));
+    float half_diag = sqrt(diag_box.dot(diag_box));
+    float aspect_ratio = (float)w() / (float)h();
+    float fov_x = fov * aspect_ratio;
+    float dist = half_diag / tan(fov_x/2. * M_PI / 180.);
+    xform_sphere.translate(Vector3d(0, 10, dist));
 
     // move the z back 5 times the bounding sphere + radius
     Vector3d offset = xform_sphere.translation();
@@ -1329,4 +1412,108 @@ void glView::updateAutoCamera()
 
 }
 
+void glView::reload_concat_times()
+{
+
+  if(!mocap_selected) return;
+  int index = m_ui->m_browser_file_comb->value() - 1;
+  if(index < 1)
+  {
+    m_ui->lbl_start_time->copy_label("");
+    m_ui->lbl_end_time->copy_label("");
+    m_ui->lbl_blend_time->copy_label("");
+    m_ui->edit_num_blend_frames->value(0);
+    m_ui->edit_start_frame->value(0);
+    m_ui->edit_end_frame->value(0);
+    m_ui->edit_num_blend_frames->deactivate();
+    m_ui->edit_start_frame->deactivate();
+    m_ui->edit_end_frame->deactivate();
+  }
+  else
+  {
+    // get the motion data
+    Motion* ptrMotion = (Motion*)m_ui->m_browser_file_comb->data(index+1);
+    if(!ptrMotion) return;
+
+    
+    // parse the string text from the row
+    string str = m_ui->m_browser_file_comb->text(index + 1);
+    string strFile, strStart, strEnd, strBlend;
+    char *word;
+    word = strtok((char*)str.c_str(), "\t");
+    strFile = word;
+    word = strtok(NULL, "\t");
+    strStart = word;
+    word = strtok(NULL, "\t");
+    strEnd = word;
+    word = strtok(NULL, "\t");
+    strBlend = word;
+
+    char text[256];
+    m_ui->edit_start_frame->maximum(ptrMotion->frames.size()-1);
+    m_ui->edit_end_frame->maximum(ptrMotion->frames.size()-1);
+    m_ui->edit_num_blend_frames->maximum(ptrMotion->frames.size()-1);
+    sprintf(text, "%.2f", (float)atoi(strBlend.c_str()) * ptrMotion->frame_time);
+    m_ui->lbl_blend_time->copy_label(text);
+    sprintf(text, "%.2f", (float)atoi(strStart.c_str()) * ptrMotion->frame_time);
+    m_ui->lbl_start_time->copy_label(text);
+    sprintf(text, "%.2f", (float)atoi(strEnd.c_str()) * ptrMotion->frame_time);
+    m_ui->lbl_end_time->copy_label(text);
+    m_ui->edit_num_blend_frames->value(atoi(strBlend.c_str()));
+    m_ui->edit_start_frame->value(atoi(strStart.c_str()));
+    m_ui->edit_end_frame->value(atoi(strEnd.c_str()));
+    m_ui->edit_num_blend_frames->activate();
+    m_ui->edit_start_frame->activate();
+    m_ui->edit_end_frame->activate();
+  }
+
+  m_ui->mainWindow->redraw();
+
+}
+
+void glView::update_concat_times()
+{
+  // make sure index is valid
+  if(!mocap_selected) return;
+  int index = m_ui->m_browser_file_comb->value() - 1;
+  if(index < 1) return;
+  
+
+  // parse the string text from the row
+  string str = m_ui->m_browser_file_comb->text(index + 1);
+  string strFile, strStart, strEnd, strBlend;
+  char *word;
+  word = strtok((char*)str.c_str(), "\t");
+  strFile = word;
+  word = strtok(NULL, "\t");
+  strStart = word;
+  word = strtok(NULL, "\t");
+  strEnd = word;
+  word = strtok(NULL, "\t");
+  strBlend = word;
+
+  
+  // add the item to the list of animation to contatenate
+  char text[256];
+  sprintf(text, 
+          "%s\t%i\t%i\t%i",
+          strFile.c_str(),
+          (int)m_ui->edit_start_frame->value(),
+          (int)m_ui->edit_end_frame->value(),
+          (int)m_ui->edit_num_blend_frames->value());
+  m_ui->m_browser_file_comb->text(index + 1, text);
+
+  // update the durations
+  sprintf(text, "%.2f", m_ui->edit_num_blend_frames->value() * mocap_selected->frame_time);
+  m_ui->lbl_blend_time->copy_label(text);
+  sprintf(text, "%.2f", m_ui->edit_start_frame->value() * mocap_selected->frame_time);
+  m_ui->lbl_start_time->copy_label(text);
+  sprintf(text, "%.2f", m_ui->edit_end_frame->value() * mocap_selected->frame_time);
+  m_ui->lbl_end_time->copy_label(text);
+  m_ui->mainWindow->redraw();
+
+  // recompute the motion
+  mode_multiple();
+
+}
 

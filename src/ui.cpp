@@ -113,6 +113,13 @@ void UserInterface::cb_Remove(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_Remove_i(o,v);
 }
 
+void UserInterface::cb_m_browser_file_comb_i(Fl_Browser*, void*) {
+  view->reload_concat_times();
+}
+void UserInterface::cb_m_browser_file_comb(Fl_Browser* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_m_browser_file_comb_i(o,v);
+}
+
 void UserInterface::cb__i(Fl_Button*, void*) {
   view->add_animation_list();
 }
@@ -141,12 +148,40 @@ void UserInterface::cb_radio_mutliple(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_radio_mutliple_i(o,v);
 }
 
+void UserInterface::cb_edit_start_frame_i(Fl_Spinner*, void*) {
+  // update the multiple mode if necessary
+  if(radio_mutliple->value() == 1)
+  {
+    view->mode_multiple();
+  }
+  
+  view->update_concat_times();
+}
+void UserInterface::cb_edit_start_frame(Fl_Spinner* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_edit_start_frame_i(o,v);
+}
+
+void UserInterface::cb_edit_end_frame_i(Fl_Spinner*, void*) {
+  // update the multiple mode if necessary
+  if(radio_mutliple->value() == 1)
+  {
+    view->mode_multiple();
+  }
+  
+  view->update_concat_times();
+}
+void UserInterface::cb_edit_end_frame(Fl_Spinner* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_edit_end_frame_i(o,v);
+}
+
 void UserInterface::cb_edit_num_blend_frames_i(Fl_Spinner*, void*) {
   // update the multiple mode if necessary
   if(radio_mutliple->value() == 1)
   {
     view->mode_multiple();
-  };
+  }
+  
+  view->update_concat_times();
 }
 void UserInterface::cb_edit_num_blend_frames(Fl_Spinner* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_edit_num_blend_frames_i(o,v);
@@ -40702,9 +40737,9 @@ static unsigned char idata_uw_logo[] =
 static Fl_RGB_Image image_uw_logo(idata_uw_logo, 600, 600, 4, 0);
 
 UserInterface::UserInterface() {
-  { mainWindow = new Fl_Double_Window(600, 690, "Skeletal Anim");
+  { mainWindow = new Fl_Double_Window(600, 711, "Skeletal Anim");
     mainWindow->user_data((void*)(this));
-    { Fl_Group* o = new Fl_Group(-5, 0, 830, 697);
+    { Fl_Group* o = new Fl_Group(-5, 0, 830, 709);
       { Fl_Group* o = new Fl_Group(0, 0, 800, 401);
         { view = new glView(0, 19, 601, 381, "This is the OpenGL view");
           view->box(FL_BORDER_BOX);
@@ -40728,7 +40763,7 @@ UserInterface::UserInterface() {
         o->end();
         Fl_Group::current()->resizable(o);
       } // Fl_Group* o
-      { Fl_Group* o = new Fl_Group(-5, 400, 807, 297);
+      { Fl_Group* o = new Fl_Group(-5, 400, 807, 309);
         { btn_play = new Fl_Button(0, 401, 24, 18, "@-1>");
           btn_play->tooltip("Play/Stop Animation");
           btn_play->type(1);
@@ -40762,7 +40797,7 @@ UserInterface::UserInterface() {
           edit_desired_fps->align(FL_ALIGN_BOTTOM);
           edit_desired_fps->when(FL_WHEN_CHANGED);
         } // Fl_Spinner* edit_desired_fps
-        { Fl_Group* o = new Fl_Group(0, 434, 565, 263);
+        { Fl_Group* o = new Fl_Group(0, 434, 565, 275);
           { Fl_Box* o = new Fl_Box(3, 436, 358, 40, "Current Animation");
             o->box(FL_ENGRAVED_FRAME);
             o->labelsize(10);
@@ -40787,8 +40822,8 @@ UserInterface::UserInterface() {
             o->labelsize(10);
             o->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
           } // Fl_Box* o
-          { Fl_Group* o = new Fl_Group(3, 487, 517, 210);
-            { Fl_Box* o = new Fl_Box(3, 489, 467, 208, "Animation Files");
+          { Fl_Group* o = new Fl_Group(3, 487, 557, 222);
+            { Fl_Box* o = new Fl_Box(3, 489, 557, 216, "Animation Files");
               o->box(FL_ENGRAVED_FRAME);
               o->labelsize(10);
               o->align(FL_ALIGN_TOP_LEFT);
@@ -40796,7 +40831,7 @@ UserInterface::UserInterface() {
             { Fl_Box* o = new Fl_Box(365, 509, 155, 20);
               Fl_Group::current()->resizable(o);
             } // Fl_Box* o
-            { m_browser_file = new Fl_Browser(10, 520, 198, 170);
+            { m_browser_file = new Fl_Browser(10, 520, 198, 175);
               m_browser_file->type(2);
               m_browser_file->labelsize(10);
               m_browser_file->textsize(10);
@@ -40813,12 +40848,17 @@ UserInterface::UserInterface() {
               o->labelsize(10);
               o->callback((Fl_Callback*)cb_Remove);
             } // Fl_Button* o
-            { m_browser_file_comb = new Fl_Browser(260, 530, 198, 100, "Animation Concatenation Files");
+            { m_browser_file_comb = new Fl_Browser(260, 530, 293, 100, "Animation Concatenation Files");
               m_browser_file_comb->type(2);
               m_browser_file_comb->labelsize(10);
               m_browser_file_comb->textsize(10);
+              m_browser_file_comb->callback((Fl_Callback*)cb_m_browser_file_comb);
               m_browser_file_comb->align(FL_ALIGN_TOP_LEFT);
               m_browser_file_comb->when(3);
+              static int widths[] = { 120, 50, 50, 50};
+              m_browser_file_comb->column_widths(widths);
+              m_browser_file_comb->column_char('\t');
+              m_browser_file_comb->add("@B12@C7@b@.Motion File\t@B12@C7@b@.Start\t@B12@C7@b@.End\t@B12@C7@b@.Blend\t");
             } // Fl_Browser* m_browser_file_comb
             { Fl_Button* o = new Fl_Button(215, 558, 35, 22, "@->");
               o->labelsize(10);
@@ -40841,21 +40881,58 @@ UserInterface::UserInterface() {
               radio_mutliple->labelsize(10);
               radio_mutliple->callback((Fl_Callback*)cb_radio_mutliple);
             } // Fl_Button* radio_mutliple
-            { edit_num_blend_frames = new Fl_Spinner(337, 634, 35, 19, "# blend frames");
+            { edit_start_frame = new Fl_Spinner(337, 633, 35, 19, "start frame");
+              edit_start_frame->labelfont(1);
+              edit_start_frame->labelsize(10);
+              edit_start_frame->minimum(0);
+              edit_start_frame->maximum(360);
+              edit_start_frame->textsize(10);
+              edit_start_frame->callback((Fl_Callback*)cb_edit_start_frame);
+              edit_start_frame->when(FL_WHEN_CHANGED);
+            } // Fl_Spinner* edit_start_frame
+            { lbl_start_time = new Fl_Box(375, 633, 45, 20);
+              lbl_start_time->box(FL_DOWN_FRAME);
+              lbl_start_time->labelsize(10);
+              lbl_start_time->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+            } // Fl_Box* lbl_start_time
+            { Fl_Box* o = new Fl_Box(420, 636, 30, 13, "sec");
+              o->labelsize(10);
+              o->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+            } // Fl_Box* o
+            { edit_end_frame = new Fl_Spinner(337, 655, 35, 19, "end frame");
+              edit_end_frame->labelfont(1);
+              edit_end_frame->labelsize(10);
+              edit_end_frame->minimum(0);
+              edit_end_frame->maximum(360);
+              edit_end_frame->textsize(10);
+              edit_end_frame->callback((Fl_Callback*)cb_edit_end_frame);
+              edit_end_frame->when(FL_WHEN_CHANGED);
+            } // Fl_Spinner* edit_end_frame
+            { lbl_end_time = new Fl_Box(375, 655, 45, 20);
+              lbl_end_time->box(FL_DOWN_FRAME);
+              lbl_end_time->labelsize(10);
+              lbl_end_time->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+            } // Fl_Box* lbl_end_time
+            { Fl_Box* o = new Fl_Box(420, 658, 30, 13, "sec");
+              o->labelsize(10);
+              o->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+            } // Fl_Box* o
+            { edit_num_blend_frames = new Fl_Spinner(337, 677, 35, 19, "# blend frames");
               edit_num_blend_frames->labelfont(1);
               edit_num_blend_frames->labelsize(10);
+              edit_num_blend_frames->minimum(0);
               edit_num_blend_frames->maximum(360);
               edit_num_blend_frames->value(6);
               edit_num_blend_frames->textsize(10);
               edit_num_blend_frames->callback((Fl_Callback*)cb_edit_num_blend_frames);
               edit_num_blend_frames->when(FL_WHEN_CHANGED);
             } // Fl_Spinner* edit_num_blend_frames
-            { lbl_blend_time = new Fl_Box(375, 634, 45, 20);
+            { lbl_blend_time = new Fl_Box(375, 677, 45, 20);
               lbl_blend_time->box(FL_DOWN_FRAME);
               lbl_blend_time->labelsize(10);
               lbl_blend_time->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
             } // Fl_Box* lbl_blend_time
-            { Fl_Box* o = new Fl_Box(420, 637, 30, 13, "sec");
+            { Fl_Box* o = new Fl_Box(420, 680, 30, 13, "sec");
               o->labelsize(10);
               o->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
             } // Fl_Box* o

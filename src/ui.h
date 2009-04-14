@@ -77,6 +77,8 @@ private:
 public:
   Fl_Browser *m_browser_file_comb;
 private:
+  void cb_m_browser_file_comb_i(Fl_Browser*, void*);
+  static void cb_m_browser_file_comb(Fl_Browser*, void*);
   void cb__i(Fl_Button*, void*);
   static void cb_(Fl_Button*, void*);
   void cb_1_i(Fl_Button*, void*);
@@ -92,6 +94,18 @@ private:
   void cb_radio_mutliple_i(Fl_Button*, void*);
   static void cb_radio_mutliple(Fl_Button*, void*);
 public:
+  Fl_Spinner *edit_start_frame;
+private:
+  void cb_edit_start_frame_i(Fl_Spinner*, void*);
+  static void cb_edit_start_frame(Fl_Spinner*, void*);
+public:
+  Fl_Box *lbl_start_time;
+  Fl_Spinner *edit_end_frame;
+private:
+  void cb_edit_end_frame_i(Fl_Spinner*, void*);
+  static void cb_edit_end_frame(Fl_Spinner*, void*);
+public:
+  Fl_Box *lbl_end_time;
   Fl_Spinner *edit_num_blend_frames;
 private:
   void cb_edit_num_blend_frames_i(Fl_Spinner*, void*);
