@@ -1194,7 +1194,7 @@ void glView::mode_multiple()
 
 
     a_start = 0.;
-    a_end = a->frames.size() * a->frame_time;
+    a_end = (a->frames.size() - 1) * a->frame_time;
 
 
     // parse the string text from the row for second motion

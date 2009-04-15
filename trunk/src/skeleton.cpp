@@ -500,7 +500,7 @@ Motion combine_motions(
 	
 	for(double t = 0.; t<duration; t+=result.frame_time)
 	{
-		Frame fa = a.get_frame(a_end + t),
+		Frame fa = a.get_frame(a_end - duration + t),
 			  fb = b.get_frame(b_start + t).apply_transform(result.skeleton, relative_xform);
 		result.frames.push_back(interpolate_frames(a.skeleton, fa, fb, interp_func(t / duration, deg)));
 	}
