@@ -1216,7 +1216,7 @@ void glView::mode_multiple()
 
 
     a_start = 0.;
-    a_end = (a->frames.size() - 1) * a->frame_time;
+    a_end = (a->frames.size()) * a->frame_time;
 
 
     // parse the string text from the row for second motion
@@ -1232,7 +1232,7 @@ void glView::mode_multiple()
     vector<Transform3d> xform_a( a->skeleton.size() ),
                         xform_b( b->skeleton.size() );
                                             
-    Frame fa = a->get_frame(a_end),
+    Frame fa = a->get_frame(a_end - duration),
           fb = b->get_frame(b_start);
     
     
