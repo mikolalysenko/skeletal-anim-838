@@ -483,10 +483,10 @@ Motion combine_motions(
   double duration, 
 	int deg)
 {
-  assert(a_end > a_start);
-  assert(b_end > b_start);
-	assert(a_end >= 0. && a_end <= a.duration());
-	assert(b_start >= 0. && b_start <= b.duration());
+  //assert(a_end > a_start);
+  //assert(b_end > b_start);
+	//assert(a_start >= 0. && a_end <= a.duration());
+	//assert(b_start >= 0. && b_end <= b.duration());
 	assert(a.skeleton.size() == b.skeleton.size());
 	assert(a.skeleton.num_parameters() == b.skeleton.num_parameters());
 
