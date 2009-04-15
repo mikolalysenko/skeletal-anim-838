@@ -7,7 +7,10 @@
 ###############################################################################
 
 #Path to Eigen2
-EIGENPATH = /home/mikola/Apps/eigen2
+EIGENPATH = ./eigen2
+
+#Path to FLTK
+FLTKPATH = /afs/cs.wisc.edu/u/y/a/yangk/Desktop/p2/fltk-1.1.9
 
 # name of the file to build
 EXE = ../a.out
@@ -25,10 +28,10 @@ srcdir = src
 builddir = out
 
 # preprocessor options to find all included files
-INC_PATH = -I$(srcdir) -I$(EIGENPATH)
+INC_PATH = -I$(srcdir) -I$(EIGENPATH) -I$(FLTKPATH)
 
 # libraries link options ('-lm' is common to link with the math library)
-LNK_LIBS = -lglut -lm -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl
+LNK_LIBS = -lglut -lm -L$(FLTKPATH)/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl
 
 
 # other compilation options

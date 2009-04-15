@@ -171,12 +171,12 @@ namespace Skeletal
     Vector3d &max_pt);
 
   // compute the bounding box for a pose
-  template<class XformIter>
+  template<class ParamIter>
   void compute_bounding_box( 
     Transform3d& xform_ref, 
     const Joint& skeleton, 
-    XformIter& pose_begin, 
-    XformIter& pose_end,
+    ParamIter pose_begin, 
+    ParamIter pose_end,
     Vector3d &min_pt, 
     Vector3d &max_pt)
   {
