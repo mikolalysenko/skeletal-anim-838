@@ -169,8 +169,8 @@ Fl_Image* img = m_ui->boxImageLogo->image();
   {
 //exit(0);
     //::MessageBox(0 , "hsdf", "sk", 0);
-	  glGenTextures(1, &idFloor);
-	  glBindTexture(GL_TEXTURE_2D, idFloor);
+    glGenTextures(1, &idFloor);
+    glBindTexture(GL_TEXTURE_2D, idFloor);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -232,32 +232,32 @@ void glView::draw_skeleton(double t)
   maxPt = mocap_selected->bound_box_max;
   glColor3f(1., 0., 0.);
   glBegin(GL_QUADS);							// Start Drawing Quads
-	// Bottom Face
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Top Right Of The Texture and Quad
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Top Left Of The Texture and Quad
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
-	// Front Face
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], maxPt[2]);	// Top Right Of The Texture and Quad
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], maxPt[2]);	// Top Left Of The Texture and Quad
-	// Back Face
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Bottom Right Of The Texture and Quad
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], minPt[2]);	// Top Right Of The Texture and Quad
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], minPt[2]);	// Top Left Of The Texture and Quad
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Bottom Left Of The Texture and Quad
-	// Right face
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Bottom Right Of The Texture and Quad
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], minPt[2]);	// Top Right Of The Texture and Quad
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], maxPt[2]);	// Top Left Of The Texture and Quad
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
-	// Left Face
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Bottom Left Of The Texture and Quad
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], maxPt[2]);	// Top Right Of The Texture and Quad
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], minPt[2]);	// Top Left Of The Texture and Quad
-	glEnd();	
+  // Bottom Face
+  glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Top Right Of The Texture and Quad
+  glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Top Left Of The Texture and Quad
+  glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
+  glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
+  // Front Face
+  glTexCoord2f(0.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
+  glTexCoord2f(1.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
+  glTexCoord2f(1.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], maxPt[2]);	// Top Right Of The Texture and Quad
+  glTexCoord2f(0.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], maxPt[2]);	// Top Left Of The Texture and Quad
+  // Back Face
+  glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Bottom Right Of The Texture and Quad
+  glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], minPt[2]);	// Top Right Of The Texture and Quad
+  glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], minPt[2]);	// Top Left Of The Texture and Quad
+  glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Bottom Left Of The Texture and Quad
+  // Right face
+  glTexCoord2f(1.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], minPt[2]);	// Bottom Right Of The Texture and Quad
+  glTexCoord2f(1.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], minPt[2]);	// Top Right Of The Texture and Quad
+  glTexCoord2f(0.0f, 1.0f); glVertex3f(maxPt[0], maxPt[1], maxPt[2]);	// Top Left Of The Texture and Quad
+  glTexCoord2f(0.0f, 0.0f); glVertex3f(maxPt[0], minPt[1], maxPt[2]);	// Bottom Left Of The Texture and Quad
+  // Left Face
+  glTexCoord2f(0.0f, 0.0f); glVertex3f(minPt[0], minPt[1], minPt[2]);	// Bottom Left Of The Texture and Quad
+  glTexCoord2f(1.0f, 0.0f); glVertex3f(minPt[0], minPt[1], maxPt[2]);	// Bottom Right Of The Texture and Quad
+  glTexCoord2f(1.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], maxPt[2]);	// Top Right Of The Texture and Quad
+  glTexCoord2f(0.0f, 1.0f); glVertex3f(minPt[0], maxPt[1], minPt[2]);	// Top Left Of The Texture and Quad
+  glEnd();	
 */
  
 
@@ -301,86 +301,70 @@ float floorColor2[3] = { .3f, .3f, 1.0f }; // Dark color
 void drawCheckeredFloor(float size, int nSquares)
 //===============================================================================
 {
-	// parameters:
-	float maxX = size/2, maxY = size/2;
-	float minX = -size/2, minY = -size/2;
+  // parameters:
+  float maxX = size/2, maxY = size/2;
+  float minX = -size/2, minY = -size/2;
 
-	int x,y,v[3],i;
-	float xp,yp,xd,yd;
-	v[2] = 0;
-	xd = (maxX - minX) / ((float) nSquares);
-	yd = (maxY - minY) / ((float) nSquares);
-	glBegin(GL_QUADS);
-	for(x=0,xp=minX; x<nSquares; x++,xp+=xd) {
-		for(y=0,yp=minY,i=x; y<nSquares; y++,i++,yp+=yd) {
-			glColor4fv(i%2==1 ? floorColor1:floorColor2);
-			glNormal3f(0, 1, 0); 
-			glVertex3d(xp,      floorHeight, yp);
-			glVertex3d(xp,      floorHeight, yp + yd);
-			glVertex3d(xp + xd, floorHeight, yp + yd);
-			glVertex3d(xp + xd, floorHeight, yp);
+  int x,y,v[3],i;
+  float xp,yp,xd,yd;
+  v[2] = 0;
+  xd = (maxX - minX) / ((float) nSquares);
+  yd = (maxY - minY) / ((float) nSquares);
+  glBegin(GL_QUADS);
+  for(x=0,xp=minX; x<nSquares; x++,xp+=xd) {
+    for(y=0,yp=minY,i=x; y<nSquares; y++,i++,yp+=yd) {
+      glColor4fv(i%2==1 ? floorColor1:floorColor2);
+      glNormal3f(0, 1, 0); 
+      glVertex3d(xp,      floorHeight, yp);
+      glVertex3d(xp,      floorHeight, yp + yd);
+      glVertex3d(xp + xd, floorHeight, yp + yd);
+      glVertex3d(xp + xd, floorHeight, yp);
 
-		} // end of for j
-	}// end of for i
-	glEnd();
+    } // end of for j
+  }// end of for i
+  glEnd();
 }
 
 
-void glView::drawFloor()
+void glView::drawFloor(bool backface)
 {
 
-  /*
-  //Draw a floor grid
-  glColor3f(1.,1.,1.);
-  glBegin(GL_LINES);
-    for(float t=-100.; t<=100.; t+=10.)
-    {
-      glVertex3f(t, 0., -100.);
-      glVertex3f(t, 0.,  100.);
-      glVertex3f(-100., 0., t);
-      glVertex3f( 100., 0., t);
-    }
-  glEnd();
-  */
-
   
-
-
-
-	//glEnable(GL_COLOR_MATERIAL);
+  glEnable(GL_CULL_FACE);
   glDisable(GL_LIGHTING);
 
   // draw the checkered floor
   drawCheckeredFloor(abs(floorVertex[0][0]-floorVertex[1][0]),20);
 
   // draw the uw logo
-  if(idFloor)
+  if(idFloor && !backface)
   {
     glDisable(GL_DEPTH_TEST);
-		glEnable(GL_NORMALIZE);
-		glEnable(GL_BLEND);
-		glDepthMask(GL_FALSE);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_BLEND);
+    glDepthMask(GL_FALSE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_TEXTURE_2D);
-	  glBindTexture(GL_TEXTURE_2D, idFloor);
+    glBindTexture(GL_TEXTURE_2D, idFloor);
     glColor3f(1.,1.,1.);
-	  glBegin(GL_QUADS);
-		  glNormal3f(0, 1, 0); 
+    glBegin(GL_QUADS);
+      glNormal3f(0, 1, 0); 
       glTexCoord2f(0, 0); glVertex3fv(floorVertex[0]);
       glTexCoord2f(1, 0); glVertex3fv(floorVertex[1]);
       glTexCoord2f(1, 1); glVertex3fv(floorVertex[2]);
       glTexCoord2f(0, 1); glVertex3fv(floorVertex[3]);
-	  glEnd();
+    glEnd();
     glDisable(GL_TEXTURE_2D);
 
     glDisable(GL_NORMALIZE);
-		glDepthMask(GL_TRUE);
-		glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
   }
 
   glEnable(GL_LIGHTING);
+  glDisable(GL_CULL_FACE);
 }
 
 void glView::drawScene()
@@ -390,7 +374,14 @@ void glView::drawScene()
   // return if no animation is selected
   if(!mocap_selected) 
   {
+
+    // draw the back of the floor
+    glFrontFace(GL_CW);
+    drawFloor(true);
+    glFrontFace(GL_CCW);
+
     drawFloor();
+
     return;
   }
 
@@ -498,15 +489,15 @@ void glView::drawScene()
     glStencilFunc(GL_ALWAYS, 3, 0xffffffff);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
   }
+ 
   
-
+ 
   // draw the floor
   // if reflection is on, only update the depth buffer since we already drew the floor
   if(m_draw_reflection) glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
   drawFloor();
   if(m_draw_reflection) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   glDisable(GL_STENCIL_TEST);
-
 
 
   glDisable(GL_LIGHTING);
@@ -560,6 +551,13 @@ void glView::drawScene()
     glPopMatrix();
   }
      
+  
+  
+  // draw the back of the floor
+  glFrontFace(GL_CW);
+  glEnable(GL_DEPTH_TEST);
+  drawFloor(true);
+  glFrontFace(GL_CCW);
 
   // draw the skeleton
   glColor4f(.2, 1., .2, 1.);
@@ -572,8 +570,8 @@ void glView::drawScene()
 
 
   // update the slider
-	double frame_num;
-	double tau = modf(m_time / mocap_selected->frame_time, &frame_num);
+  double frame_num;
+  double tau = modf(m_time / mocap_selected->frame_time, &frame_num);
   m_ui->m_slider->value(frame_num);
   m_frame_num = (unsigned int)frame_num;
 
@@ -721,46 +719,46 @@ void glView::draw()
 int glView::handle(int event)
 {
 
-	// remember what button was used
-	static int last_push;
+  // remember what button was used
+  static int last_push;
 
 
-	switch(event) {
+  switch(event) {
     // handle the mouse down event
-		case FL_PUSH:
+    case FL_PUSH:
       if(m_camera_mode != CAMERA_AUTO)
       {
-			  last_push = Fl::event_button();
+        last_push = Fl::event_button();
         if(last_push == 1)
         {
           moving_arcball = true;
           previous_rotation.setIdentity();
           rotation_pos[0] = Fl::event_x_root();
           rotation_pos[1] = Fl::event_y_root();
-				  damage(1);
-				  return 1;
+          damage(1);
+          return 1;
         }
         if(last_push == 3)
         {
           pan_camera = true;
           pan_base[0] = Fl::event_x_root();
           pan_base[1] = Fl::event_y_root();
-				  damage(1);
-				  return 1;
+          damage(1);
+          return 1;
         }
         if(last_push == 2)
         {
           zoom_camera = true;
           zoom_base[0] = Fl::event_x_root();
           zoom_base[1] = Fl::event_y_root();
-				  damage(1);
-				  return 1;
+          damage(1);
+          return 1;
         }
       }
-			break;
+      break;
     
     // handle the mouse up event
-		case FL_RELEASE:
+    case FL_RELEASE:
       
       if(last_push == 1)
       {
@@ -774,12 +772,12 @@ int glView::handle(int event)
       {
         zoom_camera = false;
       }
-			damage(1);
-			last_push=0;
-			return 1;
+      damage(1);
+      last_push=0;
+      return 1;
 
     // handle the mouse move event
-		case FL_DRAG:
+    case FL_DRAG:
       if(moving_arcball)
       {
         int x = Fl::event_x_root(),
@@ -798,8 +796,8 @@ int glView::handle(int event)
         camera_rot *= next;
                 
         previous_rotation = next;
-				damage(1);
-				return 1;
+        damage(1);
+        return 1;
       }
       
       if(pan_camera)
@@ -815,8 +813,8 @@ int glView::handle(int event)
         
         pan_base[0] = x;
         pan_base[1] = y;
-				damage(1);
-				return 1;
+        damage(1);
+        return 1;
       }
       
       if(zoom_camera)
@@ -832,27 +830,27 @@ int glView::handle(int event)
         
         zoom_base[0] = x;
         zoom_base[1] = y;
-				damage(1);
-				return 1;
+        damage(1);
+        return 1;
       }
 
-			break;
+      break;
 
-		// in order to get keyboard events, we need to accept focus
-		case FL_FOCUS:
-			return 1;
+    // in order to get keyboard events, we need to accept focus
+    case FL_FOCUS:
+      return 1;
 
-		case FL_ENTER:	// every time the mouse enters this window, aggressively take focus
-			focus(this);
-			break;
+    case FL_ENTER:	// every time the mouse enters this window, aggressively take focus
+      focus(this);
+      break;
 
-		case FL_KEYBOARD:
-	 		int k = Fl::event_key();
-			int ks = Fl::event_state();
-			break;
-	}
+    case FL_KEYBOARD:
+      int k = Fl::event_key();
+      int ks = Fl::event_state();
+      break;
+  }
 
-	return Fl_Gl_Window::handle(event);
+  return Fl_Gl_Window::handle(event);
 }
 
 
@@ -914,10 +912,10 @@ void glView::load_file()
 
       // Parse out motion capture data
       ifstream c_in(relative);
-      Motion mocap;
+      Motion* mocap;
       try
       {
-         mocap = parseBVH(c_in).convert_quat();
+         mocap = new Motion(parseBVH(c_in).convert_quat());
       }
       catch(...)
       {
@@ -967,14 +965,38 @@ void glView::remove_file()
 #endif
   }
 
+  
+  int index = m_ui->m_browser_file->value() - 1;
+  if(index < 0) return;
+
   // remove the active motion and deselect selection
   mocap_selected = NULL;
   m_ui->m_browser_file->select(0);
 
+
+  // delete the motion from the list of multiple motion
+  Motion *ptrMotion;
+  for(int i=1; i<m_ui->m_browser_file_comb->size(); i++)
+  {
+    ptrMotion = (Motion*)m_ui->m_browser_file_comb->data(i+1);
+    if(ptrMotion == mocap_list[index])
+    {
+      m_ui->m_browser_file_comb->remove(i+1);
+      i = 0;
+    }
+  }
+  
+  // update the multiple mode if necessary
+  if(m_ui->radio_mutliple->value() == 1)
+  {
+    mode_multiple();
+  }
+
   // delete the motion
-  int index = m_ui->m_browser_file->value() - 1;
+  ptrMotion = mocap_list[index];
   mocap_list.erase(mocap_list.begin() + index);
   m_ui->m_browser_file->remove(index + 1);
+  delete ptrMotion;
 
   redraw();
 }
@@ -995,7 +1017,7 @@ void glView::select_animation(int index)
   if(index < 0 || index >= mocap_list.size()) return;
 
   // set the active motion capture object
-  mocap_selected = &mocap_list[index];
+  mocap_selected = mocap_list[index];
 
   // display some info about the active object
   char text[256];
@@ -1032,7 +1054,7 @@ void glView::add_animation_list()
   if(m_ui->m_browser_file_comb->size() >= 2)
   {
     Motion* ptrMotion = (Motion*)m_ui->m_browser_file_comb->data(2);
-    if( !ptrMotion || (ptrMotion->skeleton.size() != mocap_list[index].skeleton.size()) )
+    if( !ptrMotion || (ptrMotion->skeleton.size() != mocap_list[index]->skeleton.size()) )
     {
       fl_message("Error: The number of joints in the motion did not match.");
       return;
@@ -1044,10 +1066,10 @@ void glView::add_animation_list()
   sprintf(text, 
     "%s\t0\t%i\t0",
     m_ui->m_browser_file->text(index + 1),
-    mocap_list[index].frames.size()-1);
+    mocap_list[index]->frames.size()-1);
   m_ui->m_browser_file_comb->add(
     text,
-    &mocap_list[index]
+    mocap_list[index]
     );
 
   // update the multiple mode if necessary
@@ -1106,25 +1128,25 @@ void glView::mode_single()
 //Fixes the y=0 plane to a constant -Mik
 Transform3d constrain_xform(const Transform3d& xform)
 {
-	Matrix3d m = xform.rotation(), r;
-	
-	//Zero out y part
-	for(int i=0; i<3; i++)
-		m(i,1) = m(1,i) = 0.;
-	m(1,1) = 1.	;
-	
-	//Compute closest orthonormal matrix
-	r = m.svd().matrixU() * m.svd().matrixV().transpose();
-	
-	//Reconstruct final matrix
-	Matrix4d v = Matrix4d::Identity();
-	v.block(0,0,3,3) = r;
-	v.block(0,3,3,1) = xform.translation();
-	
-	//Cancel y translation
-	v(1,3) = 0.;
-	
-	return Transform3d(v);
+  Matrix3d m = xform.rotation(), r;
+  
+  //Zero out y part
+  for(int i=0; i<3; i++)
+    m(i,1) = m(1,i) = 0.;
+  m(1,1) = 1.	;
+  
+  //Compute closest orthonormal matrix
+  r = m.svd().matrixU() * m.svd().matrixV().transpose();
+  
+  //Reconstruct final matrix
+  Matrix4d v = Matrix4d::Identity();
+  v.block(0,0,3,3) = r;
+  v.block(0,3,3,1) = xform.translation();
+  
+  //Cancel y translation
+  v(1,3) = 0.;
+  
+  return Transform3d(v);
 }
 
 void glView::mode_multiple()
@@ -1176,11 +1198,11 @@ void glView::mode_multiple()
   duration = atof(word) * a->frame_time;
 
   // copy the first motion section
-	mocap_combine.skeleton = ptrMotion->skeleton;
-	mocap_combine.frame_time = ptrMotion->frame_time;
-	mocap_combine.frames.resize(0);
-	for(double t = a_start; t<=a_end; t+=mocap_combine.frame_time)
-		mocap_combine.frames.push_back(ptrMotion->get_frame(t));
+  mocap_combine.skeleton = ptrMotion->skeleton;
+  mocap_combine.frame_time = ptrMotion->frame_time;
+  mocap_combine.frames.resize(0);
+  for(double t = a_start; t<=a_end; t+=mocap_combine.frame_time)
+    mocap_combine.frames.push_back(ptrMotion->get_frame(t));
 
 
 
@@ -1344,7 +1366,7 @@ void glView::updateCamera()
   Vector3d min_pt = Vector3d(0., 0., 0.);
   Vector3d max_pt = Vector3d(0., 0., 0.);
   Transform3d xformPose;
-	xformPose.setIdentity();
+  xformPose.setIdentity();
   compute_bounding_box( xformPose, 
                         mocap_selected->skeleton, 
                         xform.begin(), 

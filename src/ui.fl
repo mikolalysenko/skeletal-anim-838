@@ -8,7 +8,7 @@ class UserInterface {open
   } {
     Fl_Window mainWindow {
       label {Skeletal Anim} open
-      xywh {419 47 600 690} type Double resizable visible
+      xywh {419 47 600 710} type Double resizable visible
     } {
       Fl_Group {} {open
         xywh {-5 0 830 709}
@@ -68,7 +68,7 @@ class UserInterface {open
             }
           }
         }
-        Fl_Group {} {open
+        Fl_Group {} {open selected
           xywh {-5 400 807 309}
         } {
           Fl_Button btn_play {
@@ -120,7 +120,7 @@ class UserInterface {open
               xywh {3 487 557 222}
             } {
               Fl_Box {} {
-                label {Animation Files} selected
+                label {Animation Files}
                 xywh {3 489 557 216} box ENGRAVED_FRAME labelsize 10 align 5
               }
               Fl_Box {} {

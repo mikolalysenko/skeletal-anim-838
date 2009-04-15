@@ -33,18 +33,18 @@ class glView : public Fl_Gl_Window
 {
 
 public:
-
+  
   glView(int x,int y,int w,int h,const char *l=0);
 
   // overrides of important window things
-	virtual int handle(int);
+  virtual int handle(int);
   virtual void draw();  
   void display();
   void drawScene();
   void initScene();
   void draw_skeleton(double t);
   void draw_frame(int f);
-  void drawFloor();
+  void drawFloor(bool backface = false);
   void updateCamera();
   void updateAutoCamera();
 
@@ -89,7 +89,7 @@ public:
   float m_play_fps;
 
   Fl_File_Chooser* file_chooser; 
-  vector<Motion> mocap_list;
+  vector<Motion*> mocap_list;
   Motion* mocap_selected;
   Motion mocap_combine;
 
