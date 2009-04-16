@@ -77,7 +77,11 @@ public:
   {
     STYLE_LINES,
     STYLE_ELLIPSOIDS,
-    STYLE_STICK
+    STYLE_STICK,
+    STYLE_STICK2,
+    STYLE_STICK2_NO_FACE,
+    STYLE_STICK2_EDGES,
+    STYLE_STICK2_CUSTOM_FACE
   };
 
 public:
@@ -101,6 +105,7 @@ public:
   Motion mocap_combine;
 
   GLuint idFloor;
+  GLuint idFace;
   GLfloat lightPosition[4];
   GLfloat floorPlaneEquation[4];
 

@@ -65,6 +65,34 @@ void UserInterface::cb_menuSkeletonEllipsoids(Fl_Menu_* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_menuSkeletonEllipsoids_i(o,v);
 }
 
+void UserInterface::cb_Stick_i(Fl_Menu_*, void*) {
+  view->m_draw_style = glView::STYLE_STICK2;
+}
+void UserInterface::cb_Stick(Fl_Menu_* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Stick_i(o,v);
+}
+
+void UserInterface::cb_Stick1_i(Fl_Menu_*, void*) {
+  view->m_draw_style = glView::STYLE_STICK2_NO_FACE;
+}
+void UserInterface::cb_Stick1(Fl_Menu_* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Stick1_i(o,v);
+}
+
+void UserInterface::cb_Stick2_i(Fl_Menu_*, void*) {
+  view->m_draw_style = glView::STYLE_STICK2_EDGES;
+}
+void UserInterface::cb_Stick2(Fl_Menu_* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Stick2_i(o,v);
+}
+
+void UserInterface::cb_Stick3_i(Fl_Menu_*, void*) {
+  view->m_draw_style = glView::STYLE_STICK2_CUSTOM_FACE;
+}
+void UserInterface::cb_Stick3(Fl_Menu_* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Stick3_i(o,v);
+}
+
 Fl_Menu_Item UserInterface::menu_[] = {
  {"Render Options", 0,  0, 0, 64, FL_NORMAL_LABEL, 0, 10, 0},
  {"Show Shadow", 0,  (Fl_Callback*)UserInterface::cb_menuShowShadow, 0, 6, FL_NORMAL_LABEL, 0, 10, 0},
@@ -80,6 +108,10 @@ Fl_Menu_Item UserInterface::menu_[] = {
  {"Stick", 0,  (Fl_Callback*)UserInterface::cb_menuSkeletonStick, 0, 12, FL_NORMAL_LABEL, 0, 10, 0},
  {"Lines", 0,  (Fl_Callback*)UserInterface::cb_menuSkeletonLines, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
  {"Ellipsoids", 0,  (Fl_Callback*)UserInterface::cb_menuSkeletonEllipsoids, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
+ {"Stick 2", 0,  (Fl_Callback*)UserInterface::cb_Stick, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
+ {"Stick 2 with no face", 0,  (Fl_Callback*)UserInterface::cb_Stick1, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
+ {"Stick 2 with edges", 0,  (Fl_Callback*)UserInterface::cb_Stick2, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
+ {"Stick 2 with custom face", 0,  (Fl_Callback*)UserInterface::cb_Stick3, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
  {0,0,0,0,0,0,0,0,0},
  {0,0,0,0,0,0,0,0,0}
 };

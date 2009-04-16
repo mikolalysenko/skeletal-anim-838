@@ -63,6 +63,14 @@ public:
 private:
   void cb_menuSkeletonEllipsoids_i(Fl_Menu_*, void*);
   static void cb_menuSkeletonEllipsoids(Fl_Menu_*, void*);
+  void cb_Stick_i(Fl_Menu_*, void*);
+  static void cb_Stick(Fl_Menu_*, void*);
+  void cb_Stick1_i(Fl_Menu_*, void*);
+  static void cb_Stick1(Fl_Menu_*, void*);
+  void cb_Stick2_i(Fl_Menu_*, void*);
+  static void cb_Stick2(Fl_Menu_*, void*);
+  void cb_Stick3_i(Fl_Menu_*, void*);
+  static void cb_Stick3(Fl_Menu_*, void*);
 public:
   Fl_Button *btn_play;
 private:
