@@ -159,16 +159,12 @@ void glView::initScene()
   lightPosition[3] = 0;
 
   
-  //Fl_Shared_Image* img = Fl_Shared_Image::get("/afs/cs.wisc.edu/u/y/a/yangk/Desktop/p2/a/uw_logo.png");
-//Fl_Shared_Image* img = Fl_Shared_Image::get((const char*)m_ui->boxImageLogo->image()->data(),
-//  m_ui->boxImageLogo->image()->w(),
-//m_ui->boxImageLogo->image()->h());
-Fl_Image* img = m_ui->boxImageLogo->image();
+  glEnable(GL_DEPTH_TEST);
+
+  Fl_Image* img = m_ui->boxImageLogo->image();
   idFloor = 0;
   if(img)
   {
-//exit(0);
-    //::MessageBox(0 , "hsdf", "sk", 0);
     glGenTextures(1, &idFloor);
     glBindTexture(GL_TEXTURE_2D, idFloor);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
@@ -181,15 +177,32 @@ Fl_Image* img = m_ui->boxImageLogo->image();
     //img->release();
   }
 
-  glEnable(GL_DEPTH_TEST);
 
- // if(mode( FL_STENCIL) == true)
- //   ::MessageBox(0, "stencil", "", 0);
+  
+  Fl_Shared_Image* imgFace = Fl_Shared_Image::get("face.png");
+  idFace = 0;
+  if(imgFace)
+  {
+    glGenTextures(1, &idFace);
+    glBindTexture(GL_TEXTURE_2D, idFace);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, imgFace->w(), imgFace->h(), 0, GL_RGBA, GL_UNSIGNED_BYTE, imgFace->data()[0]);
+    imgFace->release();
+  }
+
+
 }
 
 void glView::draw_skeleton(double t, bool disable_color, float alpha)
 {
   if(!mocap_selected) return;
+
+  glPushAttrib(GL_ALL_ATTRIB_BITS);
 
   //Figure interpolate current pose
   Frame c_frame = mocap_selected->get_frame(t, true);
@@ -207,6 +220,23 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
     draw_stick_skeleton(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha);
     break;
 
+  case STYLE_STICK2:
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius);
+    break;
+
+  case STYLE_STICK2_NO_FACE:
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius, 0);
+    break;
+
+  case STYLE_STICK2_EDGES:
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius, 1, true);
+    break;
+
+  case STYLE_STICK2_CUSTOM_FACE:
+    glBindTexture(GL_TEXTURE_2D, idFace);
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius, 2);
+    break;
+
   case STYLE_LINES:
     draw_line_skeleton(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha);
     break;
@@ -220,6 +250,7 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
   }
 
 
+  glPopAttrib();
 
 
 /*
@@ -504,7 +535,7 @@ return;
     glTranslatef(0.0, -floorHeight * 2., 0.0);
 
     glEnable(GL_NORMALIZE);
-    glCullFace(GL_FRONT);
+    //glCullFace(GL_FRONT);
     glFrontFace(GL_CW);
 
     // blend with the ground
@@ -519,7 +550,7 @@ return;
 
     glDisable(GL_BLEND);
     glDisable(GL_NORMALIZE);
-    glCullFace(GL_BACK);
+    //glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
 

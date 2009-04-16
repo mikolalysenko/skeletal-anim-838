@@ -214,7 +214,7 @@ namespace Skeletal
   {
     compute_bounding_box_impl(xform_ref, skeleton, pose_begin, pose_end, min_pt, max_pt);
   };
-  
+
 
 };
 

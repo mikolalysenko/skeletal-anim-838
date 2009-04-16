@@ -8,7 +8,7 @@ class UserInterface {open
   } {
     Fl_Window mainWindow {
       label {Skeletal Anim} open
-      xywh {461 141 600 710} type Double resizable visible
+      xywh {461 157 600 710} type Double resizable visible
     } {
       Fl_Group {} {open
         xywh {-5 0 830 709}
@@ -82,8 +82,28 @@ class UserInterface {open
               }
               MenuItem menuSkeletonEllipsoids {
                 label Ellipsoids
-                callback {view->m_draw_style = glView::STYLE_ELLIPSOIDS;} selected
+                callback {view->m_draw_style = glView::STYLE_ELLIPSOIDS;}
                 xywh {40 40 100 20} type Radio labelsize 10
+              }
+              MenuItem {} {
+                label {Stick 2}
+                callback {view->m_draw_style = glView::STYLE_STICK2;}
+                xywh {20 20 100 20} type Radio labelsize 10
+              }
+              MenuItem {} {
+                label {Stick 2 with no face}
+                callback {view->m_draw_style = glView::STYLE_STICK2_NO_FACE;}
+                xywh {30 30 100 20} type Radio labelsize 10
+              }
+              MenuItem {} {
+                label {Stick 2 with edges}
+                callback {view->m_draw_style = glView::STYLE_STICK2_EDGES;}
+                xywh {40 40 100 20} type Radio labelsize 10
+              }
+              MenuItem {} {
+                label {Stick 2 with custom face}
+                callback {view->m_draw_style = glView::STYLE_STICK2_CUSTOM_FACE;} selected
+                xywh {50 50 100 20} type Radio labelsize 10
               }
             }
           }
