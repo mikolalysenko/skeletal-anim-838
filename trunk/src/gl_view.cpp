@@ -187,7 +187,7 @@ Fl_Image* img = m_ui->boxImageLogo->image();
  //   ::MessageBox(0, "stencil", "", 0);
 }
 
-void glView::draw_skeleton(double t)
+void glView::draw_skeleton(double t, bool disable_color, float alpha)
 {
   if(!mocap_selected) return;
 
@@ -201,9 +201,24 @@ void glView::draw_skeleton(double t)
           c_frame.pose.begin(),
           c_frame.pose.end());
 
-  //Draw the line skeleton
-  draw_ellipsoid_skeleton(mocap_selected->skeleton, xform.begin(), xform.end());
-  //draw_line_skeleton(mocap_selected->skeleton, xform.begin(), xform.end());
+  switch(m_draw_style)
+  {
+  case STYLE_STICK:
+    draw_stick_skeleton(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha);
+    break;
+
+  case STYLE_LINES:
+    draw_line_skeleton(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha);
+    break;
+
+  case STYLE_ELLIPSOIDS:
+    draw_ellipsoid_skeleton(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha);
+    break;
+
+  default:
+    break;
+  }
+
 
 
 
@@ -430,9 +445,36 @@ void glView::drawScene()
     }
   }
   
+/*
+// reflect the scene on the y axis so that we can draw the skeleton upside down
+glPushMatrix();
+glScalef(1.0, -1.0, 1.0);
+//glRotatef(180., 1, 0, 0);
+glTranslatef(0.0, -floorHeight * 2., 0.0);
+
+glEnable(GL_NORMALIZE);
+glCullFace(GL_FRONT);
+
+  glFrontFace(GL_CW);
+  glDisable(GL_LIGHTING);
+  glEnable(GL_DEPTH_TEST);
+  draw_skeleton(m_time);
+
+  glFrontFace(GL_CCW);
+
+glDisable(GL_BLEND);
+glDisable(GL_NORMALIZE);
+glCullFace(GL_BACK);
 
 
+glPopMatrix();
 
+
+  glDisable(GL_LIGHTING);
+  glEnable(GL_DEPTH_TEST);
+  draw_skeleton(m_time);
+return;
+*/
   // if we need to draw the reflection
   if(m_draw_reflection) 
   {
@@ -449,7 +491,10 @@ void glView::drawScene()
 
     // only draw on the floor
     glStencilFunc(GL_LESS, 2, 0xffffffff); 
-    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+    if(m_draw_style == STYLE_STICK)
+      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    else
+      glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
     glEnable(GL_DEPTH_TEST);
 
 
@@ -460,6 +505,7 @@ void glView::drawScene()
 
     glEnable(GL_NORMALIZE);
     glCullFace(GL_FRONT);
+    glFrontFace(GL_CW);
 
     // blend with the ground
     glEnable(GL_BLEND);
@@ -468,16 +514,19 @@ void glView::drawScene()
     // draw the skeleton
     glDisable(GL_LIGHTING);
     //glDisable(GL_DEPTH_TEST);
-    glColor4f(.2, 1., .2, .25);
-    draw_skeleton(m_time);
+    //glColor4f(.2, 1., .2, .25);
+    draw_skeleton(m_time, false, .25);
 
     glDisable(GL_BLEND);
     glDisable(GL_NORMALIZE);
     glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+
 
     glPopMatrix();
 
     glDisable(GL_STENCIL_TEST);
+
 
   }
 
@@ -510,7 +559,8 @@ void glView::drawScene()
     for(int i=0; i<6; i++)
     {
       glColor4dv(colors[i]);
-      draw_frame(i * mocap_selected->frames.size() / 6);
+      //draw_frame(i * mocap_selected->frames.size() / 6);
+      draw_skeleton(i * mocap_selected->frames.size() / 6 * mocap_selected->frame_time, true);
     }
     glDisable(GL_BLEND);
   }
@@ -541,7 +591,7 @@ void glView::drawScene()
     findPlane(floorPlaneEquation, floorVertex[0], floorVertex[1], floorVertex[2]);
     projectShadowMatrix(floorPlaneEquation, lightPosition);
     glDisable(GL_DEPTH_TEST);
-    draw_skeleton(m_time);
+    draw_skeleton(m_time, true);
 
 
     glDisable(GL_BLEND);
@@ -560,7 +610,7 @@ void glView::drawScene()
   glFrontFace(GL_CCW);
 
   // draw the skeleton
-  glColor4f(.2, 1., .2, 1.);
+  //glColor4f(.2, 1., .2, 1.);
   glDisable(GL_LIGHTING);
   glEnable(GL_DEPTH_TEST);
   draw_skeleton(m_time);
@@ -633,6 +683,7 @@ glView::glView(int x,int y,int w,int h,const char *l)
   m_draw_preview = false;
   m_draw_fps = false;
   m_camera_mode = CAMERA_FREE;
+  m_draw_style = STYLE_STICK;
 
   fl_register_images();
 

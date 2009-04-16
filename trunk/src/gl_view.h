@@ -42,7 +42,7 @@ public:
   void display();
   void drawScene();
   void initScene();
-  void draw_skeleton(double t);
+  void draw_skeleton(double t, bool disable_color = false, float alpha = 1.0);
   void draw_frame(int f);
   void drawFloor(bool backface = false);
   void updateCamera();
@@ -73,6 +73,12 @@ public:
     CAMERA_FREE,
     CAMERA_AUTO
   };
+  enum DRAW_STYLE
+  {
+    STYLE_LINES,
+    STYLE_ELLIPSOIDS,
+    STYLE_STICK
+  };
 
 public:
   bool m_drawing;
@@ -83,6 +89,7 @@ public:
   bool m_draw_preview;
   bool m_draw_fps;
   int m_camera_mode;
+  int m_draw_style; 
   unsigned int m_frame_num;
   UserInterface* m_ui;
   float m_time;

@@ -26,7 +26,8 @@ namespace Skeletal
   
   //Draws the line skeleton
   template<class XformIter>
-    void _draw_line_skeleton_impl(Transform3d xform, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end)
+    void _draw_line_skeleton_impl(Transform3d xform, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
+      bool disable_color, float alpha)
     {
       assert(pose_begin != pose_end);
 
@@ -45,14 +46,14 @@ namespace Skeletal
         Vector4d(-skeleton.offset(0), -skeleton.offset(1), -skeleton.offset(2), 0);
 
       //Draw bone
-      glColor3f(1., 1., 1.);
+      if(!disable_color) glColor4f(1., 1., 1., alpha);
       glBegin(GL_LINES);
         glVertex3f(0., 0., 0.);
         glVertex3dv(base_pt.data());
       glEnd();
       
       //Draw point for joint location
-      glColor3f(1., 0., 0.);
+      if(!disable_color) glColor4f(1., 0., 0., alpha);
       glEnable(GL_POINT_SMOOTH);
       glPointSize(5);
       glBegin(GL_POINTS);
@@ -64,24 +65,28 @@ namespace Skeletal
   
 
       for(int i=0; i<skeleton.children.size(); i++)
-        _draw_line_skeleton_impl(xform, skeleton.children[i], pose_begin, pose_end);
+        _draw_line_skeleton_impl(xform, skeleton.children[i], pose_begin, pose_end, disable_color, alpha);
     }
 
   template<class XformIter>
-    void draw_line_skeleton(const Joint& skeleton, XformIter pose_begin, XformIter pose_end)
+    void draw_line_skeleton(const Joint& skeleton, XformIter pose_begin, XformIter pose_end, 
+      bool disable_color = false, float alpha = 1.0)
     {
       Transform3d xform;
       xform.setIdentity();
-      _draw_line_skeleton_impl(xform, skeleton, pose_begin, pose_end);
+      _draw_line_skeleton_impl(xform, skeleton, pose_begin, pose_end, disable_color, alpha);
     }
 
 
 
   //Draws the line skeleton
   template<class XformIter>
-    void _draw_ellipsoid_skeleton_impl(Transform3d& xform_ref, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end)
+    void _draw_ellipsoid_skeleton_impl(Transform3d& xform_ref, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
+      bool disable_color, float alpha)
     {
       assert(pose_begin != pose_end);
+
+      if(!disable_color) glColor4f(.2, 1., .2, alpha);
 
       Transform3d xform = xform_ref;
 
@@ -142,15 +147,155 @@ namespace Skeletal
   
 
       for(int i=0; i<skeleton.children.size(); i++)
-        _draw_ellipsoid_skeleton_impl(xform, skeleton.children[i], pose_begin, pose_end);
+        _draw_ellipsoid_skeleton_impl(xform, skeleton.children[i], pose_begin, pose_end, disable_color, alpha);
     }
 
   template<class XformIter>
-    void draw_ellipsoid_skeleton(const Joint& skeleton, XformIter pose_begin, XformIter pose_end)
+    void draw_ellipsoid_skeleton(const Joint& skeleton, XformIter pose_begin, XformIter pose_end, 
+      bool disable_color = false, float alpha = 1.0)
     {
       Transform3d xform;
       xform.setIdentity();
-      _draw_ellipsoid_skeleton_impl(xform, skeleton, pose_begin, pose_end);
+      _draw_ellipsoid_skeleton_impl(xform, skeleton, pose_begin, pose_end, disable_color, alpha);
+    }
+
+
+
+  //Draws the stick figure skeleton
+  template<class XformIter>
+    void _draw_stick_skeleton_impl(Transform3d xform, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
+      bool disable_color, float alpha)
+    {
+      assert(pose_begin != pose_end);
+
+      //turn on backface culling
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
+
+      //Create a quadric for cylinders (for bone) and spheres (joints)
+      GLUquadricObj* obj = gluNewQuadric();
+      gluQuadricNormals(obj, GLU_FLAT);
+
+      //Construct joint transform
+      Transform3d base_xform = *(pose_begin++);
+      xform.translate(skeleton.offset);
+      xform = xform * base_xform;
+
+      //Set up OGL transform
+      glPushMatrix();
+      Matrix4d tr = xform.matrix();
+      glMultMatrixd(tr.data());
+
+      //Start point for bone
+      Vector4d base_pt =  base_xform.matrix().inverse() * 
+        Vector4d(-skeleton.offset(0), -skeleton.offset(1), -skeleton.offset(2), 0);
+
+      glPushMatrix();
+      //joints have names. so find one that looks like "head"
+      //and if so, use that as a bottom center of a sphere. 
+      //(outer white w/ normals to in and inner black w/ normals out)
+      //looks like most of them have a "Head" and some of them have a "head_end" (do what there?)
+      if(skeleton.name.compare("Head") == 0 || skeleton.name.compare("head") == 0 
+        || skeleton.name.compare("HEAD") == 0){
+          //draw a head.
+          glTranslatef(0, 3, 0);
+          if(!disable_color) glColor4f(1., 1., 1., alpha);
+          gluQuadricOrientation (obj, GLU_INSIDE);
+          gluSphere(obj, 6, 20, 20);
+          if(!disable_color) glColor4f(0., 0., 0., alpha);
+          gluQuadricOrientation (obj, GLU_OUTSIDE);
+          gluSphere(obj, 5, 20, 20);
+      } else {
+        //Because cylinders draw along the z axis, we need to rotate our coordinate system
+        double height = sqrt((base_pt(0) * base_pt(0)) + (base_pt(1) * base_pt(1)) + 
+          (base_pt(2) * base_pt(2)));
+        float vx = base_pt(0);
+        float vy = base_pt(1);
+        float vz = base_pt(2);
+        if(vz == 0) {
+          vz = .00000001;
+        }
+        float ax = (180./M_PI)*acos( vz/height );
+        if ( vz < 0.0 ) {
+          ax = -ax;
+        }
+        float rx = -vy*vz;
+        float ry = vx*vz;
+        glRotatef(ax, rx, ry, 0.0);
+
+        //Draw bone as a cylinder 
+        //(outer in black w/ normals facing in, inner in white w/ normals facing out)
+        //(obj, baseRadius, topRadius, height, slices, stacks)
+        if(!disable_color) glColor4f(0., 0., 0., alpha);
+        gluQuadricOrientation (obj, GLU_INSIDE);
+        gluCylinder(obj, .7, .7, height, 20, 20);
+        if(!disable_color) glColor4f(1., 1., 1., alpha);
+        gluQuadricOrientation (obj, GLU_OUTSIDE);
+        gluCylinder(obj, .5, .5, height, 20, 20);
+
+        //This is just me dicking around
+        /*if(!disable_color) glColor4f(0., 1., 0., alpha);
+        gluQuadricOrientation (obj, GLU_INSIDE);
+        gluCylinder(obj, .9, .9, height, 20, 20);
+        if(!disable_color) glColor4f(0., 0., 0., alpha);
+        gluQuadricOrientation (obj, GLU_OUTSIDE);
+        gluCylinder(obj, .5, .5, height, 20, 20);
+        */
+
+        //Draw point for joint location
+        //Draw a sphere at 0 for a joint
+        if(!disable_color) glColor4f(1., 1., 1., alpha);
+        gluSphere(obj, 0.5, 20, 20);
+      }
+      glPopMatrix(); 
+      //ok, so right now he has a neck in his head. otherwise, this is BRILLIANT.
+      //TODO: add a top hat, and possibly a top hat button.
+
+      //Undo OGL transform
+      glPopMatrix();
+      gluDeleteQuadric(obj);
+
+      /*
+      for(int i=0; i<skeleton.children.size(); i++)
+      _draw_stick_skeleton_impl(xform, skeleton.children[i], pose_begin, pose_end);
+      */
+
+      if(skeleton.name.compare("Head") == 0 || skeleton.name.compare("head") == 0 || skeleton.name.compare("HEAD") == 0){
+        for(int i=0; i<skeleton.children.size(); i++) {
+          if(skeleton.children[i].name.compare("NONAME") == 0){
+            Transform3d base_xform2 = *(pose_begin++);
+            xform.translate(skeleton.children[i].offset);
+            xform = xform * base_xform2;
+            for(int j=0; j<skeleton.children[i].children.size(); j++) {
+              _draw_stick_skeleton_impl(xform, skeleton.children[i].children[j], 
+                pose_begin, pose_end, disable_color, alpha);
+            }
+          } else if (skeleton.children[i].name.compare("Head_end") == 0) {
+            Transform3d base_xform2 = *(pose_begin++);
+            xform.translate(skeleton.children[i].offset);
+            xform = xform * base_xform2;
+            for(int j=0; j<skeleton.children[i].children.size(); j++) {
+              _draw_stick_skeleton_impl(xform, skeleton.children[i].children[j], 
+                pose_begin, pose_end, disable_color, alpha);
+            }
+          } else {
+            _draw_stick_skeleton_impl(xform, skeleton.children[i], pose_begin, pose_end, disable_color, alpha);
+          }
+        }
+      } else {
+        for(int i=0; i<skeleton.children.size(); i++) {
+          _draw_stick_skeleton_impl(xform, skeleton.children[i], pose_begin, pose_end, disable_color, alpha);
+        }
+      }
+    }
+
+  template<class XformIter>
+    void draw_stick_skeleton(const Joint& skeleton, XformIter pose_begin, XformIter pose_end, 
+      bool disable_color = false, float alpha = 1.0)
+    {
+      Transform3d xform;
+      xform.setIdentity();
+      _draw_stick_skeleton_impl(xform, skeleton, pose_begin, pose_end, disable_color, alpha);
     }
 
 

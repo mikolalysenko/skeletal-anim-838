@@ -49,6 +49,21 @@ private:
   void cb_menuCameraAuto_i(Fl_Menu_*, void*);
   static void cb_menuCameraAuto(Fl_Menu_*, void*);
 public:
+  static Fl_Menu_Item *menuSkeletonStick;
+private:
+  void cb_menuSkeletonStick_i(Fl_Menu_*, void*);
+  static void cb_menuSkeletonStick(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *menuSkeletonLines;
+private:
+  void cb_menuSkeletonLines_i(Fl_Menu_*, void*);
+  static void cb_menuSkeletonLines(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *menuSkeletonEllipsoids;
+private:
+  void cb_menuSkeletonEllipsoids_i(Fl_Menu_*, void*);
+  static void cb_menuSkeletonEllipsoids(Fl_Menu_*, void*);
+public:
   Fl_Button *btn_play;
 private:
   void cb_btn_play_i(Fl_Button*, void*);

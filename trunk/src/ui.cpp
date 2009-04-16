@@ -44,6 +44,27 @@ void UserInterface::cb_menuCameraAuto(Fl_Menu_* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_menuCameraAuto_i(o,v);
 }
 
+void UserInterface::cb_menuSkeletonStick_i(Fl_Menu_*, void*) {
+  view->m_draw_style = glView::STYLE_STICK;
+}
+void UserInterface::cb_menuSkeletonStick(Fl_Menu_* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_menuSkeletonStick_i(o,v);
+}
+
+void UserInterface::cb_menuSkeletonLines_i(Fl_Menu_*, void*) {
+  view->m_draw_style = glView::STYLE_LINES;
+}
+void UserInterface::cb_menuSkeletonLines(Fl_Menu_* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_menuSkeletonLines_i(o,v);
+}
+
+void UserInterface::cb_menuSkeletonEllipsoids_i(Fl_Menu_*, void*) {
+  view->m_draw_style = glView::STYLE_ELLIPSOIDS;
+}
+void UserInterface::cb_menuSkeletonEllipsoids(Fl_Menu_* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_menuSkeletonEllipsoids_i(o,v);
+}
+
 Fl_Menu_Item UserInterface::menu_[] = {
  {"Render Options", 0,  0, 0, 64, FL_NORMAL_LABEL, 0, 10, 0},
  {"Show Shadow", 0,  (Fl_Callback*)UserInterface::cb_menuShowShadow, 0, 6, FL_NORMAL_LABEL, 0, 10, 0},
@@ -55,6 +76,11 @@ Fl_Menu_Item UserInterface::menu_[] = {
  {"Free", 0,  (Fl_Callback*)UserInterface::cb_menuCameraFree, 0, 12, FL_NORMAL_LABEL, 0, 10, 0},
  {"Auto", 0,  (Fl_Callback*)UserInterface::cb_menuCameraAuto, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
  {0,0,0,0,0,0,0,0,0},
+ {"Skeleton", 0,  0, 0, 64, FL_NORMAL_LABEL, 0, 10, 0},
+ {"Stick", 0,  (Fl_Callback*)UserInterface::cb_menuSkeletonStick, 0, 12, FL_NORMAL_LABEL, 0, 10, 0},
+ {"Lines", 0,  (Fl_Callback*)UserInterface::cb_menuSkeletonLines, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
+ {"Ellipsoids", 0,  (Fl_Callback*)UserInterface::cb_menuSkeletonEllipsoids, 0, 8, FL_NORMAL_LABEL, 0, 10, 0},
+ {0,0,0,0,0,0,0,0,0},
  {0,0,0,0,0,0,0,0,0}
 };
 Fl_Menu_Item* UserInterface::menuShowShadow = UserInterface::menu_ + 1;
@@ -63,6 +89,9 @@ Fl_Menu_Item* UserInterface::menuShowPreview = UserInterface::menu_ + 3;
 Fl_Menu_Item* UserInterface::menuShowFPS = UserInterface::menu_ + 4;
 Fl_Menu_Item* UserInterface::menuCameraFree = UserInterface::menu_ + 7;
 Fl_Menu_Item* UserInterface::menuCameraAuto = UserInterface::menu_ + 8;
+Fl_Menu_Item* UserInterface::menuSkeletonStick = UserInterface::menu_ + 11;
+Fl_Menu_Item* UserInterface::menuSkeletonLines = UserInterface::menu_ + 12;
+Fl_Menu_Item* UserInterface::menuSkeletonEllipsoids = UserInterface::menu_ + 13;
 
 void UserInterface::cb_btn_play_i(Fl_Button* o, void*) {
   view->toggle_play(((Fl_Button *)o)->value());
