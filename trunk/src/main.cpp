@@ -9,6 +9,7 @@ main(int argc, char **argv) {
     Fl::scheme("plastic");
     Fl::visual(FL_DOUBLE|FL_INDEX);
 
+    glutInit(&argc, argv);
     ui->show(argc, argv);
 
     return Fl::run();
