@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../src;../fltk-1.1.9;../eigen2;../glut-3.7.6"
+				AdditionalIncludeDirectories="../src;../fltk-1.1.9;../eigen2;../glut-3.7.6;."
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -121,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../src;../fltk-1.1.9;../eigen2;../glut-3.7.6"
+				AdditionalIncludeDirectories="../src;../fltk-1.1.9;../eigen2;../glut-3.7.6;."
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32;NDEBUG;_WINDOWS;WIN32_LEAN_AND_MEAN;VC_EXTRA_LEAN;WIN32_EXTRA_LEAN"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -214,6 +214,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\skeleton.hpp"
 				>
 			</File>
@@ -231,6 +235,14 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath="..\icon.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\skeletal-anim.rc"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
