@@ -50,7 +50,7 @@ namespace Skeletal
   
     //Interprets the pose
     template<class XformIter, class ParamIter>
-      void _interpret_pose_impl(XformIter& result, ParamIter& pbegin, ParamIter pend) const
+      void _interpret_pose_impl(XformIter& result, ParamIter& pbegin, ParamIter pend, bool ignore_position = false) const
     {
       Transform3d xform;
       xform.setIdentity();
@@ -71,11 +71,17 @@ namespace Skeletal
         else if(channels[i] == "Zrotation")
           xform.rotate(AngleAxisd(p * M_PI / 180., Vector3d::UnitZ()));
         else if(channels[i] == "Xposition")
-          xform.translate(Vector3d(p, 0, 0));
+        {
+          if(!ignore_position) xform.translate(Vector3d(p, 0, 0));
+        }
         else if(channels[i] == "Yposition")
-          xform.translate(Vector3d(0, p, 0));
+        {
+          if(!ignore_position) xform.translate(Vector3d(0, p, 0));
+          }
         else if(channels[i] == "Zposition")
-          xform.translate(Vector3d(0, 0, p));
+        {
+          if(!ignore_position) xform.translate(Vector3d(0, 0, p));
+          }
         else if(channels[i] == "Quaternion")
         {
           Quaterniond quat(p, 0., 0., 0.);
@@ -88,6 +94,7 @@ namespace Skeletal
           xform.rotate(quat);
         }
         else assert(false);
+
       }
       
       //Store result
@@ -95,7 +102,7 @@ namespace Skeletal
       
       //Compute transforms for children
       for(int i=0; i<children.size(); i++)
-        children[i]._interpret_pose_impl(result, pbegin, pend);
+        children[i]._interpret_pose_impl(result, pbegin, pend, true);
     }
   };
   
