@@ -596,6 +596,25 @@ return;
     glDisable(GL_BLEND);
   }
 
+
+  // if we need to draw the trailing motion
+  if(m_draw_trailing_motion)
+  {
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for(int i=0; i<6; i++)
+    {
+      double frame_num_tmp;
+      double time_tmp = m_time - (float)i * (1. / (m_play_fps / 6.));
+      //double time_tmp = m_time - (float)i * mocap_selected->frame_time;
+      modf(time_tmp / mocap_selected->frame_time, &frame_num_tmp);
+      if((int)frame_num_tmp < m_frame_num)
+        draw_skeleton(m_time - (float)i * mocap_selected->frame_time, false, 1. - (float)(i+1) * 1./7.);
+    }
+    glDisable(GL_BLEND);
+  }
+
   if(m_draw_shadow)
   {
     glPushMatrix();
@@ -712,9 +731,10 @@ glView::glView(int x,int y,int w,int h,const char *l)
   m_draw_reflection = true;
   m_draw_shadow = true;
   m_draw_preview = false;
+  m_draw_trailing_motion = false;
   m_draw_fps = false;
   m_camera_mode = CAMERA_FREE;
-  m_draw_style = STYLE_STICK;
+  m_draw_style = STYLE_LINES;
 
   fl_register_images();
 
