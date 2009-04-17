@@ -39,6 +39,11 @@ private:
   void cb_menuShowFPS_i(Fl_Menu_*, void*);
   static void cb_menuShowFPS(Fl_Menu_*, void*);
 public:
+  static Fl_Menu_Item *menuShowTrailingMotion;
+private:
+  void cb_menuShowTrailingMotion_i(Fl_Menu_*, void*);
+  static void cb_menuShowTrailingMotion(Fl_Menu_*, void*);
+public:
   static Fl_Menu_Item *menuCameraFree;
 private:
   void cb_menuCameraFree_i(Fl_Menu_*, void*);
@@ -49,11 +54,6 @@ private:
   void cb_menuCameraAuto_i(Fl_Menu_*, void*);
   static void cb_menuCameraAuto(Fl_Menu_*, void*);
 public:
-  static Fl_Menu_Item *menuSkeletonStick;
-private:
-  void cb_menuSkeletonStick_i(Fl_Menu_*, void*);
-  static void cb_menuSkeletonStick(Fl_Menu_*, void*);
-public:
   static Fl_Menu_Item *menuSkeletonLines;
 private:
   void cb_menuSkeletonLines_i(Fl_Menu_*, void*);
@@ -63,6 +63,11 @@ public:
 private:
   void cb_menuSkeletonEllipsoids_i(Fl_Menu_*, void*);
   static void cb_menuSkeletonEllipsoids(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *menuSkeletonStick;
+private:
+  void cb_menuSkeletonStick_i(Fl_Menu_*, void*);
+  static void cb_menuSkeletonStick(Fl_Menu_*, void*);
   void cb_Stick_i(Fl_Menu_*, void*);
   static void cb_Stick(Fl_Menu_*, void*);
   void cb_Stick1_i(Fl_Menu_*, void*);

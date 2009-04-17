@@ -8,7 +8,7 @@ class UserInterface {open
   } {
     Fl_Window mainWindow {
       label {Skeletal Anim} open
-      xywh {461 157 600 710} type Double resizable visible
+      xywh {461 52 600 710} type Double resizable visible
     } {
       Fl_Group {} {open
         xywh {-5 0 830 709}
@@ -50,6 +50,11 @@ class UserInterface {open
                 callback {view->m_draw_fps = !view->m_draw_fps;}
                 xywh {35 35 100 20} type Toggle labelsize 10
               }
+              MenuItem menuShowTrailingMotion {
+                label {Show Trailing Motion}
+                callback {view->m_draw_trailing_motion = !view->m_draw_trailing_motion;}
+                xywh {35 35 100 20} type Toggle labelsize 10
+              }
             }
             Submenu {} {
               label Camera open
@@ -70,20 +75,20 @@ class UserInterface {open
               label Skeleton open
               xywh {10 10 100 20} labelsize 10
             } {
-              MenuItem menuSkeletonStick {
-                label Stick
-                callback {view->m_draw_style = glView::STYLE_STICK;}
-                xywh {10 10 100 20} type Radio value 1 labelsize 10
-              }
               MenuItem menuSkeletonLines {
                 label Lines
                 callback {view->m_draw_style = glView::STYLE_LINES;}
-                xywh {30 30 100 20} type Radio labelsize 10
+                xywh {30 30 100 20} type Radio value 1 labelsize 10
               }
               MenuItem menuSkeletonEllipsoids {
                 label Ellipsoids
                 callback {view->m_draw_style = glView::STYLE_ELLIPSOIDS;}
                 xywh {40 40 100 20} type Radio labelsize 10
+              }
+              MenuItem menuSkeletonStick {
+                label Stick
+                callback {view->m_draw_style = glView::STYLE_STICK;} selected
+                xywh {10 10 100 20} type Radio labelsize 10
               }
               MenuItem {} {
                 label {Stick 2}
@@ -102,7 +107,7 @@ class UserInterface {open
               }
               MenuItem {} {
                 label {Stick 2 with custom face}
-                callback {view->m_draw_style = glView::STYLE_STICK2_CUSTOM_FACE;} selected
+                callback {view->m_draw_style = glView::STYLE_STICK2_CUSTOM_FACE;}
                 xywh {50 50 100 20} type Radio labelsize 10
               }
             }
