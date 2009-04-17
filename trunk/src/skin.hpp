@@ -219,8 +219,16 @@ namespace Skeletal
         if ( vz < 0.0 ) {
           ax = -ax;
         }
+        
+
+        // yang - does this fix the rotation bug with swing examples?
+        // weird bug that only shows up in Linux; Windows version works fine
+        // no idea why though
+        if ( vz < 0. ) vz = -1.; else vz = 1.;
         float rx = -vy*vz;
         float ry = vx*vz;
+        if(rx == 0. && ry == 0.) ry = 1.;
+
         glRotatef(ax, rx, ry, 0.0);
 
         //Draw bone as a cylinder 
@@ -467,8 +475,15 @@ namespace Skeletal
         if ( vz < 0.0 ) {
           ax = -ax;
         }
+
+
+        // yang - does this fix the rotation bug with swing examples?
+        // weird bug that only shows up in Linux; Windows version works fine
+        // no idea why though
+        if ( vz < 0. ) vz = -1.; else vz = 1.;
         float rx = -vy*vz;
         float ry = vx*vz;
+        if(rx == 0. && ry == 0.) ry = 1.;
         glRotatef(ax, rx, ry, 0.0);
 
         //Draw bone as a cylinder 
