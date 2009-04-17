@@ -37,14 +37,18 @@ double  fov = 45.,
         z_near = 0.1,
         z_far = 10000.;
 
-double colors[6][4] =
+double colors[10][4] =
 {
         {1., 0., 0., 0.5},
         {.2, .2, .2, 0.5},
         {0., 0., 1., 0.5},
         {1., 1., 0., 0.5},
         {0., 1., 1., 0.5},
-        {1., 0., 1., 0.5},
+        {1., .5, 1., 0.5},
+        {1., 1., .5, 0.5},
+        {.5, 1., 1., 0.5},
+        {1., 1., 1., 0.5},
+        {0., 0., 0., 0.5}
 };
 
 static float floorHeight = 0.0;
@@ -609,9 +613,84 @@ return;
       double time_tmp = m_time - (float)i * (1. / (m_play_fps / 6.));
       //double time_tmp = m_time - (float)i * mocap_selected->frame_time;
       modf(time_tmp / mocap_selected->frame_time, &frame_num_tmp);
-      if((int)frame_num_tmp < m_frame_num)
+      int frame_num = (int)frame_num_tmp % mocap_selected->frames.size();
+      if(frame_num < m_frame_num)
         draw_skeleton(m_time - (float)i * mocap_selected->frame_time, false, 1. - (float)(i+1) * 1./7.);
     }
+    glDisable(GL_BLEND);
+  }
+
+  // this code is not very efficient
+  if(m_draw_end_effectors)
+  {
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // draw the end effectors forward
+    Vector3d end_effector_pos;
+    Vector3d end_effector_pos_prev;
+    int test = mocap_selected->list_end_effectors.size();
+    string str = mocap_selected->list_end_effectors[0]->name;
+    for(int i = 0; i < mocap_selected->list_end_effectors.size(); i++)
+    {
+      for(int j=0; j<20; j++)
+      {
+        double frame_num_tmp;
+        double time_tmp = m_time + (float)j * .1;
+        modf(time_tmp / mocap_selected->frame_time, &frame_num_tmp);
+        int frame_num = (int)frame_num_tmp % mocap_selected->frames.size();
+
+        
+        if(i < 10) 
+          glColor4dv(colors[i]);
+        else
+          glColor4f(.2, .2, .8, .5);
+
+        // draw the end effector
+        glBegin(GL_LINES);
+        if(frame_num >= 0)
+        {
+          //Figure interpolate current pose
+          Frame c_frame = mocap_selected->get_frame(time_tmp, false);
+
+          //Extract matrices
+          vector<Transform3d> xform( mocap_selected->skeleton.size() );
+          mocap_selected->skeleton.interpret_pose(
+                  xform.begin(), 
+                  c_frame.pose.begin(),
+                  c_frame.pose.end());
+
+          bool found = compute_end_effector_pos(mocap_selected->skeleton,
+            xform.begin(), xform.end(),
+            *mocap_selected->list_end_effectors[i],
+            end_effector_pos);
+
+          if(j != 0) 
+          {
+            glVertex3f(end_effector_pos_prev[0], end_effector_pos_prev[1], end_effector_pos_prev[2]);
+            glVertex3f(end_effector_pos[0], end_effector_pos[1], end_effector_pos[2]);
+          }
+          end_effector_pos_prev = end_effector_pos;
+          /*
+          if(found)
+          {
+            glEnable(GL_POINT_SMOOTH);
+            glPointSize(5);
+            glBegin(GL_POINTS);
+              glVertex3f(end_effector_pos[0], end_effector_pos[1], end_effector_pos[2]);
+            glEnd();
+          }
+          */
+        }
+        glEnd();
+
+        
+      }
+
+      
+    }
+
     glDisable(GL_BLEND);
   }
 
@@ -732,6 +811,7 @@ glView::glView(int x,int y,int w,int h,const char *l)
   m_draw_shadow = true;
   m_draw_preview = false;
   m_draw_trailing_motion = false;
+  m_draw_end_effectors = false;
   m_draw_fps = false;
   m_camera_mode = CAMERA_FREE;
   m_draw_style = STYLE_LINES;
@@ -1018,6 +1098,7 @@ void glView::load_file()
       try
       {
          mocap = new Motion(parseBVH(c_in).convert_quat());
+         find_end_effectors(mocap->skeleton, mocap->list_end_effectors);
       }
       catch(...)
       {
