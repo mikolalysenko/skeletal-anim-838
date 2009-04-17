@@ -31,7 +31,7 @@ builddir = out
 INC_PATH = -I$(srcdir) -I$(EIGENPATH) -I$(FLTKPATH)
 
 # libraries link options ('-lm' is common to link with the math library)
-LNK_LIBS = -lglut -lm -L$(FLTKPATH)/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl
+LNK_LIBS = -lglut -lm -L$(FLTKPATH)/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl -lXpm
 
 
 # other compilation options
