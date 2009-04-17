@@ -44,6 +44,11 @@ private:
   void cb_menuShowTrailingMotion_i(Fl_Menu_*, void*);
   static void cb_menuShowTrailingMotion(Fl_Menu_*, void*);
 public:
+  static Fl_Menu_Item *menuShowEndEffectors;
+private:
+  void cb_menuShowEndEffectors_i(Fl_Menu_*, void*);
+  static void cb_menuShowEndEffectors(Fl_Menu_*, void*);
+public:
   static Fl_Menu_Item *menuCameraFree;
 private:
   void cb_menuCameraFree_i(Fl_Menu_*, void*);

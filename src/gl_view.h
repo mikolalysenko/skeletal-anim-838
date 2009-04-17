@@ -93,6 +93,7 @@ public:
   bool m_draw_preview;
   bool m_draw_fps;
   bool m_draw_trailing_motion;
+  bool m_draw_end_effectors;
   int m_camera_mode;
   int m_draw_style; 
   unsigned int m_frame_num;

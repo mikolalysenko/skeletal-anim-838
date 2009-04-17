@@ -55,6 +55,11 @@ class UserInterface {open
                 callback {view->m_draw_trailing_motion = !view->m_draw_trailing_motion;}
                 xywh {35 35 100 20} type Toggle labelsize 10
               }
+              MenuItem menuShowEndEffectors {
+                label {Show End Effectors}
+                callback {view->m_draw_end_effectors = !view->m_draw_end_effectors;} selected
+                xywh {45 45 100 20} type Toggle labelsize 10
+              }
             }
             Submenu {} {
               label Camera open
@@ -87,7 +92,7 @@ class UserInterface {open
               }
               MenuItem menuSkeletonStick {
                 label Stick
-                callback {view->m_draw_style = glView::STYLE_STICK;} selected
+                callback {view->m_draw_style = glView::STYLE_STICK;}
                 xywh {10 10 100 20} type Radio labelsize 10
               }
               MenuItem {} {

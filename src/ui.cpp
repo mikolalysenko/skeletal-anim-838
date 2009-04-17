@@ -37,6 +37,13 @@ void UserInterface::cb_menuShowTrailingMotion(Fl_Menu_* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_menuShowTrailingMotion_i(o,v);
 }
 
+void UserInterface::cb_menuShowEndEffectors_i(Fl_Menu_*, void*) {
+  view->m_draw_end_effectors = !view->m_draw_end_effectors;
+}
+void UserInterface::cb_menuShowEndEffectors(Fl_Menu_* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_menuShowEndEffectors_i(o,v);
+}
+
 void UserInterface::cb_menuCameraFree_i(Fl_Menu_*, void*) {
   view->m_camera_mode = glView::CAMERA_FREE;
 }
@@ -107,6 +114,7 @@ Fl_Menu_Item UserInterface::menu_[] = {
  {"Show Colored Preview", 0,  (Fl_Callback*)UserInterface::cb_menuShowPreview, 0, 2, FL_NORMAL_LABEL, 0, 10, 0},
  {"Show FPS", 0,  (Fl_Callback*)UserInterface::cb_menuShowFPS, 0, 2, FL_NORMAL_LABEL, 0, 10, 0},
  {"Show Trailing Motion", 0,  (Fl_Callback*)UserInterface::cb_menuShowTrailingMotion, 0, 2, FL_NORMAL_LABEL, 0, 10, 0},
+ {"Show End Effectors", 0,  (Fl_Callback*)UserInterface::cb_menuShowEndEffectors, 0, 2, FL_NORMAL_LABEL, 0, 10, 0},
  {0,0,0,0,0,0,0,0,0},
  {"Camera", 0,  0, 0, 64, FL_NORMAL_LABEL, 0, 10, 0},
  {"Free", 0,  (Fl_Callback*)UserInterface::cb_menuCameraFree, 0, 12, FL_NORMAL_LABEL, 0, 10, 0},
@@ -128,11 +136,12 @@ Fl_Menu_Item* UserInterface::menuShowReflection = UserInterface::menu_ + 2;
 Fl_Menu_Item* UserInterface::menuShowPreview = UserInterface::menu_ + 3;
 Fl_Menu_Item* UserInterface::menuShowFPS = UserInterface::menu_ + 4;
 Fl_Menu_Item* UserInterface::menuShowTrailingMotion = UserInterface::menu_ + 5;
-Fl_Menu_Item* UserInterface::menuCameraFree = UserInterface::menu_ + 8;
-Fl_Menu_Item* UserInterface::menuCameraAuto = UserInterface::menu_ + 9;
-Fl_Menu_Item* UserInterface::menuSkeletonLines = UserInterface::menu_ + 12;
-Fl_Menu_Item* UserInterface::menuSkeletonEllipsoids = UserInterface::menu_ + 13;
-Fl_Menu_Item* UserInterface::menuSkeletonStick = UserInterface::menu_ + 14;
+Fl_Menu_Item* UserInterface::menuShowEndEffectors = UserInterface::menu_ + 6;
+Fl_Menu_Item* UserInterface::menuCameraFree = UserInterface::menu_ + 9;
+Fl_Menu_Item* UserInterface::menuCameraAuto = UserInterface::menu_ + 10;
+Fl_Menu_Item* UserInterface::menuSkeletonLines = UserInterface::menu_ + 13;
+Fl_Menu_Item* UserInterface::menuSkeletonEllipsoids = UserInterface::menu_ + 14;
+Fl_Menu_Item* UserInterface::menuSkeletonStick = UserInterface::menu_ + 15;
 
 void UserInterface::cb_btn_play_i(Fl_Button* o, void*) {
   view->toggle_play(((Fl_Button *)o)->value());

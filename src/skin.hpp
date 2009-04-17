@@ -570,6 +570,46 @@ namespace Skeletal
     }
 
 
+
+  //Draws the line skeleton
+  template<class XformIter>
+    bool _compute_end_effector_pos_impl(Transform3d xform, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
+      const Joint& end_effector, Vector3d &position)
+    {
+      assert(pose_begin != pose_end);
+
+      //Construct joint transform
+      Transform3d base_xform = *(pose_begin++);
+      xform.translate(skeleton.offset);
+      xform = xform * base_xform;
+    
+      if(&skeleton == &end_effector) 
+      {
+        position = xform.translation();
+        return true;
+      }
+
+      for(int i=0; i<skeleton.children.size(); i++)
+      {
+        if(_compute_end_effector_pos_impl(xform, skeleton.children[i], pose_begin, pose_end, end_effector, position) == true)
+          return true;
+      }
+
+      return false;
+    }
+
+  template<class XformIter>
+    bool compute_end_effector_pos(const Joint& skeleton, XformIter pose_begin, XformIter pose_end, 
+      const Joint& end_effector, Vector3d &position)
+    {
+      Transform3d xform;
+      xform.setIdentity();
+      return _compute_end_effector_pos_impl(xform, skeleton, pose_begin, pose_end, end_effector, position);
+    }
+
+
+
+
 };
 
 #endif

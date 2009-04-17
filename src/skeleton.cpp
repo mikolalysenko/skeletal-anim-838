@@ -158,6 +158,10 @@ Motion parseBVH(istream& bvh_file)
   // compute the bounding sphere radius
   result.bound_sphere_radius = sqrt(max(min_pt.dot(min_pt), max_pt.dot(max_pt)));
 
+  // find the end effectors
+  find_end_effectors(result.skeleton, result.list_end_effectors);
+  //for(int i = 0; i < result.list_end_effectors.size(); i++)
+  //  printf("%s\n", result.list_end_effectors[i]->name.c_str());
 
   return result;
 }
@@ -314,6 +318,7 @@ Motion Motion::convert_quat() const
   result.bound_sphere_radius = bound_sphere_radius;
   result.bound_box_min = bound_box_min;
   result.bound_box_max = bound_box_max;
+  result.list_end_effectors.clear();
 
   for(int i=0; i<frames.size(); i++)
     result.frames[i] = frames[i].reparameterize(skeleton, result.skeleton);
@@ -648,6 +653,18 @@ void compute_bounding_box(const Motion& motion,
   }
 }
 
+
+void find_end_effectors(
+    const Joint& skeleton,
+    vector<const Joint*> &list_end_effector)
+{
+  // add the end effector
+  if(skeleton.children.size() == 0) list_end_effector.push_back(&skeleton);
+
+  // loop through all the joints
+  for(int i=0; i<skeleton.children.size(); i++)
+    find_end_effectors(skeleton.children[i], list_end_effector);
+}
   
 
 }

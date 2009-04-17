@@ -130,6 +130,7 @@ namespace Skeletal
     double bound_sphere_radius;
     Vector3d bound_box_min;
     Vector3d bound_box_max;
+    vector<const Joint*> list_end_effectors;
     
     //Returns the total duration of the animation
     double duration() const
@@ -221,6 +222,10 @@ namespace Skeletal
   {
     compute_bounding_box_impl(xform_ref, skeleton, pose_begin, pose_end, min_pt, max_pt);
   };
+
+  void find_end_effectors(
+    const Joint& skeleton,
+    vector<const Joint*> &list_end_effector);
 
 
 };
