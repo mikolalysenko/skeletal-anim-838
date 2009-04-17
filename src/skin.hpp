@@ -219,14 +219,13 @@ namespace Skeletal
         if ( vz < 0.0 ) {
           ax = -ax;
         }
-        
-
         // yang - does this fix the rotation bug with swing examples?
         // weird bug that only shows up in Linux; Windows version works fine
         // no idea why though
         if ( vz < 0. ) vz = -1.; else vz = 1.;
         float rx = -vy*vz;
         float ry = vx*vz;
+        if(rx == 0. && ry == 0.) ry = 1.; 
         if(rx == 0. && ry == 0.) ry = 1.;
 
         glRotatef(ax, rx, ry, 0.0);
@@ -370,7 +369,7 @@ namespace Skeletal
             //draw a head as a cylinder
             glPushMatrix();
             glTranslatef(0, radius, 0);
-            if(!disable_color) glColor4f(1., 1., 1., alpha);
+            if(!disable_color) glColor4f(1., 1., 0., alpha);
             glutSolidTorus(thickness, radius, 20, 20);
             glPopMatrix(); 
 
@@ -404,7 +403,7 @@ namespace Skeletal
               //draw one eye
               glPushMatrix();
               glTranslatef(radius / 3., radius + radius / 3., 0.);
-              if(!disable_color) glColor4f(1., 1., 1., alpha);
+              if(!disable_color) glColor4f(1., 1., 0., alpha);
               gluSphere(obj, face_thickness, 20, 20);
               glPopMatrix(); 
 
@@ -412,7 +411,7 @@ namespace Skeletal
               //draw the other eye
               glPushMatrix();
               glTranslatef(-radius / 3., radius + radius / 3., 0.);
-              if(!disable_color) glColor4f(1., 1., 1., alpha);
+              if(!disable_color) glColor4f(1., 1., 0., alpha);
               gluSphere(obj, face_thickness, 20, 20);
               glPopMatrix(); 
 
@@ -421,19 +420,19 @@ namespace Skeletal
               glPushMatrix();
               glTranslatef(0., radius, 0.);
               glRotatef(90., 1., 0., 0.);
-              if(!disable_color) glColor4f(1., 1., 1., alpha);
+              if(!disable_color) glColor4f(1., 1., 0., alpha);
               gluCylinder(obj, face_thickness, face_thickness, radius / 6., 20, 20);
               glPopMatrix(); 
 
               glPushMatrix();
               glTranslatef(0., radius, 0.);
-              if(!disable_color) glColor4f(1., 1., 1., alpha);
+              if(!disable_color) glColor4f(1., 1., 0., alpha);
               gluSphere(obj, face_thickness, 20, 20);
               glPopMatrix(); 
 
               glPushMatrix();
               glTranslatef(0., radius - radius / 6., 0.);
-              if(!disable_color) glColor4f(1., 1., 1., alpha);
+              if(!disable_color) glColor4f(1., 1., 0., alpha);
               gluSphere(obj, face_thickness, 20, 20);
               glPopMatrix(); 
 
@@ -441,19 +440,19 @@ namespace Skeletal
               glPushMatrix();
               glTranslatef(-radius / 3., radius / 2, 0.);
               glRotatef(90., 0., 1., 0.);
-              if(!disable_color) glColor4f(1., 1., 1., alpha);
+              if(!disable_color) glColor4f(1., 1., 0., alpha);
               gluCylinder(obj, face_thickness, face_thickness, radius * 2. / 3., 20, 20);
               glPopMatrix(); 
 
               glPushMatrix();
               glTranslatef(-radius / 3., radius / 2, 0.);
-              if(!disable_color) glColor4f(1., 1., 1., alpha);
+              if(!disable_color) glColor4f(1., 1., 0., alpha);
               gluSphere(obj, face_thickness, 20, 20);
               glPopMatrix(); 
 
               glPushMatrix();
               glTranslatef(radius / 3., radius / 2, 0.);
-              if(!disable_color) glColor4f(1., 1., 1., alpha);
+              if(!disable_color) glColor4f(1., 1., 0., alpha);
               gluSphere(obj, face_thickness, 20, 20);
               glPopMatrix(); 
             
@@ -475,23 +474,22 @@ namespace Skeletal
         if ( vz < 0.0 ) {
           ax = -ax;
         }
-
-
         // yang - does this fix the rotation bug with swing examples?
         // weird bug that only shows up in Linux; Windows version works fine
         // no idea why though
         if ( vz < 0. ) vz = -1.; else vz = 1.;
         float rx = -vy*vz;
         float ry = vx*vz;
+        if(rx == 0. && ry == 0.) ry = 1.; 
         if(rx == 0. && ry == 0.) ry = 1.;
         glRotatef(ax, rx, ry, 0.0);
 
         //Draw bone as a cylinder 
-        if(!disable_color) glColor4f(1., 1., 1., alpha);
+        if(!disable_color) glColor4f(1., 1., 0., alpha);
         gluCylinder(obj, thickness, thickness, height, 20, 20);
 
         //Draw a sphere at 0 for a joint
-        if(!disable_color) glColor4f(1., 1., 1., alpha);
+        if(!disable_color) glColor4f(1., 1., 0., alpha);
         gluSphere(obj, thickness, 20, 20);
       
         glPopMatrix(); 
