@@ -150,6 +150,7 @@ public:
   Fl_Box *lbl_frames;
   Fl_Box *lbl_fps;
   Fl_Box *boxImageLogo;
+  Fl_Box *boxImageIcon;
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);
 };

@@ -379,7 +379,7 @@ namespace Skeletal
               glTranslatef(0, radius, 0);
               //if(!disable_color) glColor4f(1., 1., 0., alpha);
               
-              
+              glPushAttrib(GL_ALL_ATTRIB_BITS);
               glEnable(GL_BLEND);
               glDepthMask(GL_FALSE);
               glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -392,6 +392,7 @@ namespace Skeletal
               glEnd();
               glDisable(GL_TEXTURE_2D);
               glDisable(GL_BLEND);
+              glPopAttrib();
 
               glPopMatrix(); 
             }
