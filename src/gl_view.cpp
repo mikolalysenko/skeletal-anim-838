@@ -15,7 +15,12 @@
 #include <Eigen/SVD>
 
 //OpenGL
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
+
 
 #ifndef WIN32
 #include <sys/time.h>

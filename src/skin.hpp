@@ -14,7 +14,11 @@
 #include <Eigen/SVD>
 
 //OpenGL
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 
 //Skeleton includes
 #include <skeleton.hpp>
