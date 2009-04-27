@@ -217,12 +217,8 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
   Frame c_frame = mocap_selected->get_frame(t, true);
 
   //Extract matrices
-  vector<Transform3d> xform( mocap_selected->skeleton.size() );
-  mocap_selected->skeleton.interpret_pose(
-          xform.begin(), 
-          c_frame.pose.begin(),
-          c_frame.pose.end());
-
+  vector<Transform3d> xform = c_frame.local_xform(mocap_selected->skeleton);
+  
   switch(m_draw_style)
   {
   case STYLE_STICK:
@@ -230,20 +226,20 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
     break;
 
   case STYLE_STICK2:
-    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius);
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius());
     break;
 
   case STYLE_STICK2_NO_FACE:
-    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius, 0);
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius(), 0);
     break;
 
   case STYLE_STICK2_EDGES:
-    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius, 1, true);
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius(), 1, true);
     break;
 
   case STYLE_STICK2_CUSTOM_FACE:
     glBindTexture(GL_TEXTURE_2D, idFace);
-    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius, 2);
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius(), 2);
     break;
 
   case STYLE_LINES:
@@ -327,11 +323,7 @@ void glView::draw_frame(int f)
   Frame c_frame = mocap_selected->frames[f];
 
   //Extract matrices
-  vector<Transform3d> xform( mocap_selected->skeleton.size() );
-  mocap_selected->skeleton.interpret_pose(
-          xform.begin(), 
-          c_frame.pose.begin(),
-          c_frame.pose.end());
+  vector<Transform3d> xform = c_frame.local_xform(mocap_selected->skeleton);
 
   //Draw the line skeleton
   draw_ellipsoid_skeleton(mocap_selected->skeleton, xform.begin(), xform.end());
@@ -625,6 +617,7 @@ return;
     glDisable(GL_BLEND);
   }
 
+  /*
   // this code is not very efficient
   if(m_draw_end_effectors)
   {
@@ -677,7 +670,9 @@ return;
             glVertex3f(end_effector_pos[0], end_effector_pos[1], end_effector_pos[2]);
           }
           end_effector_pos_prev = end_effector_pos;
-          /*
+          
+          
+          // *
           if(found)
           {
             glEnable(GL_POINT_SMOOTH);
@@ -686,7 +681,7 @@ return;
               glVertex3f(end_effector_pos[0], end_effector_pos[1], end_effector_pos[2]);
             glEnd();
           }
-          */
+          // *
         }
         glEnd();
 
@@ -698,6 +693,7 @@ return;
 
     glDisable(GL_BLEND);
   }
+  */
 
   if(m_draw_shadow)
   {
@@ -1103,7 +1099,8 @@ void glView::load_file()
       try
       {
          mocap = new Motion(parseBVH(c_in).convert_quat());
-         find_end_effectors(mocap->skeleton, mocap->list_end_effectors);
+        //FIXME: Need to reimplement using new end_effector code
+//         find_end_effectors(mocap->skeleton, mocap->list_end_effectors);
       }
       catch(...)
       {
@@ -1313,29 +1310,6 @@ void glView::mode_single()
 }
 
 
-//Fixes the y=0 plane to a constant -Mik
-Transform3d constrain_xform(const Transform3d& xform)
-{
-  Matrix3d m = xform.rotation(), r;
-  
-  //Zero out y part
-  for(int i=0; i<3; i++)
-    m(i,1) = m(1,i) = 0.;
-  m(1,1) = 1.	;
-  
-  //Compute closest orthonormal matrix
-  r = m.svd().matrixU() * m.svd().matrixV().transpose();
-  
-  //Reconstruct final matrix
-  Matrix4d v = Matrix4d::Identity();
-  v.block(0,0,3,3) = r;
-  v.block(0,3,3,1) = xform.translation();
-  
-  //Cancel y translation
-  v(1,3) = 0.;
-  
-  return Transform3d(v);
-}
 
 void glView::mode_multiple()
 {
@@ -1417,32 +1391,12 @@ void glView::mode_multiple()
     word = strtok(NULL, "\t");
     next_duration = atof(word) * b->frame_time;
 
-    vector<Transform3d> xform_a( a->skeleton.size() ),
-                        xform_b( b->skeleton.size() );
                                             
-    Frame fa = a->get_frame(a_end - duration),
-          fb = b->get_frame(b_start);
     
-    
-    a->skeleton.interpret_pose(
-            xform_a.begin(), 
-            fa.pose.begin(),
-            fa.pose.end());
-
-    b->skeleton.interpret_pose(
-            xform_b.begin(), 
-            fb.pose.begin(),
-            fb.pose.end());
-    
-            
-    
-    Transform3d relative_xform(xform_b[0].inverse());
-    relative_xform = xform_a[0] * relative_xform;
-    
-    //Add constraint to fix y=0 plane (necessary to avoid the silly walking on air bug) -Mik
-    relative_xform = constrain_xform(relative_xform);
-    
-    mocap_combine = combine_motions(*a, *b, relative_xform, 
+    mocap_combine = combine_motions(*a, *b, 
+                                    relative_xform(a->skeleton, 
+                                                   a->get_frame(a_end - duration), 
+                                                   b->get_frame(b_start)),
                                     a_start, a_end,
                                     b_start, b_end,
                                     duration, 1);
@@ -1466,10 +1420,15 @@ void glView::mode_multiple()
   m_ui->mainWindow->redraw();
 
   
+  /* //Not needed anymore I think -Mik
+  
   // compute the bounding box for the skeleton
   Vector3d offset = mocap_selected->skeleton.offset;
   Vector3d min_pt = offset;
   Vector3d max_pt = offset;
+  
+  mocal_selected->bounding_box(min_pt, max_pt);
+  
   compute_bounding_box(offset, 
                        mocap_selected->skeleton, 
                        min_pt, 
@@ -1482,7 +1441,8 @@ void glView::mode_multiple()
 
   // compute the bounding sphere radius
   mocap_selected->bound_sphere_radius = sqrt(max(min_pt.dot(min_pt), max_pt.dot(max_pt)));
-
+  */
+  
   // update the default camera position
   updateCamera();
 
@@ -1500,12 +1460,7 @@ void glView::updateCamera()
   Frame c_frame = mocap_selected->frames[m_frame_num];
 
   //Extract matrices
-  vector<Transform3d> xform( mocap_selected->skeleton.size() );
-  mocap_selected->skeleton.interpret_pose(
-          xform.begin(), 
-          c_frame.pose.begin(),
-          c_frame.pose.end());
-
+  vector<Transform3d> xform = c_frame.local_xform(mocap_selected->skeleton);
   
   Transform3d xform_sphere;
   xform_sphere.setIdentity();
@@ -1520,7 +1475,8 @@ void glView::updateCamera()
 
     // move the z back 5 times the bounding sphere
     Vector3d offset = xform_sphere.translation();
-    offset[2] += mocap_selected->bound_sphere_radius * 5.;
+    
+    offset[2] += mocap_selected->bound_sphere_radius() * 5.;
     
     // update the object center and camera rotation
     object_center = offset;
@@ -1528,12 +1484,15 @@ void glView::updateCamera()
   }
   else
   {
+    Vector3d lo, hi;
+    mocap_selected->bounding_box(lo, hi);
+    
     // fix the center to be the center of the bounding box of the motion
-    Vector3d mid_pt = (mocap_selected->bound_box_max + mocap_selected->bound_box_min) / 2.;
+    Vector3d mid_pt = (lo + hi) / 2.;
     xform_sphere.translate(mid_pt);
 
     // calculate the distance to move back
-    Vector3d diag_box = (mocap_selected->bound_box_max - mocap_selected->bound_box_min) / 2.;
+    Vector3d diag_box = (hi - lo) / 2.;
     float half_diag = sqrt(diag_box.dot(diag_box));
     float aspect_ratio = (float)w() / (float)h();
     float fov_x = fov * aspect_ratio;
@@ -1542,7 +1501,7 @@ void glView::updateCamera()
 
     // move the z back 5 times the bounding sphere + radius
     Vector3d offset = xform_sphere.translation();
-    offset[2] += mocap_selected->bound_sphere_radius * 5.;
+    offset[2] += mocap_selected->bound_sphere_radius() * 5.;
     
     // update the object center and camera rotation
     object_center = offset;
@@ -1553,6 +1512,10 @@ void glView::updateCamera()
   // update the floor height
   Vector3d min_pt = Vector3d(0., 0., 0.);
   Vector3d max_pt = Vector3d(0., 0., 0.);
+  
+  mocap_selected->bounding_box(min_pt, max_pt);
+
+/*  
   Transform3d xformPose;
   xformPose.setIdentity();
   compute_bounding_box( xformPose, 
@@ -1561,6 +1524,8 @@ void glView::updateCamera()
                         xform.end(),
                         min_pt, 
                         max_pt);
+*/
+  
   floorHeight = min_pt[1];
   floorVertex[0][1] = floorHeight;
   floorVertex[1][1] = floorHeight;
@@ -1586,11 +1551,7 @@ void glView::updateAutoCamera()
     Frame c_frame = mocap_selected->frames[m_frame_num];
 
     //Extract matrices
-    vector<Transform3d> xform( mocap_selected->skeleton.size() );
-    mocap_selected->skeleton.interpret_pose(
-            xform.begin(), 
-            c_frame.pose.begin(),
-            c_frame.pose.end());
+    vector<Transform3d> xform = c_frame.local_xform(mocap_selected->skeleton);
 
     Transform3d xform_sphere;
     xform_sphere.setIdentity();
@@ -1603,12 +1564,12 @@ void glView::updateAutoCamera()
 
     // move the z back 5 times the bounding sphere
     Vector3d offset = xform_sphere.translation();
-    offset[2] += mocap_selected->bound_sphere_radius * 5.;
+    offset[2] += mocap_selected->bound_sphere_radius() * 5.;
     
     // update the object center and camera rotation
     Vector3d diff = offset - object_center;
     float diff_length = sqrt(diff.dot(diff));
-    float radius = mocap_selected->bound_sphere_radius;
+    float radius = mocap_selected->bound_sphere_radius();
     if(diff_length > radius)
     {
       // add the difference from the offset to the point on the sphere
