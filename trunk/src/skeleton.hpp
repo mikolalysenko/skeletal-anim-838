@@ -1,18 +1,19 @@
 #ifndef SKELETON_H
 #define SKELETON_H
 
-
-//Vector arithmetic
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
-
-
 //STL
 #include <iostream>
 #include <string>
 #include <vector>
 #include <cassert>
+
+//Vector arithmetic
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+
+
+#include <misc.hpp>
 
 namespace Skeletal
 {
@@ -26,7 +27,7 @@ namespace Skeletal
     string			name;
     Vector3d		offset;
     vector<string>	channels;
-    vector<Joint>	children;
+	vector<Joint>	children;
     
     //Constructors/assignment
     Joint() : name("NONAME"), offset(0,0,0) {}
@@ -94,13 +95,13 @@ namespace Skeletal
     Frame apply_transform(const Joint& skeleton, const Transform3d& xform) const;
 
     //Retrieves a local transform vector for the skeleton
-    vector<Transform3d> local_xform(const Joint& skel) const;
+    aligned<Transform3d>::vector local_xform(const Joint& skel) const;
     
     //Retrieves a global pose vector for the skeleton
-    vector<Transform3d> global_xform(const Joint& skel) const;
+    aligned<Transform3d>::vector global_xform(const Joint& skel) const;
     
     //Extracts a point cloud for this skeleton
-    vector<Vector3d> point_cloud(const Joint& skeleton) const;
+    aligned<Vector3d>::vector point_cloud(const Joint& skeleton) const;
   };
 
   //Interpolate two poses
@@ -156,7 +157,7 @@ namespace Skeletal
     //Returns a window of point clouds
     // orig is the time about which to sample, extent is the radius of the window in +/- delta_t
     // n_samples are the number of times to sample the point cloud
-    vector<Vector4d> point_cloud_window(double orig, double extent, int n_samples, double (*window)(double)) const;
+    aligned<Vector4d>::vector point_cloud_window(double orig, double extent, int n_samples, double (*window)(double)) const;
     
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

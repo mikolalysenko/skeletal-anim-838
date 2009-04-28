@@ -5,7 +5,6 @@
 //Vector arithmetic
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <Eigen/StdVector>
 
 //STL
 #include <iostream>
@@ -14,6 +13,7 @@
 #include <cassert>
 
 //Project
+#include <misc.hpp>
 #include <skeleton.hpp>
 
 namespace Skeletal
@@ -22,7 +22,7 @@ namespace Skeletal
   using namespace Eigen;
 
   //Point cloud distance metrics
-  double cloud_distance(const vector<Vector4d>& a, const vector<Vector4d>& b, const Transform3d& x);
+  double cloud_distance(const aligned<Vector4d>::vector& a, const aligned<Vector4d>::vector& b, const Transform3d& x);
   
 
   //A motion graph data structure
@@ -63,11 +63,11 @@ namespace Skeletal
     //Removes all dead ends from the motion graph
     MotionGraph extract_biconnected() const;
     
-    //Synthesize a random motion for testing purposes
+    //Synthesize a random motion with l frames
     Motion random_motion(int l) const;
     
     private:
-      vector< vector<Vector4d> > local_clouds;
+      vector< aligned<Vector4d>::vector > local_clouds;
   };
  
   //Serialization
@@ -75,7 +75,7 @@ namespace Skeletal
   void writeMotionGraph(ostream& os, const MotionGraph g);
   
   //Constructs a motion graph from a bunch of random motions
-  MotionGraph construct_graph(const vector<Motion>& motions,
+  MotionGraph construct_graph(const aligned<Motion>::vector& motions,
     double frame_time,
     double threshold,
     double window_size,
