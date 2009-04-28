@@ -10,13 +10,9 @@
 #include <FL/Fl_Shared_Image.H>
 
 
-#include <Eigen/StdVector>
-
 #include <stdlib.h>
 #include <stdio.h>
-#include <vector>
-
-
+#include <vector>
 class glView;
 #include "ui.h"
 

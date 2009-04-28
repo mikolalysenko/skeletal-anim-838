@@ -12,6 +12,7 @@
 #include <cmath>
 
 //Project
+#include <misc.hpp>
 #include <skeleton.hpp>
 #include <mograph.hpp>
 
@@ -22,8 +23,28 @@ using namespace Skeletal;
 namespace Skeletal
 {
 
+//Point cloud distance with windows
+double cloud_distance(const aligned<Vector4d>::vector& a, const aligned<Vector4d>::vector& b, const Transform3d& x)
+{
+  assert(a.size() == b.size());
+  
+  double s = 0.;
+  for(int i=0; i<a.size(); i++)
+  {
+    Vector3d da = a[i].block(1,3,0,0),
+             db = b[i].block(1,3,0,0);
+    
+    da = x * da;
+      
+    s += (da - db).squaredNorm() * a[i].w() * b[i].w();
+  }
+  
+  return sqrt(s);
+}
+
+
 //Constructs a motion graph
-MotionGraph construct_graph(const vector<Motion>& motions, double ft, double thresh, double w, int n, double (*wind_func)(double))
+MotionGraph construct_graph(const aligned<Motion>::vector& motions, double ft, double thresh, double w, int n, double (*wind_func)(double))
 {
     MotionGraph result(motions[0].skeleton);
     result.frame_time = ft;
@@ -39,7 +60,7 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
     for(double t=0.; t<motion.duration(); t+=frame_time)
     {
         //Extract window about i
-        vector<Vector4d> cloud = motion.point_cloud_window(t, w, n, window_func);
+        aligned<Vector4d>::vector cloud = motion.point_cloud_window(t, w, n, window_func);
         
         vector<int> edges;
         if(t+frame_time<motion.duration())

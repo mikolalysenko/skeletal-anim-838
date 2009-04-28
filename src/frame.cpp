@@ -1,7 +1,6 @@
 
 //Eigen
 #include <Eigen/Core>
-#include <Eigen/StdVector>
 #include <Eigen/LU>
 #include <Eigen/SVD>
 #include <Eigen/QR>
@@ -80,7 +79,7 @@ Frame Frame::reparameterize(const Joint& base, const Joint& target) const
   assert(base.size() == target.size());
 
   //Interpret pose
-  vector<Transform3d> target_xform = local_xform(base);
+  aligned<Transform3d>::vector target_xform = local_xform(base);
 
   //Construct result
   Frame result;
@@ -296,9 +295,9 @@ void local_pose_impl(
 
 
 //Retrieves a local transform vector for the skeleton
-vector<Transform3d> Frame::local_xform(const Joint& skel) const
+aligned<Transform3d>::vector Frame::local_xform(const Joint& skel) const
 {
-    vector<Transform3d> xform(skel.num_parameters());
+    aligned<Transform3d>::vector xform(skel.num_parameters());
     Transform3d *xptr = &xform[0];
     const double *ptr = &pose[0];
     local_pose_impl(skel, xptr, ptr, &pose[pose.size()]);
@@ -318,9 +317,9 @@ void global_xform_impl(const Joint& joint, Transform3d*& xform, Transform3d root
 }
 
 //Retrieves a global pose vector for the skeleton
-vector<Transform3d> Frame::global_xform(const Joint& skel) const
+aligned<Transform3d>::vector Frame::global_xform(const Joint& skel) const
 {
-    vector<Transform3d> xform = local_xform(skel);
+    aligned<Transform3d>::vector xform = local_xform(skel);
     Transform3d root, *xptr = &xform[0];
     root.setIdentity();
     global_xform_impl(skel, xptr, root);
@@ -329,12 +328,14 @@ vector<Transform3d> Frame::global_xform(const Joint& skel) const
 }
 
 //Retrieves a point cloud for this frame/skeleton pair
-vector<Vector3d> Frame::point_cloud(const Joint& skel) const
+aligned<Vector3d>::vector Frame::point_cloud(const Joint& skel) const
 {
-  vector<Transform3d> xform = global_xform(skel);
-  vector<Vector3d> result(xform.size());
+  aligned<Transform3d>::vector xform = global_xform(skel);
+  aligned<Vector3d>::vector result(xform.size());
   for(int i=0; i<xform.size(); i++)
+  {
     result[i] = xform[i].translation();
+  }
   return result;
 }
 

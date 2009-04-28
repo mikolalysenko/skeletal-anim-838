@@ -9,7 +9,6 @@
 //Eigen includes
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <Eigen/StdVector>
 #include <Eigen/LU>
 #include <Eigen/QR>
 #include <Eigen/SVD>
@@ -25,6 +24,11 @@
 #ifndef WIN32
 #include <sys/time.h>
 #endif
+
+#include <misc.hpp>
+#include <skeleton.hpp>
+#include <skin.hpp>
+#include <mograph.hpp>
 
 #include "gl_view.h"
 
@@ -217,7 +221,7 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
   Frame c_frame = mocap_selected->get_frame(t, true);
 
   //Extract matrices
-  vector<Transform3d> xform = c_frame.local_xform(mocap_selected->skeleton);
+  aligned<Transform3d>::vector xform = c_frame.local_xform(mocap_selected->skeleton);
   
   switch(m_draw_style)
   {
@@ -323,7 +327,7 @@ void glView::draw_frame(int f)
   Frame c_frame = mocap_selected->frames[f];
 
   //Extract matrices
-  vector<Transform3d> xform = c_frame.local_xform(mocap_selected->skeleton);
+  aligned<Transform3d>::vector xform = c_frame.local_xform(mocap_selected->skeleton);
 
   //Draw the line skeleton
   draw_ellipsoid_skeleton(mocap_selected->skeleton, xform.begin(), xform.end());
@@ -653,7 +657,7 @@ return;
           Frame c_frame = mocap_selected->get_frame(time_tmp, false);
 
           //Extract matrices
-          vector<Transform3d> xform( mocap_selected->skeleton.size() );
+          aligned<Transform3d>::vector xform( mocap_selected->skeleton.size() );
           mocap_selected->skeleton.interpret_pose(
                   xform.begin(), 
                   c_frame.pose.begin(),
@@ -1460,7 +1464,7 @@ void glView::updateCamera()
   Frame c_frame = mocap_selected->frames[m_frame_num];
 
   //Extract matrices
-  vector<Transform3d> xform = c_frame.local_xform(mocap_selected->skeleton);
+  aligned<Transform3d>::vector xform = c_frame.local_xform(mocap_selected->skeleton);
   
   Transform3d xform_sphere;
   xform_sphere.setIdentity();
@@ -1551,7 +1555,7 @@ void glView::updateAutoCamera()
     Frame c_frame = mocap_selected->frames[m_frame_num];
 
     //Extract matrices
-    vector<Transform3d> xform = c_frame.local_xform(mocap_selected->skeleton);
+    aligned<Transform3d>::vector xform = c_frame.local_xform(mocap_selected->skeleton);
 
     Transform3d xform_sphere;
     xform_sphere.setIdentity();
