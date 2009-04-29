@@ -293,17 +293,8 @@ void Frame::local_pose_impl(
     local_pose_impl(joint.children[i], result, pbegin, pend, true);
 }
 
-/*
-//Retrieves a local transform vector for the skeleton
-aligned<Transform3d>::vector Frame::local_xform(const Joint& skel) const
-{
-    aligned<Transform3d>::vector xform(skel.num_parameters());
-    Transform3d *xptr = &xform[0];
-    const double *ptr = &pose[0];
-    local_pose_impl(skel, xptr, ptr, NULL);//&pose[pose.size()]);
-    return xform;
-}
-*/
+
+#ifdef WIN32
 
 
 void Frame::global_xform_impl(const Joint& joint, Transform3d*& xform, Transform3d& root_ref) const
@@ -318,7 +309,31 @@ void Frame::global_xform_impl(const Joint& joint, Transform3d*& xform, Transform
         global_xform_impl(joint.children[i], xform, root);
 }
 
-/*
+#else
+
+
+//Retrieves a local transform vector for the skeleton
+aligned<Transform3d>::vector Frame::local_xform(const Joint& skel) const
+{
+    aligned<Transform3d>::vector xform(skel.num_parameters());
+    Transform3d *xptr = &xform[0];
+    const double *ptr = &pose[0];
+    local_pose_impl(skel, xptr, ptr, &pose[pose.size()]);
+    return xform;
+}
+
+
+void global_xform_impl(const Joint& joint, Transform3d*& xform, Transform3d root)
+{
+    //Update transform matrix
+    root.translate(joint.offset);
+    root = root * (*xform);
+    *(xform++) = root;
+    
+    for(int i=0; i<joint.children.size(); i++)
+        global_xform_impl(joint.children[i], xform, root);
+}
+
 //Retrieves a global pose vector for the skeleton
 aligned<Transform3d>::vector Frame::global_xform(const Joint& skel) const
 {
@@ -329,9 +344,7 @@ aligned<Transform3d>::vector Frame::global_xform(const Joint& skel) const
   
     return xform;
 }
-*/
 
-/*
 //Retrieves a point cloud for this frame/skeleton pair
 aligned<Vector3d>::vector Frame::point_cloud(const Joint& skel) const
 {
@@ -343,6 +356,8 @@ aligned<Vector3d>::vector Frame::point_cloud(const Joint& skel) const
   }
   return result;
 }
-*/
+
+
+#endif
 
 }

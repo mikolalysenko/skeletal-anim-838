@@ -94,6 +94,7 @@ namespace Skeletal
     //Apply a transformation to this pose
     Frame apply_transform(const Joint& skeleton, const Transform3d& xform) const;
 
+#ifdef WIN32
     void local_pose_impl(const Joint joint,
                          Transform3d*& result, 
                          const double*& pbegin, 
@@ -135,7 +136,18 @@ namespace Skeletal
       return result;
     }
   };
+#else
 
+    //Retrieves a local transform vector for the skeleton
+    aligned<Transform3d>::vector local_xform(const Joint& skel) const;
+    
+    //Retrieves a global pose vector for the skeleton
+    aligned<Transform3d>::vector global_xform(const Joint& skel) const;
+    
+    //Extracts a point cloud for this skeleton
+    aligned<Vector3d>::vector point_cloud(const Joint& skeleton) const;
+
+#endif
   //Interpolate two poses
   Frame interpolate_frames(const Joint& skel, const Frame& a, const Frame& b, double t);
   
@@ -185,7 +197,9 @@ namespace Skeletal
     
     //Constructs the bounding box
     void bounding_box(Vector3d& lo, Vector3d& hi) const;
-    
+
+
+#ifdef WIN32
     //Returns a window of point clouds
     // orig is the time about which to sample, extent is the radius of the window in +/- delta_t
     // n_samples are the number of times to sample the point cloud
@@ -207,7 +221,14 @@ namespace Skeletal
       
       return result;
     }
-
+#else
+    
+    //Returns a window of point clouds
+    // orig is the time about which to sample, extent is the radius of the window in +/- delta_t
+    // n_samples are the number of times to sample the point cloud
+    aligned<Vector4d>::vector point_cloud_window(double orig, double extent, int n_samples, double (*window)(double)) const;
+    
+#endif
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   };
