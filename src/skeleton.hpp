@@ -128,14 +128,14 @@ namespace Skeletal
     aligned<Vector3d>::vector point_cloud(const Joint& skel) const
     {
       aligned<Transform3d>::vector xform = global_xform(skel);
-      aligned<Vector3d>::vector result(xform.size());
+      aligned<Vector3d>::vector result;//(xform.size());
       for(int i=0; i<xform.size(); i++)
       {
         result[i] = xform[i].translation();
       }
       return result;
     }
-  };
+
 #else
 
     //Retrieves a local transform vector for the skeleton
@@ -148,9 +148,13 @@ namespace Skeletal
     aligned<Vector3d>::vector point_cloud(const Joint& skeleton) const;
 
 #endif
+ 
+  };
+
   //Interpolate two poses
   Frame interpolate_frames(const Joint& skel, const Frame& a, const Frame& b, double t);
-  
+ 
+
   //Motion capture data structure
   struct Motion
   {
@@ -259,4 +263,3 @@ namespace Skeletal
 };
 
 #endif
-

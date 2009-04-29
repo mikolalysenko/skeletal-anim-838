@@ -230,6 +230,7 @@ Frame Frame::apply_transform(const Joint& skeleton, const Transform3d& xform) co
   return result;
 }
 
+#ifdef WIN32
 //Interprets the pose
 void Frame::local_pose_impl(
     const Joint joint,
@@ -237,6 +238,14 @@ void Frame::local_pose_impl(
     const double*& pbegin, 
     const double* pend,
     bool skip_transform) const
+#else
+void local_pose_impl(
+    const Joint joint,
+    Transform3d*& result, 
+    const double*& pbegin, 
+    const double* pend,
+    bool skip_transform = false)
+#endif
 {
   Transform3d xform;
   xform.setIdentity();
