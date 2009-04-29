@@ -54,7 +54,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON                ICON                    "C:\\Documents and Settings\\yangk\\My Documents\\pdf\\p2\\latest\\skeletal-anim-838\\icon.ico"
+IDI_ICON                ICON                    "..\\icon.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

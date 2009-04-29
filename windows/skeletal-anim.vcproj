@@ -188,7 +188,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\src\bvh.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\frame.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\gl_view.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\joint.cpp"
 				>
 			</File>
 			<File
@@ -196,7 +208,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\skeleton.cpp"
+				RelativePath="..\src\mograph.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\motion.cpp"
 				>
 			</File>
 			<File
@@ -211,6 +227,14 @@
 			>
 			<File
 				RelativePath="..\src\gl_view.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\misc.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\mograph.hpp"
 				>
 			</File>
 			<File

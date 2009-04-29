@@ -30,12 +30,13 @@ namespace Skeletal
   
   //Draws the line skeleton
   template<class XformIter>
-    void _draw_line_skeleton_impl(Transform3d xform, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
+    void _draw_line_skeleton_impl(Transform3d& xform_ref, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
       bool disable_color, float alpha)
     {
       assert(pose_begin != pose_end);
 
       //Construct joint transform
+      Transform3d xform = xform_ref;
       Transform3d base_xform = *(pose_begin++);
       xform.translate(skeleton.offset);
       xform = xform * base_xform;
@@ -167,10 +168,13 @@ namespace Skeletal
 
   //Draws the stick figure skeleton
   template<class XformIter>
-    void _draw_stick_skeleton_impl(Transform3d xform, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
+    void _draw_stick_skeleton_impl(Transform3d& xform_ref, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
       bool disable_color, float alpha)
     {
       assert(pose_begin != pose_end);
+
+      
+      Transform3d xform = xform_ref;
 
       //turn on backface culling
       glEnable(GL_CULL_FACE);
@@ -578,12 +582,13 @@ namespace Skeletal
 
   //Draws the line skeleton
   template<class XformIter>
-    bool _compute_end_effector_pos_impl(Transform3d xform, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
+    bool _compute_end_effector_pos_impl(Transform3d& xform_ref, const Joint& skeleton, XformIter& pose_begin, XformIter pose_end, 
       const Joint& end_effector, Vector3d &position)
     {
       assert(pose_begin != pose_end);
 
       //Construct joint transform
+      Transform3d xform = xform_ref;
       Transform3d base_xform = *(pose_begin++);
       xform.translate(skeleton.offset);
       xform = xform * base_xform;
