@@ -274,7 +274,7 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
   glMultMatrixd(tr.data());
   glDisable(GL_LIGHTING);
   glColor3f(1., 1., 0.);
-  glutWireSphere(mocap_selected->bound_sphere_radius, 8, 8);
+  glutWireSphere(mocap_selected->bound_sphere_radius(), 8, 8);
   glPopMatrix();
 */
 
@@ -1457,6 +1457,11 @@ void glView::mode_multiple()
 void glView::updateCamera()
 {
 
+  // temporarily disable updating the camera since it looks like the radius
+  // return is being calculated differently
+  return;
+
+
   if(!mocap_selected) return;
 
 
@@ -1506,7 +1511,7 @@ void glView::updateCamera()
     // move the z back 5 times the bounding sphere + radius
     Vector3d offset = xform_sphere.translation();
     offset[2] += mocap_selected->bound_sphere_radius() * 5.;
-    
+   
     // update the object center and camera rotation
     object_center = offset;
     camera_rot.setIdentity();

@@ -231,12 +231,12 @@ Frame Frame::apply_transform(const Joint& skeleton, const Transform3d& xform) co
 }
 
 //Interprets the pose
-void local_pose_impl(
+void Frame::local_pose_impl(
     const Joint joint,
     Transform3d*& result, 
     const double*& pbegin, 
     const double* pend,
-    bool skip_transform = false)
+    bool skip_transform) const
 {
   Transform3d xform;
   xform.setIdentity();
@@ -293,21 +293,23 @@ void local_pose_impl(
     local_pose_impl(joint.children[i], result, pbegin, pend, true);
 }
 
-
+/*
 //Retrieves a local transform vector for the skeleton
 aligned<Transform3d>::vector Frame::local_xform(const Joint& skel) const
 {
     aligned<Transform3d>::vector xform(skel.num_parameters());
     Transform3d *xptr = &xform[0];
     const double *ptr = &pose[0];
-    local_pose_impl(skel, xptr, ptr, &pose[pose.size()]);
+    local_pose_impl(skel, xptr, ptr, NULL);//&pose[pose.size()]);
     return xform;
 }
+*/
 
 
-void global_xform_impl(const Joint& joint, Transform3d*& xform, Transform3d root)
+void Frame::global_xform_impl(const Joint& joint, Transform3d*& xform, Transform3d& root_ref) const
 {
     //Update transform matrix
+    Transform3d root = root_ref; // Windows complains that 'formal parameter with __declspec(align('16')) won't be aligned'
     root.translate(joint.offset);
     root = root * (*xform);
     *(xform++) = root;
@@ -316,6 +318,7 @@ void global_xform_impl(const Joint& joint, Transform3d*& xform, Transform3d root
         global_xform_impl(joint.children[i], xform, root);
 }
 
+/*
 //Retrieves a global pose vector for the skeleton
 aligned<Transform3d>::vector Frame::global_xform(const Joint& skel) const
 {
@@ -326,7 +329,9 @@ aligned<Transform3d>::vector Frame::global_xform(const Joint& skel) const
   
     return xform;
 }
+*/
 
+/*
 //Retrieves a point cloud for this frame/skeleton pair
 aligned<Vector3d>::vector Frame::point_cloud(const Joint& skel) const
 {
@@ -338,5 +343,6 @@ aligned<Vector3d>::vector Frame::point_cloud(const Joint& skel) const
   }
   return result;
 }
+*/
 
 }

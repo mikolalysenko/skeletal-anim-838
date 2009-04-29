@@ -94,14 +94,46 @@ namespace Skeletal
     //Apply a transformation to this pose
     Frame apply_transform(const Joint& skeleton, const Transform3d& xform) const;
 
+    void local_pose_impl(const Joint joint,
+                         Transform3d*& result, 
+                         const double*& pbegin, 
+                         const double* pend,
+                         bool skip_transform = false) const;
+
     //Retrieves a local transform vector for the skeleton
-    aligned<Transform3d>::vector local_xform(const Joint& skel) const;
+    aligned<Transform3d>::vector local_xform(const Joint& skel) const
+    {
+        aligned<Transform3d>::vector xform(skel.num_parameters());
+        Transform3d *xptr = &xform[0];
+        const double *ptr = &pose[0];
+        local_pose_impl(skel, xptr, ptr, NULL);//&pose[pose.size()]);
+        return xform;
+    }
     
+    void global_xform_impl(const Joint& joint, Transform3d*& xform, Transform3d& root_ref) const;
+
     //Retrieves a global pose vector for the skeleton
-    aligned<Transform3d>::vector global_xform(const Joint& skel) const;
+    aligned<Transform3d>::vector global_xform(const Joint& skel) const
+    {
+        aligned<Transform3d>::vector xform = local_xform(skel);
+        Transform3d root, *xptr = &xform[0];
+        root.setIdentity();
+        global_xform_impl(skel, xptr, root);
+      
+        return xform;
+    }
     
     //Extracts a point cloud for this skeleton
-    aligned<Vector3d>::vector point_cloud(const Joint& skeleton) const;
+    aligned<Vector3d>::vector point_cloud(const Joint& skel) const
+    {
+      aligned<Transform3d>::vector xform = global_xform(skel);
+      aligned<Vector3d>::vector result(xform.size());
+      for(int i=0; i<xform.size(); i++)
+      {
+        result[i] = xform[i].translation();
+      }
+      return result;
+    }
   };
 
   //Interpolate two poses
@@ -157,8 +189,25 @@ namespace Skeletal
     //Returns a window of point clouds
     // orig is the time about which to sample, extent is the radius of the window in +/- delta_t
     // n_samples are the number of times to sample the point cloud
-    aligned<Vector4d>::vector point_cloud_window(double orig, double extent, int n_samples, double (*window)(double)) const;
-    
+    aligned<Vector4d>::vector point_cloud_window(double orig, double extent, int n_samples, double (*window)(double)) const
+    {
+      assert(n_samples % 2 == 1); // Number of samples must be odd
+      
+      aligned<Vector4d>::vector result;
+      
+      double frame_t = orig - extent/2.,
+             delta_t = extent / (double)n_samples,
+             t = -1.;
+      for(int i=0; i<n_samples; i++, frame_t += delta_t, t += 2. / (double)n_samples)
+      {
+        aligned<Vector3d>::vector cloud = get_frame(frame_t).point_cloud(skeleton);
+        for(int j=0; j<cloud.size(); j++)
+          result.push_back(Vector4d(cloud[j].x(), cloud[j].y(), cloud[j].z(), window(t)));
+      }
+      
+      return result;
+    }
+
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   };
