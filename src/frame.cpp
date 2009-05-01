@@ -337,7 +337,7 @@ aligned<Vector3d>::vector Frame::point_cloud(const Joint& skel) const
   aligned<Vector3d>::vector result(xform.size());
   for(int i=0; i<xform.size(); i++)
   {
-    result[i] = xform[i].translation();
+    result[i] = (Vector3d)xform[i].translation();
   }
   return result;
 }
