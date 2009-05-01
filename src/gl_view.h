@@ -55,6 +55,7 @@ public:
   void move_frame_to(int value);
   void set_desired_fps(int value){m_play_fps = value; redraw();};
   void load_file();
+  void save_file();
   void remove_file();
   void update_selection();
   void print_skeleton(const Joint& skel, int t = 0);
@@ -64,6 +65,12 @@ public:
   void mode_multiple();
   void update_concat_times();
   void reload_concat_times();
+  void debugFunction1();
+  void debugFunction2();
+  void debugFunction3();
+  void debugFunction4();
+  void debugFunction5();
+
 
 public:
   enum CAMERA_MODE
