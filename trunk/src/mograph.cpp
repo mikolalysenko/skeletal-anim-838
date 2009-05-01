@@ -88,6 +88,7 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
 //Extracts all biconnected components
 MotionGraph MotionGraph::extract_biconnected() const
 {
+	//Not yet implemented
     return MotionGraph(*this);
 }
 

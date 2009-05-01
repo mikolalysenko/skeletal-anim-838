@@ -13,6 +13,7 @@
 #include <cmath>
 
 //Project
+#include <misc.hpp>
 #include <skeleton.hpp>
 
 using namespace std;
