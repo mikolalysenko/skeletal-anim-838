@@ -41,10 +41,7 @@ COMPILE_OPTS =
 BWARN_OPTS = 
 
 # extented compiler warning options (for GOAL_DEBUG)
-EWARN_OPTS = $(BWARN_OPTS) -pedantic\
-	     -Wtraditional -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align\
-	     -Wwrite-strings -Wstrict-prototypes -Wredundant-decls\
-	     -Wnested-externs -Woverloaded-virtual -Winline
+EWARN_OPTS = $(BWARN_OPTS)
 
 ###############################################################################
 # INTERNAL VARIABLES

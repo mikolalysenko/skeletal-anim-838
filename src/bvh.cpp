@@ -148,7 +148,7 @@ Motion parseBVH(istream& bvh_file)
 void writeJoint(ostream& bvh_file, const Joint& skel, string tabs = "")
 {
   if(skel.name != "NONAME")
-    bvh_file << skel.name << endl;
+    bvh_file << tabs << skel.name << endl;
   
   bvh_file << tabs << "{" << endl
        << tabs << "\tOFFSET " << skel.offset[0] << " " << skel.offset[1] << " " << skel.offset[2] << endl
