@@ -33,6 +33,15 @@
 #include "gl_view.h"
 
 
+#ifdef WIN32
+#  include <io.h>
+#    define access _access
+#    define chdir _chdir
+#    define getcwd _getcwd
+#else
+#  include <unistd.h>
+#endif
+
 
 
 #define PAN_RATE        100.
@@ -1073,7 +1082,8 @@ void glView::load_file()
   file_chooser->filter(filters);
 
   // allow multiple files
-  file_chooser->type(file_chooser->type() ^ Fl_File_Chooser::MULTI);
+  file_chooser->type(Fl_File_Chooser::MULTI);
+  file_chooser->label("Select Motion File");
 
   // display dialog until it is closed
   file_chooser->show();
@@ -1697,3 +1707,58 @@ void glView::update_concat_times()
 
 }
 
+
+void glView::save_file()
+{
+  if(!mocap_selected) return;
+
+  // snippet take from fltk example
+  const char *c = NULL;
+  fl_file_chooser_ok_label("Save");
+  c=fl_file_chooser("Save To:", "BVH Files (*.bvh)", c);
+  fl_file_chooser_ok_label(NULL);
+  if (!c) return;
+
+  if (!access(c, 0))
+  {
+    const char *basename;
+    if ((basename = strrchr(c, '/')) != NULL)
+      basename ++;
+#if defined(WIN32)
+    if ((basename = strrchr(c, '\\')) != NULL)
+      basename ++;
+#endif 
+    else
+      basename = c;
+
+    if (fl_choice("The file \"%s\" already exists.\n"
+                  "Do you want to replace it?", "Cancel",
+	    "Replace", NULL, basename) == 0) return;
+  }
+
+  // write the bvh file
+  ofstream bvh_file(c);
+  writeBVH(bvh_file, (const Motion&)*mocap_selected); 
+
+}
+
+
+void glView::debugFunction1()
+{
+}
+
+void glView::debugFunction2()
+{
+}
+
+void glView::debugFunction3()
+{
+}
+
+void glView::debugFunction4()
+{
+}
+
+void glView::debugFunction5()
+{
+}

@@ -81,6 +81,16 @@ private:
   static void cb_Stick2(Fl_Menu_*, void*);
   void cb_Stick3_i(Fl_Menu_*, void*);
   static void cb_Stick3(Fl_Menu_*, void*);
+  void cb_DebugFunction1_i(Fl_Menu_*, void*);
+  static void cb_DebugFunction1(Fl_Menu_*, void*);
+  void cb_DebugFunction2_i(Fl_Menu_*, void*);
+  static void cb_DebugFunction2(Fl_Menu_*, void*);
+  void cb_DebugFunction3_i(Fl_Menu_*, void*);
+  static void cb_DebugFunction3(Fl_Menu_*, void*);
+  void cb_DebugFunction4_i(Fl_Menu_*, void*);
+  static void cb_DebugFunction4(Fl_Menu_*, void*);
+  void cb_DebugFunction5_i(Fl_Menu_*, void*);
+  static void cb_DebugFunction5(Fl_Menu_*, void*);
 public:
   Fl_Button *btn_play;
 private:
@@ -145,12 +155,15 @@ private:
   static void cb_edit_num_blend_frames(Fl_Spinner*, void*);
 public:
   Fl_Box *lbl_blend_time;
+private:
+  void cb_Save_i(Fl_Button*, void*);
+  static void cb_Save(Fl_Button*, void*);
+public:
   Fl_Box *lbl_name;
   Fl_Box *lbl_joints;
   Fl_Box *lbl_frames;
   Fl_Box *lbl_fps;
   Fl_Box *boxImageLogo;
-  Fl_Box *boxImageIcon;
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);
 };

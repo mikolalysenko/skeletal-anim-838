@@ -57,7 +57,7 @@ class UserInterface {open
               }
               MenuItem menuShowEndEffectors {
                 label {Show End Effectors}
-                callback {view->m_draw_end_effectors = !view->m_draw_end_effectors;} selected
+                callback {view->m_draw_end_effectors = !view->m_draw_end_effectors;}
                 xywh {45 45 100 20} type Toggle labelsize 10
               }
             }
@@ -114,6 +114,36 @@ class UserInterface {open
                 label {Stick 2 with custom face}
                 callback {view->m_draw_style = glView::STYLE_STICK2_CUSTOM_FACE;}
                 xywh {50 50 100 20} type Radio labelsize 10
+              }
+            }
+            Submenu {} {
+              label Debug open
+              xywh {10 10 100 20} labelsize 10
+            } {
+              MenuItem {} {
+                label DebugFunction1
+                callback {view->debugFunction1();}
+                xywh {10 10 100 20} value 1 labelsize 10
+              }
+              MenuItem {} {
+                label DebugFunction2
+                callback {view->debugFunction2();}
+                xywh {20 20 100 20} value 1 labelsize 10
+              }
+              MenuItem {} {
+                label DebugFunction3
+                callback {view->debugFunction3();}
+                xywh {30 30 100 20} value 1 labelsize 10
+              }
+              MenuItem {} {
+                label DebugFunction4
+                callback {view->debugFunction4();}
+                xywh {40 40 100 20} value 1 labelsize 10
+              }
+              MenuItem {} {
+                label DebugFunction5
+                callback {view->debugFunction5();}
+                xywh {50 50 100 20} value 1 labelsize 10
               }
             }
           }
@@ -273,6 +303,11 @@ class UserInterface {open
                 label sec
                 xywh {420 680 30 13} labelsize 10 align 20
               }
+              Fl_Button {} {
+                label Save
+                callback {view->save_file();}
+                xywh {495 498 55 22} labelsize 10
+              }
             }
             Fl_Box lbl_name {
               xywh {10 450 195 20} box DOWN_FRAME labelsize 10 align 20
@@ -286,7 +321,7 @@ class UserInterface {open
             Fl_Box lbl_fps {
               xywh {307 450 45 20} box DOWN_FRAME labelsize 10 align 16
             }
-            Fl_Box boxImageLogo {
+            Fl_Box boxImageLogo {selected
               image {../uw_logo.png} xywh {365 450 25 25} hide
             }
           }

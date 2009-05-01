@@ -152,7 +152,7 @@ void writeJoint(ostream& bvh_file, const Joint& skel, string tabs = "")
   
   bvh_file << tabs << "{" << endl
        << tabs << "\tOFFSET " << skel.offset[0] << " " << skel.offset[1] << " " << skel.offset[2] << endl
-       << tabs << "\tCHANNELS " << skel.channels.size() << endl;
+       << tabs << "\tCHANNELS " << skel.channels.size() << " ";
 
   for(int i=0; i<skel.channels.size(); i++)
       bvh_file << skel.channels[i] << " ";
@@ -179,13 +179,13 @@ void writeBVH(ostream& bvh_file, const Motion& motion)
   
   bvh_file << "MOTION" << endl
            << "Frames: " << motion.frames.size() << endl
-           << "Time: " << motion.frame_time << endl;
+           << "Frame Time: " << motion.frame_time << endl;
   
   for(int i=0; i<motion.frames.size(); i++)
   {
     for(int j=0; j<motion.frames[i].pose.size(); j++)
-      cout << motion.frames[i].pose[j] << " ";
-    cout << endl;
+      bvh_file << motion.frames[i].pose[j] << " ";
+    bvh_file << endl;
   }
 }
 
