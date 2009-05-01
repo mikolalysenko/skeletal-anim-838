@@ -13,7 +13,8 @@ EIGENPATH = ./eigen2
 FLTKPATH = /afs/cs.wisc.edu/u/y/a/yangk/Desktop/p2/fltk-1.1.9
 
 # name of the file to build
-EXE = ../a.out
+guiexe	= ./main
+toolexe	= ./tool
 
 # source files suffix (all source files must have the same suffix)
 SOURCE_SUFFIX = cpp
@@ -22,26 +23,25 @@ SOURCE_SUFFIX = cpp
 CXX = g++
 
 # source files directory
-srcdir = src
+commondir	= src/common
+tooldir 	= src/tools
+guidir		= src/gui
 
 # build directory
 builddir = out
 
 # preprocessor options to find all included files
-INC_PATH = -I$(srcdir) -I$(EIGENPATH) -I$(FLTKPATH)
+INC_PATH = -I$(commondir) -I$(tooldir) -I$(guidir) -I$(EIGENPATH) -I$(FLTKPATH)
 
 # libraries link options ('-lm' is common to link with the math library)
-LNK_LIBS = -lglut -lm -L$(FLTKPATH)/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl -lXpm
-
+GUI_LIBS	= -lglut -lm -L$(FLTKPATH)/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl -lXpm
+TOOL_LIBS	= -lm
 
 # other compilation options
 COMPILE_OPTS = 
 
 # basic compiler warning options (for GOAL_EXE)
 BWARN_OPTS = 
-
-# extented compiler warning options (for GOAL_DEBUG)
-EWARN_OPTS = $(BWARN_OPTS)
 
 ###############################################################################
 # INTERNAL VARIABLES
@@ -50,9 +50,9 @@ EWARN_OPTS = $(BWARN_OPTS)
 ###############################################################################
 
 # You may freely change the following goal names if you dislike them.
-GOAL_DEBUG = debug
-GOAL_PROF = prof
-GOAL_EXE = all
+GOAL_DEBUG	= debug
+GOAL_PROF	= prof
+GOAL_EXE	= all
 
 # build options for GOAL_DEBUG (executable for debugging) goal
 ifeq "$(MAKECMDGOALS)" "$(GOAL_DEBUG)"
@@ -110,15 +110,23 @@ CPPOPTS = $(INC_PATH)
 CXXOPTS = $(GOAL_OPTS) $(COMPILE_OPTS) $(WARN_OPTS) $(OPTIMISE_OPTS)
 
 # linker options
-LDOPTS = $(GOAL_OPTS) $(LNK_LIBS)
+GUI_LDOPTS	= $(GOAL_OPTS) $(GUI_LIBS) 
+TOOL_LDOPTS = $(GOAL_OPTS) $(TOOL_LIBS) 
 
 # source files in this project
-sources := $(wildcard $(srcdir)/*.$(SOURCE_SUFFIX))
+commonsources := $(wildcard $(commondir)/*.$(SOURCE_SUFFIX))
+toolsources   := $(wildcard $(tooldir)/*.$(SOURCE_SUFFIX)) $(commonsources)
+guisources 	  := $(wildcard $(guidir)/*.$(SOURCE_SUFFIX))   $(commonsources)
 
-# object files in this project
-objs := $(notdir $(sources))
-objs := $(addprefix $(builddir)/, $(objs))
-objs := $(objs:.$(SOURCE_SUFFIX)=.o)
+# GUI object files in this project
+guiobjs	:= $(notdir $(guisources))
+guiobjs := $(addprefix $(builddir)/, $(guiobjs))
+guiobjs := $(guiobjs:.$(SOURCE_SUFFIX)=.o)
+
+toolobjs := $(notdir $(toolsources))
+toolobjs := $(addprefix $(builddir)/, $(toolobjs))
+toolobjs := $(toolobjs:.$(SOURCE_SUFFIX)=.o)
+
 
 # executable with full path
 exe = $(builddir)/$(EXE)
@@ -127,7 +135,8 @@ exe = $(builddir)/$(EXE)
 # For every source file a dependencies makefile is created and included.
 # The deps variable contains the list of all dependencies makefiles.
 deps_suffix = d
-deps := $(objs:.o=.$(deps_suffix))
+guideps		:= $(guiobjs:.o=.$(deps_suffix))
+tooldeps	:= $(toolobjs:.o=.$(deps_suffix))
 
 # To detect goal changes (for instance from GOAL_DEBUG to GOAL_EXE)
 # between invocations, this makefile creates an empty file (the goal flag
@@ -161,12 +170,7 @@ usage:
 
 # If source files exist then build the EXE file.
 .PHONY:	$(GOAL_EXE)
-ifneq "$(strip $(sources))" ""
-$(GOAL_EXE):	$(exe)
-else
-$(GOAL_EXE):
-	@echo "No source file found."
-endif
+$(GOAL_EXE):	$(guiexe) $(toolexe)
 
 # GOAL_DEBUG and GOAL_PROF targets use the same rules than GOAL_EXE.
 .PHONY:	$(GOAL_DEBUG)
@@ -182,12 +186,24 @@ $(GOAL_PROF):	$(GOAL_EXE)
 ###############################################################################
 
 # linking
-$(exe):	$(objs)
-	$(CXX) $^ -o $@ $(LDOPTS) $(LDFLAGS)
+$(guiexe):	$(guiobjs)
+	$(CXX) $^ -o $@ $(GUI_LDOPTS) $(LDFLAGS)
+
+$(toolexe):	$(toolobjs)
+	$(CXX) $^ -o $@ $(TOOL_LDOPTS) $(LDFLAGS)
+
 
 # explicit definition of the implicit rule used to compile source files
-$(builddir)/%.o:	$(srcdir)/%.$(SOURCE_SUFFIX)
+$(builddir)/%.o:	$(commondir)/%.$(SOURCE_SUFFIX)
 	$(CXX) -c $< $(CPPOPTS) $(CXXOPTS) $(CPPFLAGS) $(CXXFLAGS) -o $@
+
+$(builddir)/%.o:	$(guidir)/%.$(SOURCE_SUFFIX)
+	$(CXX) -c $< $(CPPOPTS) $(CXXOPTS) $(CPPFLAGS) $(CXXFLAGS) -o $@
+
+$(builddir)/%.o:	$(tooldir)/%.$(SOURCE_SUFFIX)
+	$(CXX) -c $< $(CPPOPTS) $(CXXOPTS) $(CPPFLAGS) $(CXXFLAGS) -o $@
+
+
 
 # Rule to build our included dependencies makefiles.
 # This rule is used by GNU Make because it automatically tries to (re)build
@@ -198,23 +214,33 @@ $(builddir)/%.o:	$(srcdir)/%.$(SOURCE_SUFFIX)
 # Note that the dependencies can be goal specific.
 # The goal_flag_file is determined at run time because it must be the current
 # goal and not the goal in use when the dependencies makefile was created.
-$(builddir)/%.$(deps_suffix):	$(srcdir)/%.$(SOURCE_SUFFIX) $(goal_flag_file)
+$(builddir)/%.$(deps_suffix):	$(guidir)/%.$(SOURCE_SUFFIX) $(goal_flag_file)
 	$(SHELL) -ec '$(CXX) -MM $(CPPOPTS) $(CPPFLAGS) $< |\
 	sed '\''s@\($*\)\.o[ :]*@$(builddir)/\1.o $@: $$(goal_flag_file) @g'\'' > $@;\
 	[ -s $@ ] || rm -f $@'
 
+$(builddir)/%.$(deps_suffix):	$(commondir)/%.$(SOURCE_SUFFIX) $(goal_flag_file)
+	$(SHELL) -ec '$(CXX) -MM $(CPPOPTS) $(CPPFLAGS) $< |\
+	sed '\''s@\($*\)\.o[ :]*@$(builddir)/\1.o $@: $$(goal_flag_file) @g'\'' > $@;\
+	[ -s $@ ] || rm -f $@'
+
+$(builddir)/%.$(deps_suffix):	$(tooldir)/%.$(SOURCE_SUFFIX) $(goal_flag_file)
+	$(SHELL) -ec '$(CXX) -MM $(CPPOPTS) $(CPPFLAGS) $< |\
+	sed '\''s@\($*\)\.o[ :]*@$(builddir)/\1.o $@: $$(goal_flag_file) @g'\'' > $@;\
+	[ -s $@ ] || rm -f $@'
+
+
 # If dependencies have to be up to date then include dependencies makefiles.
 ifeq "$(CHECK_DEPS)" "yes"
- ifneq "$(strip $(sources))" ""
-  include $(deps)
- endif
+ include $(guideps)
+ include $(tooldeps)
 endif
 
 # Rule to produce the goal flag file.
 # If the goal has changed then we must rebuild on a clean state because
 # pre-processor DEFINE's may have changed.
 $(goal_flag_file):
-	rm -f $(exe) $(goal_flag_file_prefix)* $(objs) $(deps)
+	rm -f $(guiexe) $(toolexe) $(goal_flag_file_prefix)* $(guiobjs) $(guideps) $(toolobjs) $(tooldeps)
 	touch $@
 
 ###############################################################################
@@ -224,9 +250,10 @@ $(goal_flag_file):
 # List the source files
 .PHONY:	list
 list:
-	@echo $(sources) | tr [:space:] \\n
+	@echo $(guisources) | tr [:space:] \\n
+	@echo $(toolsources) | tr [:space:] \\n
 
 # Remove all files that are normally created by building the program.
 .PHONY:	clean
 clean:
-	rm -f $(exe) $(goal_flag_file_prefix)* $(objs) $(deps)
+	rm -f $(guiexe) $(toolexe) $(goal_flag_file_prefix)* $(guiobjs) $(guideps) $(toolobjs) $(tooldeps) 
