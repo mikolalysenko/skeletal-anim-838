@@ -16,20 +16,50 @@ using namespace std;
 using namespace Eigen;
 using namespace Skeletal;
 
+
+//File IO helpers
+Motion read_motion(const string& file_name)
+{
+	ifstream tmp(file_name.c_str());
+	return parseBVH(tmp).convert_quat();
+}
+
+MotionGraph read_graph(const string& file_name)
+{
+	ifstream tmp(file_name.c_str());
+	return parseMotionGraph(tmp);
+}
+
+//Windowing function
+double hann_window(double t)
+{
+	return 1.;
+}
+
 //Creates a motion graph from a motion file
 void create_graph(const string& mo_file)
 {
+	Motion motion = read_motion(mo_file);
+	MotionGraph graph(motion.skeleton);
+	graph.frame_time = motion.frame_time;
+	writeMotionGraph(cout, graph);
 }
 
 //Adds a motion to a motion graph
 void add_motion(const string& mo_file, const string& graph_file)
 {
+	Motion motion = read_motion(mo_file);
+	MotionGraph graph = read_graph(graph_file);
+	graph.insert_motion(motion, 10., motion.frame_time * 5.,  5, hann_window);
+	writeMotionGraph(cout, graph);
 }
-
 
 //Synthesizes a new motion
 void synthesize_motion(int l, const string& graph_file)
 {
+	MotionGraph graph = read_graph(graph_file);
+	Motion motion = graph.random_motion(l);
+	writeBVH(cout, motion);
 }
 
 
@@ -67,6 +97,8 @@ int main(int argc, char** argv)
 	
 	string command = argv[1];
 	
+	try
+	{
 	if(command == "-c")
 	{
 		assert(argc == 3);
@@ -90,6 +122,12 @@ int main(int argc, char** argv)
 	{
 		cout << "Unknown command: " << command << endl;
 		print_help();
+		exit(1);
+	}
+	}
+	catch(string str)
+	{
+		cout << "Exception: " << str << endl;
 		exit(1);
 	}
 

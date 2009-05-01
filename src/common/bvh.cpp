@@ -116,7 +116,7 @@ Motion parseBVH(istream& bvh_file)
   int num_frames;
   if(!(bvh_file >> num_frames))
     throw string("Unexpected EOF.");
-  if(num_frames <= 0)
+  if(num_frames < 0)
     throw string("Incorrect frame count");
   vector<Frame> frames(num_frames);
   
@@ -145,10 +145,10 @@ Motion parseBVH(istream& bvh_file)
 }
 
 //Writes a skeleton to file
-void writeJoint(ostream& bvh_file, const Joint& skel, string tabs = "")
+void writeJoint(ostream& bvh_file, const Joint& skel, string tabs)
 {
   if(skel.name != "NONAME")
-    bvh_file << tabs << skel.name << endl;
+    bvh_file << skel.name << endl;
   
   bvh_file << tabs << "{" << endl
        << tabs << "\tOFFSET " << skel.offset[0] << " " << skel.offset[1] << " " << skel.offset[2] << endl
@@ -160,6 +160,7 @@ void writeJoint(ostream& bvh_file, const Joint& skel, string tabs = "")
   
   for(int i=0; i<skel.children.size(); i++)
   {
+  	bvh_file << tabs << '\t';
     if(skel.children[i].children.size() > 0)
       bvh_file << "JOINT ";
     else

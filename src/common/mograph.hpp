@@ -42,15 +42,15 @@ namespace Skeletal
       skeleton(other.skeleton),
       frame_time(other.frame_time),
       frames(other.frames),
-      graph(other.graph),
-      local_clouds(other.local_clouds) {}
+      graph(other.graph) {}
+      
+    //Assignment
     MotionGraph operator=(const MotionGraph& other)
     {
       skeleton = other.skeleton;
       frame_time = other.frame_time;
       frames = other.frames;
       graph = other.graph;
-      local_clouds = other.local_clouds;
       return *this;
     }
     
@@ -67,22 +67,16 @@ namespace Skeletal
     //Synthesize a random motion with l frames
     Motion random_motion(int l) const;
     
-    private:
-      vector< aligned<Vector4d>::vector > local_clouds;
+    //Extracts a linear submotion from the motion graph
+    Motion submotion(int start, int end) const;    
+    
+    //Pulls out a local window frame about the frame f
+    aligned<Vector4d>::vector point_cloud(int f, double w, int n, double (*wind_func)(double)) const;
   };
  
   //Serialization
   MotionGraph parseMotionGraph(istream& is);
   void writeMotionGraph(ostream& os, const MotionGraph g);
-  
-  //Constructs a motion graph from a bunch of random motions
-  MotionGraph construct_graph(const aligned<Motion>::vector& motions,
-    double frame_time,
-    double threshold,
-    double window_size,
-    int n_samples,
-    double (*window_func)(double));
-  
-};
+  };
 
 #endif
