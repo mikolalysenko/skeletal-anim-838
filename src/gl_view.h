@@ -9,16 +9,18 @@
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Shared_Image.H>
 
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <vector>
+
 class glView;
 #include "ui.h"
 
 //Project includes
 #include <skeleton.hpp>
 #include <skin.hpp>
+
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <vector>
 
 using namespace std;
 using namespace Eigen;
