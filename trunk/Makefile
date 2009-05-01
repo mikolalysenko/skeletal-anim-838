@@ -14,7 +14,7 @@ FLTKPATH = /afs/cs.wisc.edu/u/y/a/yangk/Desktop/p2/fltk-1.1.9
 
 # name of the file to build
 guiexe	= ./main
-toolexe	= ./tool
+toolexe	= ./motool
 
 # source files suffix (all source files must have the same suffix)
 SOURCE_SUFFIX = cpp
