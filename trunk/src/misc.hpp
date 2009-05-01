@@ -4,6 +4,7 @@
 #define MISC_H
 
 #include <Eigen/Core>
+#include <Eigen/StdVector>
 
 #include <vector>
 #include <map>

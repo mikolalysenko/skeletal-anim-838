@@ -1,17 +1,19 @@
 #ifndef SKIN_H
 #define SKIN_H
 
+//Vector arithmetic
+#include <Eigen/Core>
+#include <Eigen/StdVector>
+#include <Eigen/Geometry>
+#include <Eigen/LU>
+#include <Eigen/SVD>
+
 //STL
 #include <iostream>
 #include <string>
 #include <vector>
 #include <cassert>
 
-//Vector arithmetic
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-#include <Eigen/LU>
-#include <Eigen/SVD>
 
 //OpenGL
 #ifdef __APPLE__

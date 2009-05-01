@@ -1,14 +1,17 @@
+
+//Eigen
+#include <Eigen/Core>
+#include <Eigen/StdVector>
+#include <Eigen/LU>
+#include <Eigen/SVD>
+#include <Eigen/QR>
+
 //STL
 #include <iostream>
 #include <vector>
 #include <string>
 #include <cmath>
 
-//Eigen
-#include <Eigen/Core>
-#include <Eigen/LU>
-#include <Eigen/SVD>
-#include <Eigen/QR>
 
 //Project
 #include <skeleton.hpp>
@@ -184,7 +187,7 @@ void Motion::bounding_box(Vector3d& lo, Vector3d& hi) const
   cout << "box = " << lo << "," << hi << endl;
 }
 
-#ifndef WIN32
+
 //Compute a window about the point cloud
 aligned<Vector4d>::vector Motion::point_cloud_window(double orig, double extent, int n_samples, double (*window)(double)) const
 {
@@ -204,7 +207,6 @@ aligned<Vector4d>::vector Motion::point_cloud_window(double orig, double extent,
   
   return result;
 }
-#endif
 
 
 
