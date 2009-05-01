@@ -56,25 +56,6 @@ MotionGraph construct_graph(const aligned<Motion>::vector& motions, double ft, d
 
 
 
-//Compute a window about the point cloud
-void wtf( aligned<Vector4d>::vector& tmptest)
-{
-
-  aligned<Vector4d>::vector cloud;
-  aligned<Vector4d>::vector result;
-  /*
-  double frame_t = orig - extent/2.,
-         delta_t = extent / (double)n_samples,
-         t = -1.;
-  for(int i=0; i<n_samples; i++, frame_t += delta_t, t += 2. / (double)n_samples)
-  {
-    aligned<Vector3d>::vector cloud = get_frame(frame_t).point_cloud(skeleton);
-    for(int j=0; j<cloud.size(); j++)
-      result.push_back(Vector4d(cloud[j].x(), cloud[j].y(), cloud[j].z(), window(t)));
-  }
-  */
-  //return result;
-}
 
 //Inserts a motion into the MotionGraph
 void MotionGraph::insert_motion(const Motion& motion, double threshold, double w, int n, double (*window_func)(double))
@@ -82,9 +63,7 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
     for(double t=0.; t<motion.duration(); t+=frame_time)
     {
         //Extract window about i
-        aligned<Vector4d>::vector cloud;// = motion.point_cloud_window(t, w, n, window_func);
- motion.point_cloud_window(t, w, n, window_func);   
-        wtf(cloud);
+        aligned<Vector4d>::vector cloud = motion.point_cloud_window(t, w, n, window_func);  
         vector<int> edges;
         if(t+frame_time<motion.duration())
             edges.push_back(frames.size());
