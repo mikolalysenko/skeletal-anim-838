@@ -202,7 +202,14 @@ aligned<Vector4d>::vector Motion::point_cloud_window(double orig, double extent,
   {
     aligned<Vector3d>::vector cloud = get_frame(frame_t).point_cloud(skeleton);
     for(int j=0; j<cloud.size(); j++)
-      result.push_back(Vector4d(cloud[j].x(), cloud[j].y(), cloud[j].z(), window(t)));
+    {
+      assert(-1e10 <= cloud[j].x() <= 1e10);
+      assert(-1e10 <= cloud[j].y() <= 1e10);
+      assert(-1e10 <= cloud[j].z() <= 1e10);
+      
+      Vector3d tmp = cloud[j];
+      result.push_back(Vector4d(tmp.x(), tmp.y(), tmp.z(), window(t)));
+    }
   }
   
   return result;

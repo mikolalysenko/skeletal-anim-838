@@ -172,11 +172,12 @@ namespace Skeletal
   //Computes the relative alignment of two motions
   Transform3d relative_xform(const Joint& skel, const Frame& base_frame, const Frame& target_frame);
   
-  //Parses a BVH file from some input stream
+  //Serialization
   Motion parseBVH(istream& bvh_file);
-  
-  //Writes a BVH file to disk
   void writeBVH(ostream& bvh_file, const Motion& motion);
+  Joint parseJoint(istream& bvh_file);
+  void writeJoint(ostream& bvh_file, const Joint& skel, string tabs = "");
+
   
   //Combines two sections of motions together
   Motion combine_motions(
