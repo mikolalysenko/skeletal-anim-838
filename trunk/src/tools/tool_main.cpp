@@ -33,7 +33,7 @@ MotionGraph read_graph(const string& file_name)
 //Windowing function
 double hann_window(double t)
 {
-	return 1.;
+	return 0.5 * (1. - cos(M_PI * 2. * t));
 }
 
 //Creates a motion graph from a motion file
