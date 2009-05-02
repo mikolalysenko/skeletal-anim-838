@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="skeletal-anim"
-	ProjectGUID="{5EB43FE9-CCC2-49FA-8F8A-04A6F689E106}"
-	RootNamespace="skeletal-anim"
+	Name="motool"
+	ProjectGUID="{8D291796-DC2A-4BB5-9817-1ACD3C836C5B}"
+	RootNamespace="motool"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
+			OutputDirectory="Motool Debug"
+			IntermediateDirectory="Motool Debug"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../src;../fltk-1.1.9;../eigen2;../glut-3.7.6;.;../src/common;../src/gui"
+				AdditionalIncludeDirectories="../src;../fltk-1.1.9;../eigen2;../glut-3.7.6;.;../src/common;../src/tools"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,11 +63,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib glu32.lib comctl32.lib wsock32.lib fltkgld.lib fltkd.lib  fltkimagesd.lib fltkjpegd.lib fltkpngd.lib fltkzd.lib"
-				OutputFile="$(OutDir)/skeletal-anim.exe"
+				OutputFile="$(OutDir)/motool.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../fltk-1.1.9/lib;../glut-3.7.6"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/skeletal-anim.pdb"
+				ProgramDatabaseFile="$(OutDir)/motool.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -98,8 +98,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			OutputDirectory="Motool Release"
+			IntermediateDirectory="Motool Release"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -121,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../src;../fltk-1.1.9;../eigen2;../glut-3.7.6;.;../src/common;../src/gui"
+				AdditionalIncludeDirectories="../src;../fltk-1.1.9;../eigen2;../glut-3.7.6;.;../src/common;../src/tools"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32;NDEBUG;_WINDOWS;WIN32_LEAN_AND_MEAN;VC_EXTRA_LEAN;WIN32_EXTRA_LEAN"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -141,9 +141,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
 				AdditionalDependencies="opengl32.lib glu32.lib wsock32.lib comctl32.lib fltk.lib fltkgl.lib fltkimages.lib fltkjpeg.lib fltkpng.lib fltkz.lib"
-				OutputFile="$(OutDir)/skeletal-anim.exe"
+				OutputFile="$(OutDir)/motool.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../fltk-1.1.9/lib;../glut-3.7.6"
 				IgnoreDefaultLibraryNames="libcd"
@@ -196,15 +195,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\gui\gl_view.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\src\common\joint.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\gui\main.cpp"
 				>
 			</File>
 			<File
@@ -216,7 +207,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\gui\ui.cpp"
+				RelativePath="..\src\tools\tool_main.cpp"
 				>
 			</File>
 		</Filter>
@@ -225,10 +216,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\src\gui\gl_view.h"
-				>
-			</File>
 			<File
 				RelativePath="..\src\common\misc.hpp"
 				>
@@ -241,28 +228,12 @@
 				RelativePath="..\src\common\skeleton.hpp"
 				>
 			</File>
-			<File
-				RelativePath="..\src\gui\skin.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\gui\ui.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath="..\icon.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\skeletal-anim.rc"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>
