@@ -16,6 +16,10 @@
 
 #include <misc.hpp>
 
+#ifdef WIN32
+#define isnan _isnan
+#endif
+
 namespace Skeletal
 {
   using namespace std;
@@ -170,7 +174,7 @@ namespace Skeletal
   Transform3d constrain_xform(const Transform3d& xform);
   
   //Computes the relative alignment of two motions
-  Transform3d relative_xform(const Joint& skel, const Frame& base_frame, const Frame& target_frame);
+  Transform3d relative_xform(const Joint& skel, const Frame& base_frame, const Frame& target_frame, bool use_constraint = true);
   
   //Serialization
   Motion parseBVH(istream& bvh_file);

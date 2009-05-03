@@ -1468,7 +1468,19 @@ void glView::updateCamera()
 {
 
   // temporarily disable updating the camera since it looks like the radius
-  // return is being calculated differently
+  // return is being calculated differently 
+  {
+      // update the floor height
+      Vector3d min_pt = Vector3d(0., 0., 0.);
+      Vector3d max_pt = Vector3d(0., 0., 0.);
+      
+      mocap_selected->bounding_box(min_pt, max_pt);
+
+      floorHeight = min_pt[1];
+      floorVertex[0][1] = floorHeight;
+      floorVertex[1][1] = floorHeight;
+      floorVertex[2][1] = floorHeight;
+  }
   return;
 
 
@@ -1742,13 +1754,72 @@ void glView::save_file()
 
 }
 
+//Windowing function
+double hann_window(double t)
+{
+	return 1.;
+}
 
 void glView::debugFunction1()
 {
+  
+	MotionGraph graph(mocap_selected->skeleton);
+	graph.frame_time = mocap_selected->frame_time;
+//	graph.insert_motion(*mocap_selected, 10., mocap_selected->frame_time * 5.,  5, hann_window);
+	graph.insert_motion2(*mocap_selected, 10.1, 0.,  1, hann_window);
+    ofstream graph_file("graph_file.txt");
+    writeMotionGraph(graph_file, graph);
+
+    mocap_combine = graph.random_motion2(2000);
+    mocap_selected = &mocap_combine;
+
+
+  // display some info about the active object
+  char text[256];
+  m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1.);
+  m_ui->lbl_name->copy_label("RANDOM MOTION");
+  sprintf(text, "%i", mocap_selected->skeleton.size());
+  m_ui->lbl_joints->copy_label(text);
+  sprintf(text, "%i", mocap_selected->frames.size());
+  m_ui->lbl_frames->copy_label(text);
+  sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
+  m_ui->lbl_fps->copy_label(text);
+  m_ui->mainWindow->redraw();
 }
 
 void glView::debugFunction2()
 {
+    if(mocap_list.size() == 0) return;
+    MotionGraph graph(mocap_list[0]->skeleton);
+	graph.frame_time = mocap_list[0]->frame_time;
+    graph.insert_motion2(*mocap_list[0], 10.1, 0.,  1, hann_window);
+
+    for(int i = 1; i < mocap_list.size(); i++)
+    {
+        if(mocap_list[0]->skeleton.size() == mocap_list[i]->skeleton.size())
+            graph.insert_motion2(*mocap_list[i], 10.1, 0.,  1, hann_window);
+    }
+
+    
+    ofstream graph_file("graph_file.txt");
+    writeMotionGraph(graph_file, graph);
+
+    mocap_combine = graph.random_motion2(2000);
+    mocap_selected = &mocap_combine;
+
+
+    // display some info about the active object
+    char text[256];
+    m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1.);
+    m_ui->lbl_name->copy_label("RANDOM MOTION");
+    sprintf(text, "%i", mocap_selected->skeleton.size());
+    m_ui->lbl_joints->copy_label(text);
+    sprintf(text, "%i", mocap_selected->frames.size());
+    m_ui->lbl_frames->copy_label(text);
+    sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
+    m_ui->lbl_fps->copy_label(text);
+    m_ui->mainWindow->redraw();
+
 }
 
 void glView::debugFunction3()

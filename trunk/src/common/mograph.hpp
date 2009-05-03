@@ -60,12 +60,18 @@ namespace Skeletal
       double window_size, 
       int window_res, 
       double (*window_func)(double));
+    void insert_motion2(const Motion& motion, 
+      double threshold,
+      double window_size, 
+      int window_res, 
+      double (*window_func)(double));
     
     //Removes all dead ends from the motion graph
     MotionGraph extract_biconnected() const;
     
     //Synthesize a random motion with l frames
     Motion random_motion(int l) const;
+    Motion random_motion2(int l) const;
     
     //Extracts a linear submotion from the motion graph
     Motion submotion(int start, int end) const;    
