@@ -178,6 +178,7 @@ void apply_transform_impl(
       
       result += 4;
       params += 4;
+      i += 3;
     }
     else if(chan == "Xrotation" ||
         chan == "Yrotation" ||
@@ -207,7 +208,7 @@ void apply_transform_impl(
       //Skip ahead
       params += 3;
       result += 3;
-      i += 3;
+      i += 2;
     } else assert(false);
   }
 
@@ -299,7 +300,7 @@ void local_pose_impl(
 //Retrieves a local transform vector for the skeleton
 aligned<Transform3d>::vector Frame::local_xform(const Joint& skel) const
 {
-    aligned<Transform3d>::vector xform(skel.num_parameters());
+    aligned<Transform3d>::vector xform(skel.size());
     Transform3d *xptr = &xform[0];
     const double *ptr = &pose[0];
     // TODO need to fix???
