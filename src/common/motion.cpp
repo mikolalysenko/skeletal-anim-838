@@ -251,14 +251,15 @@ Transform3d constrain_xform(const Transform3d& xform)
 //Computes the relative alignment of two motions
 Transform3d relative_xform(const Joint& skel, 
   const Frame& base_frame, 
-  const Frame& target_frame)
+  const Frame& target_frame,
+  bool use_constraint)
 {
   aligned<Transform3d>::vector	xform_a = base_frame.local_xform(skel),
                       			xform_b = target_frame.local_xform(skel);
           
   Transform3d result(xform_b[0].inverse());
   result = xform_a[0] * result;
-  result = constrain_xform(result);
+  if(use_constraint) result = constrain_xform(result);
 
   return result;
 }

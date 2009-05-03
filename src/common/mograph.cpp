@@ -176,6 +176,98 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
     }
 }
 
+
+//Inserts a motion into the MotionGraph
+void MotionGraph::insert_motion2(const Motion& motion, double threshold, double w, int n, double (*window_func)(double))
+{
+
+/*
+    for(double t=0.; t<motion.duration(); t+=frame_time)
+    {      
+        
+        //Add frame to graph
+        frames.push_back(motion.get_frame(t));
+    }
+
+    graph.clear();
+
+    
+    for(int i=0; i<frames.size(); i++)
+    {
+        aligned<Vector4d>::vector cloud = point_cloud(i, w, n, window_func);  
+        vector<int> edges;
+        if(i < frames.size() - 1) edges.push_back(i+1);
+
+        for(int j=0; j<frames.size(); j++)
+        {
+            if(i == j) continue;
+            if(i + 1 == j) 
+            {
+                edges.push_back(j+1);
+                continue;
+            }
+//continue;
+            //Compute distance metric
+            Transform3d rel = relative_xform(skeleton, frames[j], frames[i], false);
+            double dist = cloud_distance(cloud, point_cloud(j, w, n, window_func), rel);
+            
+            if(dist < threshold)
+            {
+                if(j + 1 < frames.size())             
+                    edges.push_back(j+1);
+            }
+
+
+        }
+        graph.push_back(edges);
+    }
+*/
+    for(double t=0.; t<motion.duration(); t+=frame_time)
+    {
+        //Extract window about i
+        aligned<Vector4d>::vector cloud = motion.point_cloud_window(t, w, n, window_func);  
+        vector<int> edges;
+        
+        if(t+frame_time<motion.duration())
+            edges.push_back(frames.size() + 1);
+        
+        // Do we need to ignore adding frames that are near the end of a motion?
+        for(int j=0; j<frames.size(); j++)
+        {
+            // HACK don't allow frames next to the normal motion to be edges
+            // local min/max condition should fix this???
+            if(j > graph[frames.size()-1][0] - 10 && j < graph[frames.size()-1][0] + 10) continue;
+
+/*    
+        	aligned<Vector4d>::vector dest_cloud = point_cloud(j, w, n, window_func);
+            Transform3d rel = relative_xform(dest_cloud, cloud);     
+            double dist = cloud_distance(cloud, dest_cloud, rel);
+*/     
+
+            //Compute distance metric
+            Transform3d rel = relative_xform(skeleton, frames[j], motion.get_frame(t), false);
+            double dist = cloud_distance(cloud, point_cloud(j, w, n, window_func), rel);
+            
+
+            cerr << "dist = " << dist << endl;
+            
+            if(dist < threshold)
+            {
+                if(t+frame_time<motion.duration())
+            	    graph[j].push_back(frames.size()+1);
+                edges.push_back(j+1);
+            }
+        }
+        
+        //Add frame to graph
+        frames.push_back(motion.get_frame(t));
+        graph.push_back(edges);
+        
+    }
+}
+
+
+
 //Extracts all biconnected components
 MotionGraph MotionGraph::extract_biconnected() const
 {
@@ -188,6 +280,7 @@ double const_func(double t)
 {
 	return 1.;
 }
+
 
 //Do a random walk on the motion graph of length at most l, stop if you get stuck
 Motion MotionGraph::random_motion(int l) const
@@ -227,6 +320,100 @@ Motion MotionGraph::random_motion(int l) const
         random_frames.push_back(next.apply_transform(skeleton, rel));
         
         c = n;
+    }
+
+    return Motion(frame_time, random_frames, skeleton);
+}
+
+
+
+//Do a random walk on the motion graph of length at most l, stop if you get stuck
+Motion MotionGraph::random_motion2(int l) const
+{
+    vector<Frame> random_frames;
+    vector<int> transition_frames;
+    
+    int c = rand()%frames.size();
+    c = 0;
+    random_frames.push_back(frames[c]);
+    
+    Transform3d rel_last;
+    rel_last.setIdentity();
+
+/*
+    aligned<Transform3d>::vector	xform_a = frames[c].local_xform(skeleton);
+    //Transform3d my_rel; 
+    Transform3d my_identity;
+    my_identity.setIdentity();
+    Transform3d c_inv(xform_a[0].inverse());
+    rel_last = my_identity * c_inv;
+    rel_last = constrain_xform(rel_last);
+    random_frames.push_back(frames[c].apply_transform(skeleton, rel_last));
+*/
+    for(int i=0; i<l; i++)
+    {
+        if(graph[c].size() == 0)
+            break;
+        
+        int r = rand() % 5;
+        
+        if(r == 0)
+        	r = rand() % graph[c].size();
+        else
+        	r = 0;
+//r = 0;
+        
+        int n = graph[c][r];
+        
+        
+        
+        cerr << "n = " << n << endl;
+        Frame next = frames[n];
+
+
+        //   rel_last = relative_xform(skeleton, random_frames[random_frames.size()-1], next);
+        if(n != c+1)
+        {
+            n = graph[c][r];
+            next = frames[n];
+
+            rel_last = relative_xform(skeleton, random_frames[random_frames.size()-1], next);
+
+            Frame inter_next = next.apply_transform(skeleton, rel_last);
+            random_frames.push_back(inter_next);
+            transition_frames.push_back(random_frames.size() - 1);
+        }
+        else
+        {
+         
+            random_frames.push_back(next.apply_transform(skeleton, rel_last));
+        }
+                
+        c = n;
+    }
+
+
+    // blend frames
+    int num_blend_frames = 5;
+    for(int i = 0; i < transition_frames.size(); i++)
+    {
+        int start_frame = transition_frames[i] - num_blend_frames / 2,
+            end_frame   = transition_frames[i] + num_blend_frames / 2;
+
+        // don't blend if there isn't enough frames
+        if(start_frame < 0 || start_frame >= random_frames.size()) continue;
+
+        int frame_index = start_frame;
+        for(int j = 0; j < num_blend_frames; j++)
+        {
+            random_frames[frame_index] = 
+                interpolate_frames(skeleton, 
+                                   random_frames[start_frame], 
+                                   random_frames[end_frame], 
+                                   (double)j / (double)num_blend_frames);
+
+            frame_index++;
+        }
     }
 
     return Motion(frame_time, random_frames, skeleton);
