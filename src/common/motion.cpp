@@ -159,7 +159,7 @@ double Motion::bound_sphere_radius() const
     }
   }
   
-  cout << "r = " << r << endl;
+  //cerr << "r = " << r << endl;
   
   return r;
 }
@@ -180,11 +180,11 @@ void Motion::bounding_box(Vector3d& lo, Vector3d& hi) const
 	      lo[d] = min(lo[d], cloud[j][d]);
 	      hi[d] = max(hi[d], cloud[j][d]);
 	    }
-	    cout << "cloud[" << j << "] = " << cloud[j] << endl;
+	    //cerr << "cloud[" << j << "] = " << cloud[j] << endl;
 	 }
   }
   
-  cout << "box = " << lo << "," << hi << endl;
+  //cerr << "box = " << lo << "," << hi << endl;
 }
 
 
