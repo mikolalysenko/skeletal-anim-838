@@ -68,7 +68,7 @@ namespace Skeletal
       double (*window_func)(double)) { assert(false); }
     
     //Removes all dead ends from the motion graph
-    MotionGraph extract_biconnected() const;
+    vector<MotionGraph> extract_scc() const;
     
     //Synthesize a random motion with l frames
     Motion random_motion(int l) const;

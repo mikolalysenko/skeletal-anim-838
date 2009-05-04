@@ -62,6 +62,21 @@ void synthesize_motion(int l, const string& graph_file)
 	writeBVH(cout, motion);
 }
 
+//Extract strongly connected components
+void extract_scc(const string& graph_file)
+{
+	MotionGraph graph = read_graph(graph_file);
+	vector<MotionGraph> scc = graph.extract_scc();
+	
+	int max_graph = 0;
+	
+	for(int i=1; i<scc.size(); i++)
+		if(scc[i].frames.size() > scc[max_graph].frames.size())
+			max_graph = i;
+	
+	writeMotionGraph(cout, scc[max_graph]);
+}
+
 
 //Prints out a helpful message
 void print_help()
@@ -78,6 +93,9 @@ void print_help()
 		 << endl
 		 << "  Add a motion to a graph:" << endl
 		 << "     motool -a <motion.bvh> <graph.mog>" << endl
+		 << endl
+		 << "  Extract strongly connected components:" << endl
+		 << "     motool -scc <graph.mog>" << endl
 		 << endl
 		 << "  Synthesize a random motion:" << endl
 		 << "     motool -s <length> <graph.mog>" << endl
@@ -117,6 +135,11 @@ int main(int argc, char** argv)
 		int l = atoi(argv[2]);
 		string graph_file(argv[3]);
 		synthesize_motion(l, graph_file);
+	}
+	else if(command == "-scc")
+	{
+		assert(argc == 3);
+		extract_scc(argv[2]);
 	}
 	else
 	{
