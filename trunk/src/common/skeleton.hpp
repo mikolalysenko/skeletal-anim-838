@@ -107,6 +107,9 @@ namespace Skeletal
     
     //Extracts a point cloud for this skeleton
     aligned<Vector3d>::vector point_cloud(const Joint& skeleton) const;
+
+	//Extracts a point cloud with contant weights
+    aligned<Vector4d>::vector point_cloudw(const Joint& skeleton) const;
  
   };
 

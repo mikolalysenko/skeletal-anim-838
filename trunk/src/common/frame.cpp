@@ -344,5 +344,15 @@ aligned<Vector3d>::vector Frame::point_cloud(const Joint& skel) const
   return result;
 }
 
+//Returns a point cloud with constant weight
+aligned<Vector4d>::vector Frame::point_cloudw(const Joint& skel) const
+{
+	aligned<Vector3d>::vector cloud = point_cloud(skel);
+	aligned<Vector4d>::vector result(cloud.size());
+	for(int i=0; i<cloud.size(); i++)
+		result[i] = Vector4d(cloud[i].x(), cloud[i].y(), cloud[i].z(), 1.);
+	return result;
+}
+
 
 }
