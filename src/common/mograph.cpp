@@ -282,8 +282,6 @@ vector<MotionGraph> MotionGraph::extract_scc() const
 			int v = to_visit.top();
 			to_visit.pop();
 			
-			cerr << "visit: " << v << endl;
-			
 			if(visited[v])
 				continue;
 			visited[v] = true;
@@ -297,8 +295,6 @@ vector<MotionGraph> MotionGraph::extract_scc() const
 		//Throw out 1 node motion graphs because they are stupid
 		if(subgraph.size() == 1)
 			continue;
-			
-		cerr << "Got component: " << n << endl;
 		
 		//Compact subgraph and build submotion graph
 		sort(subgraph.begin(), subgraph.end());
@@ -312,8 +308,6 @@ vector<MotionGraph> MotionGraph::extract_scc() const
 		for(int i=0; i<subgraph.size(); i++)
 		{
 			int v = subgraph[i];
-			
-			cerr << v << ' ';
 			mog.frames.push_back(frames[v]);
 			
 			for(int j=0; j<graph[v].size(); j++)
@@ -382,7 +376,13 @@ Motion MotionGraph::random_motion(int l) const
     }
 
     return Motion(frame_time, random_frames, skeleton);
-}
+}
+
+//Synthesizes a motion following along the path function
+Motion MotionGraph::follow_path(Vector2d (*path_func)(double t), double max_d) const
+{
+	//TODO: Not yet implemented
+}
 
 
 extern void assert_token(istream& file, const string& tok);

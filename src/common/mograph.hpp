@@ -74,6 +74,9 @@ namespace Skeletal
     Motion random_motion(int l) const;
     Motion random_motion2(int l) const { assert(false); }
     
+    //Synthesizes a motion which follows a path
+    Motion follow_path(Vector2d (*path_func)(double), double max_d) const;
+    
     //Extracts a linear submotion from the motion graph
     Motion submotion(int start, int end) const;    
     
