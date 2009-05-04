@@ -8,7 +8,9 @@
 //STL
 #include <iostream>
 #include <vector>
+#include <stack>
 #include <string>
+#include <algorithm>
 #include <cmath>
 
 //Project
@@ -53,9 +55,6 @@ Transform3d relative_xform(
 	bx /= bw;
 	bz /= bw;
 	
-	cerr << "abar = " << ax << ',' << az << endl
-		 << "bbar = " << bx << ',' << bz << endl;
-	
 	double dx = 0., dz = 0., tw = 0.;
 	
 	for(int i=0; i<a.size(); i++)
@@ -90,9 +89,7 @@ Transform3d relative_xform(
 	result.setIdentity();
 	result = result.translate(Vector3d(ax, 0., az))
 				   .rotate(rot)
-					.translate(Vector3d(-bx, 0., -bz))
-				   
-				   ;
+					.translate(Vector3d(-bx, 0., -bz));
 	
 	return result;
 }
@@ -111,21 +108,14 @@ double cloud_distance(const aligned<Vector4d>::vector& a, const aligned<Vector4d
     
     da = x * da;
     
-    /*
-    cerr << "da = " << da << endl;
-    cerr << "db = " << db << endl;
-    cerr << "(aw,bw) = " << a[i].w() << "," << b[i].w() << endl;
-    */
-    
     double d = (da - db).squaredNorm() * a[i].w() * b[i].w();
     s += d;
-    //cerr << "\t\td = " << d << endl;
   }
   
   s = sqrt(s);
+  
   assert(!isnan(s));
   assert(-1e10 <= s && s <= 1e10);
-  //cout << "\t\t\t\ts = " << s <<endl;
   
   return s;
 }
@@ -134,8 +124,6 @@ double cloud_distance(const aligned<Vector4d>::vector& a, const aligned<Vector4d
 Motion MotionGraph::submotion(int start, int end) const
 {
 	assert(0 <= start && start <= end && end <= frames.size());
-
-	//cerr << "Getting sub motion : " << start << "," << end << endl;
 
 	vector<Frame> tmp(end - start);
 	copy(frames.begin() + start, frames.begin() + end, tmp.begin());
@@ -193,8 +181,9 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
         }
     }
     
-    //Print out matrix for matlab analysis
-    //cerr << data << endl;
+    //Print out matrix for debugging
+    cerr << data << endl;
+    
     
     for(int i=0; i<n_frames; i++)
     for(int j=0; j<o_frames + n_frames; j++)
@@ -203,6 +192,9 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
     	
     	double val = data(i, j);
     	
+    	if(val >= threshold) continue;
+    	
+    	//Check
     	for(int dx=-2; dx<=2; dx++)
     	for(int dy=-2; dy<=2; dy++)
 		{
@@ -217,27 +209,132 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
 				goto skip;
 		}
 		
+		//Add edge to graph
 		if(i != j - o_frames)
-		{
-			cerr << "Adding edge: " << i << ',' << j << endl;
 			graph[i + o_frames].push_back(j);
-		}
     	
 	skip: continue;
     }
-    
-    /*
-    //assert(false);
-    exit(1);
-    */
 }
 
+//Computes finish times for each node
+void dfs(
+	int node,
+	int& finish_time,
+	vector<int>& finish,
+	const vector< vector<int> >& graph)
+{
+	if(finish[node] != -1)
+		return;
+	
+	finish[node] = finish_time++;
+	
+	for(int i=0; i<graph[node].size(); i++)
+		dfs(graph[node][i], finish_time, finish, graph);
+		
+	finish[node] = finish_time++;
+}
 
 //Extracts all biconnected components
-MotionGraph MotionGraph::extract_biconnected() const
+vector<MotionGraph> MotionGraph::extract_scc() const
 {
-	//TODO: Not yet implemented
-    return MotionGraph(*this);
+	//Initialize finish times
+	vector<int> finish(frames.size());
+	fill(finish.begin(), finish.end(), -1);
+	
+	//Compute finish times for forward DFS
+	for(int i=0, finish_time = 0; i<frames.size(); i++)
+	if(finish[i] == -1)
+		dfs(i, finish_time, finish, graph);
+
+	//Construct G^T, event order
+	vector< vector<int> > graphT(frames.size());
+	vector< pair<int, int> > ordered(frames.size());
+	for(int i=0; i<graph.size(); i++)	
+	{
+		for(int j=0; j<graph[i].size(); j++)
+			graphT[graph[i][j]].push_back(i);
+		ordered[i] = make_pair(finish[i], i);
+	}	
+	sort(ordered.begin(), ordered.end(), greater< pair<int,int> >());
+	
+	//Extract each connected component
+	vector< MotionGraph > result;
+
+	//Initialize visit buffer
+	vector<bool> visited(frames.size());
+	fill(visited.begin(), visited.end(), false);
+
+	//Visit frames in reverse order
+	for(int i=0; i<frames.size(); i++)
+	{
+		int n = ordered[i].second;
+		if(visited[n]) continue;
+		
+		//Extract subgraph
+		vector<int> subgraph;
+		stack<int> to_visit;
+		to_visit.push(n);
+		
+		//Extract tree rooted at this DFS point
+		while(!to_visit.empty())
+		{
+			int v = to_visit.top();
+			to_visit.pop();
+			
+			cerr << "visit: " << v << endl;
+			
+			if(visited[v])
+				continue;
+			visited[v] = true;
+			
+			subgraph.push_back(v);
+			
+			for(int i=0; i<graphT[v].size(); i++)
+				to_visit.push(graphT[v][i]);
+		}
+		
+		//Throw out 1 node motion graphs because they are stupid
+		if(subgraph.size() == 1)
+			continue;
+			
+		cerr << "Got component: " << n << endl;
+		
+		//Compact subgraph and build submotion graph
+		sort(subgraph.begin(), subgraph.end());
+		
+		//Build motion graph
+		MotionGraph mog(skeleton);
+		mog.frame_time = frame_time;
+		mog.graph.resize(subgraph.size());
+		
+		//Put frames back into motion graph
+		for(int i=0; i<subgraph.size(); i++)
+		{
+			int v = subgraph[i];
+			
+			cerr << v << ' ';
+			mog.frames.push_back(frames[v]);
+			
+			for(int j=0; j<graph[v].size(); j++)
+			{
+				//Check if edge is inside subgraph
+				int u = graph[v][j];
+				vector<int>::iterator it = lower_bound(subgraph.begin(), subgraph.end(), u);
+				
+				//If not, then skip it
+				if(it == subgraph.end() || *it != u)
+					continue;
+				
+				mog.graph[i].push_back((int)(it - subgraph.begin()));
+			}
+		}
+		cerr << endl;
+		
+		result.push_back(mog);
+	}
+
+    return result;
 }
 
 //Constant window function
@@ -254,6 +351,9 @@ Motion MotionGraph::random_motion(int l) const
     
     //Get initial frame
     int c = rand()%frames.size();
+    while(graph[c].size() == 0)
+    	c = rand() % frames.size();
+    
     random_frames.push_back(frames[c]);
     
     
@@ -275,8 +375,6 @@ Motion MotionGraph::random_motion(int l) const
         
         //Compute relative transformation
         Transform3d rel = relative_xform(pcloud, ncloud);
-			
-		cerr << "rel_xform = " << rel.matrix() << endl;
         	
         random_frames.push_back(next.apply_transform(skeleton, rel));
         
