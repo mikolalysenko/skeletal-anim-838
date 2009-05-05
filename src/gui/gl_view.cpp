@@ -1765,12 +1765,11 @@ void glView::debugFunction1()
   
 	MotionGraph graph(mocap_selected->skeleton);
 	graph.frame_time = mocap_selected->frame_time;
-//	graph.insert_motion(*mocap_selected, 10., mocap_selected->frame_time * 5.,  5, hann_window);
-	graph.insert_motion2(*mocap_selected, 10.1, 0.,  1, hann_window);
+	graph.insert_motion(*mocap_selected, 10., mocap_selected->frame_time * 5.,  5, hann_window);
     ofstream graph_file("graph_file.txt");
     writeMotionGraph(graph_file, graph);
 
-    mocap_combine = graph.random_motion2(2000);
+    mocap_combine = graph.random_motion(2000);
     mocap_selected = &mocap_combine;
 
 
@@ -1792,19 +1791,19 @@ void glView::debugFunction2()
     if(mocap_list.size() == 0) return;
     MotionGraph graph(mocap_list[0]->skeleton);
 	graph.frame_time = mocap_list[0]->frame_time;
-    graph.insert_motion2(*mocap_list[0], 10.1, 0.,  1, hann_window);
+    graph.insert_motion(*mocap_list[0], 10.1, 0.,  1, hann_window);
 
     for(int i = 1; i < mocap_list.size(); i++)
     {
         if(mocap_list[0]->skeleton.size() == mocap_list[i]->skeleton.size())
-            graph.insert_motion2(*mocap_list[i], 10.1, 0.,  1, hann_window);
+            graph.insert_motion(*mocap_list[i], 10.1, 0.,  1, hann_window);
     }
 
     
     ofstream graph_file("graph_file.txt");
     writeMotionGraph(graph_file, graph);
 
-    mocap_combine = graph.random_motion2(2000);
+    mocap_combine = graph.random_motion(2000);
     mocap_selected = &mocap_combine;
 
 

@@ -61,21 +61,17 @@ namespace Skeletal
       int window_res, 
       double (*window_func)(double));
       
-    void insert_motion2(const Motion& motion, 
-      double threshold,
-      double window_size, 
-      int window_res, 
-      double (*window_func)(double)) { assert(false); }
-    
     //Removes all dead ends from the motion graph
     vector<MotionGraph> extract_scc() const;
     
+    //Synthesizes a motion
+    Motion synthesize_motion(const vector<int> frame_seq, const Transform3d& base_pose) const;
+    
     //Synthesize a random motion with l frames
     Motion random_motion(int l) const;
-    Motion random_motion2(int l) const { assert(false); }
     
     //Synthesizes a motion which follows a path
-    Motion follow_path(Vector2d (*path_func)(double), double max_d) const;
+    Motion follow_path(Vector2d (*path_func)(double), double max_d, double dur) const;
     
     //Extracts a linear submotion from the motion graph
     Motion submotion(int start, int end) const;    

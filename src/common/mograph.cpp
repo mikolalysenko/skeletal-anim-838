@@ -182,11 +182,10 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
     }
     
     //Print out matrix for debugging
-    cerr << data << endl;
-    
+    //cerr << data << endl;
     
     for(int i=0; i<n_frames; i++)
-    for(int j=0; j<o_frames + n_frames; j++)
+    for(int j=0; j<o_frames + n_frames-1; j++)
     {
     	//Check if i,j is a local minima
     	
@@ -211,7 +210,7 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
 		
 		//Add edge to graph
 		if(i != j - o_frames)
-			graph[i + o_frames].push_back(j);
+			graph[i + o_frames].push_back(j+1);
     	
 	skip: continue;
     }
@@ -331,57 +330,103 @@ vector<MotionGraph> MotionGraph::extract_scc() const
     return result;
 }
 
-//Constant window function
-double const_func(double t)
+//Synthesizes a motion
+Motion MotionGraph::synthesize_motion(const vector<int> frame_seq, const Transform3d& base_pose) const
 {
-	return 1.;
+	//Initialize frame result
+	vector<Frame> result;
+	result.push_back(frames[frame_seq[0]].apply_transform(skeleton, base_pose));
+	
+	for(int i=1; i<frame_seq.size(); i++)
+	{
+		//Extract point clouds
+		aligned<Vector4d>::vector
+			pcloud = result[result.size() - 1].point_cloudw(skeleton),
+			ncloud = frames[max(frame_seq[i]-1, 0)].point_cloudw(skeleton);
+			
+		//Compute relative xform
+		Transform3d rel = relative_xform(pcloud, ncloud);
+		
+		//Store result
+		result.push_back(frames[frame_seq[i]].apply_transform(skeleton, rel));
+	}
+	
+	//Return the final motion sequence
+	return Motion(frame_time, result, skeleton);
 }
 
 
 //Do a random walk on the motion graph of length at most l, stop if you get stuck
 Motion MotionGraph::random_motion(int l) const
 {
-    vector<Frame> random_frames;
-    
+	vector<int> seq;
+
     //Get initial frame
     int c = rand()%frames.size();
     while(graph[c].size() == 0)
     	c = rand() % frames.size();
+    seq.push_back(c);
     
-    random_frames.push_back(frames[c]);
-    
-    
+    //Generate a bunch of random frames
     for(int i=0; i<l; i++)
     {
         if(graph[c].size() == 0)
             break;
         
-        int r  = rand() % graph[c].size();
-        int n = graph[c][r];
-        
-        //cerr << "n = " << n << endl;
-        Frame next = frames[n];
-        
-        //Get local point clouds
-        aligned<Vector4d>::vector 
-        	pcloud = random_frames[random_frames.size()-1].point_cloudw(skeleton),
-        	ncloud = frames[max(0, n-1)].point_cloudw(skeleton);
-        
-        //Compute relative transformation
-        Transform3d rel = relative_xform(pcloud, ncloud);
-        	
-        random_frames.push_back(next.apply_transform(skeleton, rel));
-        
-        c = n;
+        seq.push_back( c = graph[c][rand() % graph[c].size()] );
     }
+    
 
-    return Motion(frame_time, random_frames, skeleton);
+	//Synthesize motion from frame sequence
+    Transform3d start_pose;
+    start_pose.setIdentity();
+    return synthesize_motion(seq, start_pose);
 }
 
-//Synthesizes a motion following along the path function
-Motion MotionGraph::follow_path(Vector2d (*path_func)(double t), double max_d) const
+//Performs the path DFS
+struct Traversal
 {
-	//TODO: Not yet implemented
+	Vector2d (*path_func)(double t);
+	vector<int> visit_frames;
+	MotionGraph& graph;
+	double max_d;
+	
+	bool dfs(int frame, int t, float x, float z, float theta)
+	{
+		return false;
+	}
+};
+
+
+//Synthesizes a motion following along the path function
+Motion MotionGraph::follow_path(Vector2d (*path_func)(double t), double max_d, double dur) const
+{
+/*
+	Vector2d start_pt = path_func(0.);
+	Vector2d heading = ((*path_func)(frame_time) - start_pt).normalized;
+	
+	//Construct target pose
+	Transform3d target_pose;
+	target_pose.setIdentity();
+	
+	//Allocate data for traversal
+	Traversal trav;
+	trav.path_func = path_func;
+	trav.visit_frames.resize(dur / frame_time);
+	trav.graph = *this;
+	trav.max_d = max_d;
+
+	//Initialize traversal queue	
+	for(int i=0; i<frames.size(); i++)
+	{
+		//Do DFS
+		if(trav.dfs(i, start_pt.x, start_pt.y, atan2(heading.x, heading.y))
+			return synthesize_motion(trav.visit_frames, target_pose);
+	}
+
+	//Did not find, motion return failure
+	return Motion(frame_time, vector<Frame>(0), skeleton);
+*/
 }
 
 
