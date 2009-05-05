@@ -111,9 +111,6 @@ namespace Skeletal
 	//Extracts a point cloud with contant weights
     aligned<Vector4d>::vector point_cloudw(const Joint& skeleton) const;
  
- 	//Recovers the root transformation
- 	Transform3d root_xform(const Joint& skeleton) const;
- 
   };
 
   //Interpolate two poses
