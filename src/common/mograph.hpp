@@ -22,10 +22,6 @@ namespace Skeletal
   using namespace std;
   using namespace Eigen;
 
-  //Point cloud distance metrics
-  double cloud_distance(const aligned<Vector4d>::vector& a, const aligned<Vector4d>::vector& b, const Transform3d& x);
-  
-
   //A motion graph data structure
   struct MotionGraph
   {
@@ -61,7 +57,7 @@ namespace Skeletal
       int window_res, 
       double (*window_func)(double));
       
-    //Removes all dead ends from the motion graph
+    //Removes all dead ends from the motion graph, returning a list of strongly connected components
     vector<MotionGraph> extract_scc() const;
     
     //Synthesizes a motion
@@ -79,10 +75,16 @@ namespace Skeletal
     //Pulls out a local window frame about the frame f
     aligned<Vector4d>::vector point_cloud(int f, double w, int n, double (*wind_func)(double)) const;
   };
+  
+  //Point cloud distance metric
+  double cloud_distance(const aligned<Vector4d>::vector& a, const aligned<Vector4d>::vector& b, const Transform3d& x);
+
+  //Point cloud alignment
+  Transform3d relative_xform(const aligned<Vector4d>::vector& a, const aligned<Vector4d>::vector& b);
  
   //Serialization
   MotionGraph parseMotionGraph(istream& is);
-  void writeMotionGraph(ostream& os, const MotionGraph g);
+  void writeMotionGraph(ostream& os, const MotionGraph& g);
   };
 
 #endif
