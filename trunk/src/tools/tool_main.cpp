@@ -17,6 +17,67 @@ using namespace Eigen;
 using namespace Skeletal;
 
 
+//Spline stuff
+aligned<Vector3f>::vector control_points;
+double t_max;
+
+void read_control_points(istream& data)
+{
+	int n_points;
+	if(!(data >> n_points) || n_points <= 0)
+		throw "Invalid number of control points for spline curve";
+		
+	control_points.resize(n_points);
+	for(int i=0; i<n_points; i++)
+		if(!(data >> control_points[i].x() >> control_points[i].y() >> control_points[i].z()))
+			throw "Invalid control point";
+			
+	//Validate data (assert that path is monotonic)
+	assert(control_points[0].z() == 0.);
+	for(int i=1; i<n_points; i++)
+		assert(control_points[i].z() > control_points[i-1].z());
+		
+	t_max = control_points[control_points.size() - 1].z();
+}
+
+
+//deCasteljau's algorithm
+Vector3f eval_spline(float t)
+{
+	aligned<Vector3f>::vector tmp(control_points.begin(), control_points.end());
+	
+	for(int i=control_points.size(); i>0; i--)
+	for(int j=0; j<i; j++)
+		tmp[j] = tmp[j] * (1. - t) + tmp[j+1]*t;
+
+	return tmp[0];
+}
+
+//Evaluates the spline at some point in time
+Vector2f eval_time_spline(double t)
+{
+	assert(t >= 0. && t <= t_max);
+	
+	//Do a binary search to find t coordinate for time value
+	float lo = 0., hi = 1.;
+	Vector3f pt;
+	while(abs(lo - hi) > 1e-4)
+	{
+		float m = lo + (hi - lo) * .5;
+		pt = eval_spline(m);
+		
+		if(pt.z() < t)
+			hi = m;
+		else
+			lo = m;
+	}
+	
+	//Return the value of the spline at this time
+	return Vector2f(pt.x(), pt.y());
+}
+
+
+
 //File IO helpers
 Motion read_motion(const string& file_name)
 {
@@ -77,6 +138,16 @@ void extract_scc(const string& graph_file)
 	writeMotionGraph(cout, scc[max_graph]);
 }
 
+void process_spline(double max_d, const string& spline_file, const string& graph_file)
+{
+	ifstream sin(spline_file.c_str());
+
+	read_control_points(sin);
+	MotionGraph graph = read_graph(graph_file);
+	Motion motion = graph.follow_path(&eval_time_spline, max_d, t_max);
+	writeBVH(cout, motion);
+}
+
 
 //Prints out a helpful message
 void print_help()
@@ -99,6 +170,9 @@ void print_help()
 		 << endl
 		 << "  Synthesize a random motion:" << endl
 		 << "     motool -s <length> <graph.mog>" << endl
+		 << endl
+		 << "  Walk along a path:" << endl
+		 << "     motool -path <max_distance> <path_file.spline> <graph.mog>" << endl
 		 << endl
 		 << endl;
 }
@@ -140,6 +214,13 @@ int main(int argc, char** argv)
 	{
 		assert(argc == 3);
 		extract_scc(argv[2]);
+	}
+	else if(command == "-path")
+	{
+		cout << "Argc = " << argc << endl;
+	
+		assert(argc == 5);
+		process_spline(atof(argv[2]), string(argv[3]), string(argv[4]));
 	}
 	else
 	{
