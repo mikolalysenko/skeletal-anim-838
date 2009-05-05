@@ -485,7 +485,7 @@ MotionGraph parseMotionGraph(istream& is)
 }
 
 //Writes a motion graph to the output stream
-void writeMotionGraph(ostream& os, const MotionGraph g)
+void writeMotionGraph(ostream& os, const MotionGraph& g)
 {
 	os << "MOGRAPH" << endl;
 	writeJoint(os, g.skeleton);
