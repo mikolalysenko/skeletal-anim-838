@@ -330,6 +330,8 @@ vector<MotionGraph> MotionGraph::extract_scc() const
     return result;
 }
 
+
+
 //Synthesizes a motion
 Motion MotionGraph::synthesize_motion(const vector<int> frame_seq, const Transform3d& base_pose) const
 {
@@ -375,7 +377,6 @@ Motion MotionGraph::random_motion(int l) const
         
         seq.push_back( c = graph[c][rand() % graph[c].size()] );
     }
-    
 
 	//Synthesize motion from frame sequence
     Transform3d start_pose;
@@ -386,47 +387,116 @@ Motion MotionGraph::random_motion(int l) const
 //Performs the path DFS
 struct Traversal
 {
-	Vector2d (*path_func)(double t);
+	Vector2f (*path_func)(double t);
 	vector<int> visit_frames;
-	MotionGraph& graph;
+	const MotionGraph* mog;
 	double max_d;
 	
-	bool dfs(int frame, int t, float x, float z, float theta)
+	Transform2f rel2D(int a, int b)
 	{
+		//Extract point clouds
+		aligned<Vector4d>::vector
+			pcloud = mog->frames[a].point_cloudw(mog->skeleton),
+			ncloud = mog->frames[b].point_cloudw(mog->skeleton);
+		
+		//Compute relative xform
+		Transform3d x3d = relative_xform(pcloud, ncloud);
+		
+		//Extract components
+		Matrix3d mat = x3d.rotation();
+		Vector3d trans = x3d.translation();
+		
+		//Build 2D xform
+		Matrix2f rot;
+		rot(0,0) = mat(0,0);
+		rot(0,1) = mat(0,2);
+		rot(1,0) = mat(2,0);
+		rot(1,1) = mat(2,2);
+		
+		Transform2f result;
+		result.setIdentity();
+		
+		return result.rotate(rot)
+					 .translate(Vector2f(trans.x(), trans.z()));
+	}
+	
+	bool dfs(int frame, int t, Transform2f pose)
+	{
+		//Success!
+		if(t >= visit_frames.size())
+			return true;
+	
+		//Check we are still in bounds
+		double t0 = t * mog->frame_time;
+		Vector2f tpos = path_func(t0);
+		if((tpos - pose.translation()).norm() > max_d)
+			return false;
+		
+		//Mark frame as visited
+		visit_frames[t] = frame;
+		
+		//Generate successor states
+		for(int i=0; i<mog->graph[frame].size(); i++)
+		{
+			int n = mog->graph[frame][i];
+			if(dfs(n, t+1, rel2D(frame, n) * pose))
+				return true;
+		}
+		
+		//fail
 		return false;
 	}
 };
 
 
 //Synthesizes a motion following along the path function
-Motion MotionGraph::follow_path(Vector2d (*path_func)(double t), double max_d, double dur) const
+Motion MotionGraph::follow_path(Vector2f (*path_func)(double t), double max_d, double dur) const
 {
-/*
-	Vector2d start_pt = path_func(0.);
-	Vector2d heading = ((*path_func)(frame_time) - start_pt).normalized;
-	
+	Vector2f start_pt = path_func(0.);
+	Vector2f heading = (path_func(frame_time) - start_pt).normalized();
+
 	//Construct target pose
-	Transform3d target_pose;
+	Matrix2f rot;
+	rot(0,0) =  heading.y();
+	rot(0,1) =  heading.x();
+	rot(1,0) = -heading.x();
+	rot(1,1) =  heading.y();
+	
+	Transform2f target_pose;
 	target_pose.setIdentity();
+	target_pose.rotate(rot)
+			   .translate((Vector2f)start_pt);
 	
 	//Allocate data for traversal
 	Traversal trav;
 	trav.path_func = path_func;
 	trav.visit_frames.resize(dur / frame_time);
-	trav.graph = *this;
+	trav.mog = this;
 	trav.max_d = max_d;
 
 	//Initialize traversal queue	
 	for(int i=0; i<frames.size(); i++)
 	{
 		//Do DFS
-		if(trav.dfs(i, start_pt.x, start_pt.y, atan2(heading.x, heading.y))
-			return synthesize_motion(trav.visit_frames, target_pose);
+		if(trav.dfs(i, 0, target_pose))
+		{
+			//Convert pose to 3D
+			Matrix3d tmp = Matrix3d::Identity();
+			tmp(0,0) = rot(0,0);
+			tmp(0,2) = rot(0,1);
+			tmp(2,0) = rot(1,0);
+			tmp(2,2) = rot(1,1);
+			
+			Transform3d xform;
+			xform.setIdentity();
+			xform = xform.rotate(tmp).translate(Vector3d(start_pt.x(), 0, start_pt.z()));
+		
+			return synthesize_motion(trav.visit_frames, xform);
+		}
 	}
 
 	//Did not find, motion return failure
 	return Motion(frame_time, vector<Frame>(0), skeleton);
-*/
 }
 
 
