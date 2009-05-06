@@ -37,7 +37,7 @@ void read_control_points(istream& data)
 	//Validate data (assert that path is monotonic)
 	assert(control_points[0].z() == 0.);
 	for(int i=1; i<n_points; i++)
-		assert(control_points[i].z() > control_points[i-1].z());
+		assert(control_points[i].z() >= control_points[i-1].z());
 		
 	t_max = control_points[control_points.size() - 1].z();
 }
@@ -116,7 +116,7 @@ void add_motion(const string& mo_file, const string& graph_file)
 {
 	Motion motion = read_motion(mo_file);
 	MotionGraph graph = read_graph(graph_file);
-	graph.insert_motion(motion, 10., motion.frame_time * 5.,  5, hann_window);
+	graph.insert_motion(motion, 15., motion.frame_time * 5.,  5, hann_window);
 	writeMotionGraph(cout, graph);
 }
 
@@ -133,6 +133,9 @@ void extract_scc(const string& graph_file)
 {
 	MotionGraph graph = read_graph(graph_file);
 	vector<MotionGraph> scc = graph.extract_scc();
+	
+	//Validate size constraint
+	assert(scc.size() > 0);
 	
 	int max_graph = 0;
 	
