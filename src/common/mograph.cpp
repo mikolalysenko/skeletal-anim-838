@@ -582,4 +582,34 @@ void writeMotionGraph(ostream& os, const MotionGraph& g)
 	}
 }
 
+//Create point cloud map
+void MotionGraph::create_point_cloud_map(MatrixXd& data,
+                                         double& max_distance,
+                                         double w, 
+                                         int n, 
+                                         double (*window_func)(double))
+{
+    //Get frame sizes
+    int num_frames = frames.size();
+   
+    //Allocate data
+    data = MatrixXd::Zero(num_frames, num_frames);
+    max_distance = 0.;
+
+    for(int i=0; i<num_frames; i++)
+    {
+        aligned<Vector4d>::vector cloud = point_cloud(i, w, n, window_func); 
+       
+        for(int j=0; j<num_frames; j++)
+        {
+            aligned<Vector4d>::vector dest_cloud = point_cloud(j, w, n, window_func);
+            Transform3d rel = relative_xform(dest_cloud, cloud);
+            data(i, j) = cloud_distance(cloud, dest_cloud, rel);
+            if(data(i, j) > max_distance) max_distance = data(i, j);
+        }
+    }
+
+
+}
+
 }

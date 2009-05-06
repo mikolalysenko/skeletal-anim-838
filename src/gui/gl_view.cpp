@@ -1,6 +1,7 @@
 
 #include <FL/fl_ask.H>
 #include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Image.H>
 
 //STL includes
 #include <iostream>
@@ -848,6 +849,7 @@ glView::glView(int x,int y,int w,int h,const char *l)
   m_draw_fps = false;
   m_camera_mode = CAMERA_FREE;
   m_draw_style = STYLE_LINES;
+  imgMap = NULL;
 
   fl_register_images();
 
@@ -1897,6 +1899,7 @@ void glView::load_motion_graph()
       try
       {
          motion_graph = parseMotionGraph(c_in);
+         reset_mg_map();
          update_mg_info();
       }
       catch(...)
@@ -1942,18 +1945,67 @@ void glView::save_motion_graph()
 
 }
 
+void glView::reset_mg_map()
+{
+    imgCloudMapData.resize(1 * 1 * 3);
+    imgCloudMapData[0] = 0;
+    imgCloudMapData[1] = 0;
+    imgCloudMapData[2] = 0;
+    Fl_RGB_Image* imgCloudMap = new Fl_RGB_Image(&imgCloudMapData[0], 1, 1);
+    imgMap = imgCloudMap->copy(400, 400);
+    m_ui->boxPoitCloudMap->image(imgMap);
+    delete imgCloudMap;
+    
+    m_ui->motionGraphWindow->redraw();
+}
+
 void glView::recompute_mg()
 {
-    
-    double treshold = atof(m_ui->inputCloudTreshold->value());
-  
 
-    MotionGraph graph(motion_graph.skeleton);
-    graph.frame_time = motion_graph.frame_time;
-    Motion motion(motion_graph.frame_time, motion_graph.frames, motion_graph.skeleton);
-    graph.insert_motion(motion, treshold, graph.frame_time * 5.,  5, hann_window);
-    motion_graph = graph;
-    update_mg_info();
+    
+
+    m_ui->boxPoitCloudMap->image(NULL);
+    if(imgMap)
+    {
+      delete imgMap;
+      imgMap = NULL;
+    }
+
+    if(motion_graph.frames.size() == 0) 
+    {
+        reset_mg_map();
+        return;
+    }
+    double max_distance;
+    motion_graph.create_point_cloud_map(dataCloudMap, max_distance, motion_graph.frame_time * 5.,  5, hann_window);
+
+    int rows = dataCloudMap.rows(),
+        cols = dataCloudMap.cols();
+    imgCloudMapData.resize(rows * cols * 3);
+
+
+
+    long index = 0;
+    unsigned char value;
+    for(int i = 0; i < rows; i++)
+    {
+        index = (rows - 1 - i) * cols * 3;
+        for(int j = 0; j < cols; j++)
+        {
+            unsigned char value = (unsigned char)(dataCloudMap(i,j) / max_distance * 255.);
+            imgCloudMapData[index++] = value;
+            imgCloudMapData[index++] = value;
+            imgCloudMapData[index++] = value;
+        }
+    }
+
+    Fl_RGB_Image* imgCloudMap = new Fl_RGB_Image(&imgCloudMapData[0], rows, cols);
+    imgMap = imgCloudMap->copy(400, 400);
+    m_ui->boxPoitCloudMap->image(imgMap);
+
+    delete imgCloudMap;
+    m_ui->motionGraphWindow->redraw();
+
 }
 
 void glView::insert_motion_mg()
@@ -2024,6 +2076,7 @@ void glView::insert_motion_mg()
 
     }
 
+    reset_mg_map();
     update_mg_info();
   }
 
@@ -2059,7 +2112,7 @@ void glView::create_mg_files()
     double treshold = atof(m_ui->inputCloudTreshold->value());
    
     MotionGraph graph(mocap_list[0]->skeleton);
-	graph.frame_time = mocap_list[0]->frame_time;
+	  graph.frame_time = mocap_list[0]->frame_time;
 
     for(int i = 0; i < mocap_list.size(); i++)
     {
@@ -2072,6 +2125,7 @@ void glView::create_mg_files()
     //graph = graphlist[0];
     motion_graph = graph;
 
+    reset_mg_map();
     update_mg_info();
     
 }
@@ -2094,5 +2148,73 @@ void glView::clear_motion_graph()
 {
     MotionGraph graph;
     motion_graph = graph;
+    reset_mg_map();
     update_mg_info();
+}
+
+
+
+// FlTk Event handler for the window
+int PointCloudMap::handle(int event)
+{
+
+
+
+  switch(event) {
+    // handle the mouse down event
+    case FL_PUSH:
+        take_focus ();
+        if(Fl::event_button() == FL_LEFT_MOUSE)
+        {
+            pt_x = Fl::event_x()-this->x();
+            pt_y = Fl::event_y()-this->y();
+        } 
+        return 1;
+    
+    // handle the mouse up event
+    case FL_RELEASE:
+        break;
+
+    // handle the mouse move event
+    case FL_DRAG:
+        if(Fl::event_button() == FL_LEFT_MOUSE)
+        {
+            pt_x = Fl::event_x()-this->x();
+            pt_y = Fl::event_y()-this->y();
+        }
+        return 1;
+
+
+    case FL_FOCUS :
+    case FL_UNFOCUS :
+        return 1;
+
+
+    case FL_KEYBOARD:
+       {
+          switch (Fl::event_key()) 
+          {
+              case FL_Up:
+                  pt_y = min(h()-1, pt_y+1);
+                  break;
+
+              case FL_Down:
+                  pt_y = max(0, pt_y-1);
+                  break;
+
+              case FL_Left:
+                  pt_x = max(0, pt_x-1);
+                  break;
+
+	            case FL_Right:
+                  pt_x = min(w()-1, pt_x+1);
+                  break;
+          }
+       }
+       return 1;
+
+
+  }
+
+  return Fl_Box::handle(event);
 }
