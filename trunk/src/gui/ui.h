@@ -12,6 +12,8 @@
 #include <FL/Fl_Spinner.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Browser.H>
+#include <FL/Fl_Float_Input.H>
+#include <FL/Fl_Int_Input.H>
 
 class UserInterface {
 public:
@@ -159,11 +161,41 @@ private:
   void cb_Save_i(Fl_Button*, void*);
   static void cb_Save(Fl_Button*, void*);
 public:
+  Fl_Button *radio_motion_graph;
+private:
+  void cb_radio_motion_graph_i(Fl_Button*, void*);
+  static void cb_radio_motion_graph(Fl_Button*, void*);
+public:
   Fl_Box *lbl_name;
   Fl_Box *lbl_joints;
   Fl_Box *lbl_frames;
   Fl_Box *lbl_fps;
   Fl_Box *boxImageLogo;
+  Fl_Double_Window *motionGraphWindow;
+  Fl_Box *imagePointCloud;
+private:
+  void cb_Load_i(Fl_Button*, void*);
+  static void cb_Load(Fl_Button*, void*);
+  void cb_Create_i(Fl_Button*, void*);
+  static void cb_Create(Fl_Button*, void*);
+  void cb_Insert_i(Fl_Button*, void*);
+  static void cb_Insert(Fl_Button*, void*);
+  void cb_Save1_i(Fl_Button*, void*);
+  static void cb_Save1(Fl_Button*, void*);
+  void cb_Recompute_i(Fl_Button*, void*);
+  static void cb_Recompute(Fl_Button*, void*);
+public:
+  Fl_Float_Input *inputCloudTreshold;
+  Fl_Box *lbl_joints_mg;
+  Fl_Box *lbl_frames_mg;
+  Fl_Box *lbl_fps_mg;
+  Fl_Int_Input *inputRandomFrames;
+private:
+  void cb_Synthesize_i(Fl_Button*, void*);
+  static void cb_Synthesize(Fl_Button*, void*);
+  void cb_Clear_i(Fl_Button*, void*);
+  static void cb_Clear(Fl_Button*, void*);
+public:
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);
 };
