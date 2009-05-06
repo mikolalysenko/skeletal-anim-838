@@ -164,7 +164,7 @@ void writeJoint(ostream& bvh_file, const Joint& skel, string tabs)
     if(skel.children[i].children.size() > 0)
       bvh_file << "JOINT ";
     else
-      bvh_file << "End Site" << endl;
+      bvh_file << "End Site " << endl;
     writeJoint(bvh_file, skel.children[i], tabs + "\t");
   }
   

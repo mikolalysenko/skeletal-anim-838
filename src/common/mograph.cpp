@@ -210,7 +210,7 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
 		
 		//Add edges to graph
 		graph[j].push_back(i + o_frames + 1);
-		graph[i + o_frames].push_back(j+1);
+		graph[i + o_frames].push_back(j + 1);
 		
 		//cerr << "Adding edge: " << j << "," << (i + o_frames) << endl;
     	
@@ -315,6 +315,9 @@ vector<MotionGraph> MotionGraph::extract_scc() const
 			//Add frame index
 			frame_indexes[v] = mog.frames.size();
 			mog.frames.push_back(frames[v]);
+			
+			if(v < frames.size() && (i == subgraph.size() - 1) || (subgraph[i+1] != v+1))
+				mog.frames.push_back(frames[v+1]);
 		}
 		
 		//Put edges back into motion graph
@@ -353,6 +356,8 @@ Motion MotionGraph::synthesize_motion(const vector<int> frame_seq, const Transfo
 	vector<Frame> result;
 	result.push_back(frames[frame_seq[0]].apply_transform(skeleton, base_pose));
 	
+	Transform3d pxform = base_pose;
+	
 	for(int i=1; i<frame_seq.size(); i++)
 	{
 		//Extract point clouds
@@ -362,9 +367,11 @@ Motion MotionGraph::synthesize_motion(const vector<int> frame_seq, const Transfo
 			
 		//Compute relative xform
 		Transform3d rel = relative_xform(pcloud, ncloud);
+		Frame next = frames[frame_seq[i]].apply_transform(skeleton, rel);
 		
 		//Store result
-		result.push_back(frames[frame_seq[i]].apply_transform(skeleton, rel));
+		result.push_back(next);
+		pxform = rel;
 	}
 	
 	//Return the final motion sequence
@@ -414,25 +421,19 @@ struct Traversal
 			ncloud = mog->frames[b].point_cloudw(mog->skeleton);
 		
 		//Compute relative xform
-		Transform3d x3d = relative_xform(pcloud, ncloud);
+		Matrix4d x3d = relative_xform(pcloud, ncloud).matrix();
 		
-		//Extract components
-		Matrix3d mat = x3d.rotation();
-		Vector3d trans = x3d.translation();
+		//Extract x-z component
+		Matrix3f mat;
+		mat.setIdentity();
+		mat(0,0) = x3d(0,0);
+		mat(0,1) = x3d(0,2);
+		mat(0,2) = x3d(0,3);
+		mat(1,0) = x3d(2,0);
+		mat(1,1) = x3d(2,2);
+		mat(1,2) = x3d(2,3);
 		
-		//Build 2D xform
-		Matrix2f rot;
-		rot(0,0) = mat(0,0);
-		rot(0,1) = mat(0,2);
-		rot(1,0) = mat(2,0);
-		rot(1,1) = mat(2,2);
-		
-		Transform2f result;
-		result.setIdentity();
-		result = result.rotate(rot)
-					 .translate(Vector2f(trans.x(), trans.z()));
-		
-		return result;
+		return Transform2f(mat);
 	}
 
 	//Extracts the base point for the anim	
@@ -445,7 +446,7 @@ struct Traversal
 	
 	bool dfs(int frame, int t, Transform2f pose)
 	{
-		cerr << "Visiting: " << frame << "," << t << endl;
+		//cerr << "Visiting: " << frame << "," << t << ", pose = " << endl << pose.matrix() << endl;
 		
 		//Success!
 		if(t >= visit_frames.size())
@@ -456,8 +457,10 @@ struct Traversal
 		Vector2f tpos = path_func(t0),
 				 cpos = base_pt(frame, pose);
 		
+		/*
 		cerr << "Target = " << tpos << endl
 			 << "Current = " << cpos << endl;
+		*/
 		
 		if((tpos - cpos).squaredNorm() > max_d)
 			return false;
@@ -469,7 +472,7 @@ struct Traversal
 		for(int i=0; i<mog->graph[frame].size(); i++)
 		{
 			int n = mog->graph[frame][i];
-			Transform2f rel_xform = rel2D(max(n-1, 0), n) * rel2D(frame, max(n-1, 0)) * pose;
+			Transform2f rel_xform = rel2D(frame, max(n-1, 0)) * pose;
 			
 			if(dfs(n, t+1, rel_xform))
 				return true;
@@ -524,24 +527,22 @@ Motion MotionGraph::follow_path(Vector2f (*path_func)(double t), double max_d, d
 			//Set up matrix
 			Transform2f rel_target;
 			rel_target.setIdentity();
-			rel_target = rel_target.rotate(rot).translate(start_pt) * root;
+			rel_target = rel_target.translate(start_pt).rotate(rot) * root;
 	
 			//Do DFS
 			if(trav.dfs(i, 0, rel_target))
 			{
 				//Convert pose to 3D
-				Matrix3d tmp = Matrix3d::Identity();
-				tmp(0,0) = rot(0,0);
-				tmp(0,2) = rot(0,1);
-				tmp(2,0) = rot(1,0);
-				tmp(2,2) = rot(1,1);
+				Matrix3f rel = rel_target.matrix();
+				Matrix4d tmp = Matrix4d::Identity();
+				tmp(0,0) = rel(0,0);
+				tmp(0,2) = rel(0,1);
+				tmp(0,3) = rel(0,2);
+				tmp(2,0) = rel(1,0);
+				tmp(2,2) = rel(1,1);
+				tmp(2,3) = rel(1,2);
 			
-				Transform3d xform;
-				xform.setIdentity();
-				xform = xform.rotate(tmp);
-				xform = xform.translate(Vector3d(start_pt.x(), 0., start_pt.y()));
-		
-				return synthesize_motion(trav.visit_frames, xform);
+				return synthesize_motion(trav.visit_frames, Transform3d(tmp));
 			}
 		}
 	}

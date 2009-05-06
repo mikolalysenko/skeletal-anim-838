@@ -34,8 +34,8 @@ builddir = out
 INC_PATH = -I$(commondir) -I$(tooldir) -I$(guidir) -I$(EIGENPATH) -I$(FLTKPATH)
 
 # libraries link options ('-lm' is common to link with the math library)
-GUI_LIBS	= -lglut -lm -L$(FLTKPATH)/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl -lXpm
-TOOL_LIBS	= -lm
+GUI_LIBS	= -Wl-stack_size,1000000 -lglut -lm -L$(FLTKPATH)/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lXext -lX11 -lfltk -lfltk_gl -lXpm
+TOOL_LIBS	= -Wl-stack_size,1000000 -lm
 
 # other compilation options
 COMPILE_OPTS = 
