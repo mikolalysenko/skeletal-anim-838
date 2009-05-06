@@ -8,9 +8,10 @@
 #include <FL/Fl_File_Icon.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Shared_Image.H>
-
+#include <FL/Fl_Box.H>
 
 class glView;
+class PointCloudMap;
 #include "ui.h"
 
 //Project includes
@@ -81,6 +82,7 @@ public:
   void synthesize_motion();
   void create_mg_files();
   void update_mg_info();
+  void reset_mg_map();
 
 
 public:
@@ -129,8 +131,25 @@ public:
   GLfloat lightPosition[4];
   GLfloat floorPlaneEquation[4];
 
+  MatrixXd dataCloudMap;
+  Fl_Image* imgMap;
+  vector<unsigned char> imgCloudMapData;
+
+  
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 };
 
+class PointCloudMap : public Fl_Box
+{
+public:
+  PointCloudMap(int x,int y,int w,int h,const char *l=0) 
+    : Fl_Box(x,y,w,h,l), pt_x(0), pt_y(0) {};
+
+  virtual int handle(int);
+private:
+  int pt_x;
+  int pt_y;
+};
 
 #endif

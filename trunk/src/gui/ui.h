@@ -14,6 +14,7 @@
 #include <FL/Fl_Browser.H>
 #include <FL/Fl_Float_Input.H>
 #include <FL/Fl_Int_Input.H>
+#include <FL/Fl_Progress.H>
 
 class UserInterface {
 public:
@@ -172,7 +173,7 @@ public:
   Fl_Box *lbl_fps;
   Fl_Box *boxImageLogo;
   Fl_Double_Window *motionGraphWindow;
-  Fl_Box *imagePointCloud;
+  PointCloudMap *boxPoitCloudMap;
 private:
   void cb_Load_i(Fl_Button*, void*);
   static void cb_Load(Fl_Button*, void*);
@@ -182,8 +183,8 @@ private:
   static void cb_Insert(Fl_Button*, void*);
   void cb_Save1_i(Fl_Button*, void*);
   static void cb_Save1(Fl_Button*, void*);
-  void cb_Recompute_i(Fl_Button*, void*);
-  static void cb_Recompute(Fl_Button*, void*);
+  void cb_Compute_i(Fl_Button*, void*);
+  static void cb_Compute(Fl_Button*, void*);
 public:
   Fl_Float_Input *inputCloudTreshold;
   Fl_Box *lbl_joints_mg;

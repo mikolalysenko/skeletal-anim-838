@@ -74,6 +74,13 @@ namespace Skeletal
     
     //Pulls out a local window frame about the frame f
     aligned<Vector4d>::vector point_cloud(int f, double w, int n, double (*wind_func)(double)) const;
+
+    //Create point cloud map
+    void create_point_cloud_map(MatrixXd& data,
+      double& max_distance,
+      double window_size,
+      int window_res,
+      double (*window_func)(double));
   };
   
   //Point cloud distance metric
