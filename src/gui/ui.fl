@@ -7,8 +7,8 @@ class UserInterface {open
   Function {UserInterface()} {open
   } {
     Fl_Window mainWindow {
-      label {Skeletal Anim} open
-      xywh {461 52 600 710} type Double resizable visible
+      label {Skeletal Anim}
+      xywh {460 28 600 704} type Double hide resizable size_range {600 710 0 0}
     } {
       Fl_Group {} {open
         xywh {-5 0 830 709}
@@ -23,7 +23,7 @@ class UserInterface {open
             code1 {view->set_ui(this);}
             class glView
           }
-          Fl_Menu_Bar {} {open
+          Fl_Menu_Bar {} {
             xywh {0 0 600 18} selection_color 49 labelsize 10 textsize 10
           } {
             Submenu {} {
@@ -171,14 +171,14 @@ class UserInterface {open
             xywh {565 401 35 19} labelfont 1 labelsize 10 align 2 when 1 maximum 360 value 30 textsize 10
           }
           Fl_Group {} {open
-            xywh {0 434 565 275}
+            xywh {0 434 597 275}
           } {
             Fl_Box {} {
               label {Current Animation}
               xywh {3 436 358 40} box ENGRAVED_FRAME labelsize 10 align 5
             }
             Fl_Box {} {
-              xywh {518 456 40 20} resizable
+              xywh {575 440 11 11} resizable
             }
             Fl_Box {} {
               label Name
@@ -241,12 +241,14 @@ class UserInterface {open
               }
               Fl_Button radio_single {
                 label {Single File}
-                callback {view->mode_single();}
+                callback {view->mode_single();
+motionGraphWindow->hide();}
                 xywh {215 495 70 22} type Radio value 1 selection_color 231 labelsize 10
               }
               Fl_Button radio_mutliple {
                 label {Multiple Files}
-                callback {view->mode_multiple();}
+                callback {view->mode_multiple();
+motionGraphWindow->hide();}
                 xywh {290 495 70 22} type Radio selection_color 231 labelsize 10
               }
               Fl_Spinner edit_start_frame {
@@ -308,6 +310,11 @@ class UserInterface {open
                 callback {view->save_file();}
                 xywh {495 498 55 22} labelsize 10
               }
+              Fl_Button radio_motion_graph {
+                label {Motion Graph}
+                callback {view->mode_motion_graph();}
+                xywh {365 495 70 22} type Radio selection_color 231 labelsize 10
+              }
             }
             Fl_Box lbl_name {
               xywh {10 450 195 20} box DOWN_FRAME labelsize 10 align 20
@@ -321,10 +328,99 @@ class UserInterface {open
             Fl_Box lbl_fps {
               xywh {307 450 45 20} box DOWN_FRAME labelsize 10 align 16
             }
-            Fl_Box boxImageLogo {selected
+            Fl_Box boxImageLogo {
               image {../uw_logo.png} xywh {365 450 25 25} hide
             }
           }
+        }
+      }
+    }
+    Fl_Window motionGraphWindow {
+      label {Motion Graph} open
+      xywh {581 172 646 546} type Double visible
+    } {
+      Fl_Group {} {open
+        xywh {0 0 715 550}
+      } {
+        Fl_Box imagePointCloud {
+          label {Point Cloud Distance Map}
+          xywh {245 145 400 400} box DOWN_FRAME labelsize 10 align 5
+        }
+        Fl_Button {} {
+          label {Load motion graph}
+          callback {view->load_motion_graph();}
+          xywh {10 8 165 22} labelsize 10
+        }
+        Fl_Button {} {
+          label {Create motion graph from loaded files}
+          callback {view->create_mg_files();}
+          xywh {10 78 199 22} labelsize 10
+        }
+        Fl_Button {} {
+          label {Insert motion file}
+          callback {view->insert_motion_mg();}
+          xywh {10 108 200 22} labelsize 10
+        }
+        Fl_Button {} {
+          label {Save motion graph}
+          callback {view->save_motion_graph();}
+          xywh {180 8 165 22} labelsize 10
+        }
+        Fl_Button {} {
+          label {Recompute Motion Graph}
+          callback {view->recompute_mg();}
+          xywh {10 138 200 22} labelsize 10
+        }
+        Fl_Input inputCloudTreshold {
+          label Threshold
+          xywh {60 55 85 20} labelsize 10 textsize 10
+          code0 {\#include <FL/Fl_Float_Input.H>}
+          class Fl_Float_Input
+        }
+        Fl_Group {} {open
+          xywh {240 60 400 45}
+        } {
+          Fl_Box {} {
+            label {Motion Graph}
+            xywh {243 62 397 38} box ENGRAVED_FRAME labelsize 10 align 5
+          }
+          Fl_Box {} {
+            label {\# Joints}
+            xywh {245 64 50 13} labelsize 10 align 16
+          }
+          Fl_Box {} {
+            label {\# Frames}
+            xywh {295 64 50 13} labelsize 10 align 16
+          }
+          Fl_Box {} {
+            label FPS
+            xywh {345 64 50 13} labelsize 10 align 16
+          }
+          Fl_Box lbl_joints_mg {
+            xywh {249 76 45 20} box DOWN_FRAME labelsize 10 align 16
+          }
+          Fl_Box lbl_frames_mg {
+            xywh {298 76 45 20} box DOWN_FRAME labelsize 10 align 16
+          }
+          Fl_Box lbl_fps_mg {
+            xywh {347 76 45 20} box DOWN_FRAME labelsize 10 align 16
+          }
+        }
+        Fl_Input inputRandomFrames {
+          label {\# of random frames}
+          xywh {105 185 85 20} labelsize 10 textsize 10
+          code0 {\#include <FL/Fl_Int_Input.H>}
+          class Fl_Int_Input
+        }
+        Fl_Button {} {
+          label {Synthesize random motion}
+          callback {view->synthesize_motion();}
+          xywh {10 208 200 22} labelsize 10
+        }
+        Fl_Button {} {
+          label {Clear motion graph}
+          callback {view->clear_motion_graph();} selected
+          xywh {350 8 165 22} labelsize 10
         }
       }
     }

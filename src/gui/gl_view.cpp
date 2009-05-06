@@ -1,4 +1,6 @@
 
+#include <FL/fl_ask.H>
+#include <FL/Fl_Double_Window.H>
 
 //STL includes
 #include <iostream>
@@ -168,8 +170,24 @@ void glView::print_skeleton(const Joint& skel, int t)
 }
 
 
+void mainWindow_callback(Fl_Widget* widget, void*) 
+{
+  exit(0);
+}
+void motionGraphWindow_callback(Fl_Widget* widget, void*) 
+{
+  // do nothing
+  ((Fl_Double_Window*)widget)->iconize();
+}
+
+
 void glView::initScene()
 {
+  m_ui->mainWindow->callback(mainWindow_callback);
+  m_ui->motionGraphWindow->callback(motionGraphWindow_callback);
+  m_ui->inputCloudTreshold->value("10.0");
+  m_ui->inputRandomFrames->value("2000"); 
+
   // camera position
   object_center = Vector3d(0, 50, 400);
   camera_rot.setIdentity();
@@ -804,6 +822,7 @@ void glView::display()
 
 
 }
+
 
 
 
@@ -1757,7 +1776,7 @@ void glView::save_file()
 //Windowing function
 double hann_window(double t)
 {
-	return 1.;
+	return 0.5 * (1. - cos(M_PI * 2. * t));
 }
 
 void glView::debugFunction1()
@@ -1791,21 +1810,19 @@ void glView::debugFunction2()
     if(mocap_list.size() == 0) return;
     MotionGraph graph(mocap_list[0]->skeleton);
 	graph.frame_time = mocap_list[0]->frame_time;
-    graph.insert_motion(*mocap_list[0], 10.1, 0.,  1, hann_window);
 
-    for(int i = 1; i < mocap_list.size(); i++)
+    for(int i = 0; i < mocap_list.size(); i++)
     {
         if(mocap_list[0]->skeleton.size() == mocap_list[i]->skeleton.size())
-            graph.insert_motion(*mocap_list[i], 10.1, 0.,  1, hann_window);
+            graph.insert_motion(*mocap_list[i], 10., mocap_selected->frame_time * 5.,  5, hann_window);
     }
-
-    
+//vector<MotionGraph> graph_list = graph.extract_scc();
+//graph = graph_list[0];    
     ofstream graph_file("graph_file.txt");
     writeMotionGraph(graph_file, graph);
 
     mocap_combine = graph.random_motion(2000);
     mocap_selected = &mocap_combine;
-
 
     // display some info about the active object
     char text[256];
@@ -1831,4 +1848,251 @@ void glView::debugFunction4()
 
 void glView::debugFunction5()
 {
+}
+
+
+void glView::mode_motion_graph()
+{
+    mocap_selected = NULL;
+    m_time = 0.;
+    m_frame_num = 0;
+    m_play = false;
+    m_ui->btn_play->clear();
+    m_ui->motionGraphWindow->show();
+}
+
+void glView::load_motion_graph()
+{
+
+  int	i;			            // Looping var
+  int	count;			        // Number of files selected
+  char	relative[1024];		    // Relative filename
+
+
+  // apply filter
+  const char filters[] = "Motion Graph Files (*)\t";
+  file_chooser->filter(filters);
+
+  // allow single file
+  file_chooser->type(Fl_File_Chooser::SINGLE);
+  file_chooser->label("Select Motion Graph");
+
+  // display dialog until it is closed
+  file_chooser->show();
+  while (file_chooser->visible()) {
+    Fl::wait();
+  }
+
+  // process selected file
+  int index = -1;
+  count = file_chooser->count();
+  if (count > 0)
+  {
+
+      // get the relative path
+      fl_filename_relative(relative, sizeof(relative), file_chooser->value());
+
+      // Parse out motion graph
+      ifstream c_in(relative);
+      try
+      {
+         motion_graph = parseMotionGraph(c_in);
+         update_mg_info();
+      }
+      catch(...)
+      {
+        fl_message("Error: An error occured trying to read the file %s", relative);
+      }
+
+  }
+
+}
+
+void glView::save_motion_graph()
+{
+
+  // snippet take from fltk example
+  const char *c = NULL;
+  fl_file_chooser_ok_label("Save");
+  c=fl_file_chooser("Save To:", "Motion Graph Files (*)\t", c);
+  fl_file_chooser_ok_label(NULL);
+  if (!c) return;
+
+  if (!access(c, 0))
+  {
+    const char *basename;
+    if ((basename = strrchr(c, '/')) != NULL)
+      basename ++;
+#if defined(WIN32)
+    if ((basename = strrchr(c, '\\')) != NULL)
+      basename ++;
+#endif 
+    else
+      basename = c;
+
+    if (fl_choice("The file \"%s\" already exists.\n"
+                  "Do you want to replace it?", "Cancel",
+	    "Replace", NULL, basename) == 0) return;
+  }
+
+  // write the motion graph file
+  ofstream bvh_file(c);
+  writeMotionGraph(bvh_file, motion_graph); 
+
+
+}
+
+void glView::recompute_mg()
+{
+    
+    double treshold = atof(m_ui->inputCloudTreshold->value());
+  
+
+    MotionGraph graph(motion_graph.skeleton);
+    graph.frame_time = motion_graph.frame_time;
+    Motion motion(motion_graph.frame_time, motion_graph.frames, motion_graph.skeleton);
+    graph.insert_motion(motion, treshold, graph.frame_time * 5.,  5, hann_window);
+    motion_graph = graph;
+    update_mg_info();
+}
+
+void glView::insert_motion_mg()
+{
+
+  int	i;			            // Looping var
+  int	count;			        // Number of files selected
+  char	relative[1024];		// Relative filename
+
+
+  // apply filter
+  const char filters[] = 
+    "BVH Files (*.bvh)\t"
+    //"PostScript Files (*.ps)\t"
+    //"Image Files (*.{bmp,gif,jpg,png})\t"
+    //"C/C++ Source Files (*.{c,C,cc,cpp,cxx})"
+  ;
+  file_chooser->filter(filters);
+
+  // allow multiple files
+  file_chooser->type(Fl_File_Chooser::MULTI);
+  file_chooser->label("Select Motion File");
+
+  // display dialog until it is closed
+  file_chooser->show();
+  while (file_chooser->visible()) {
+    Fl::wait();
+  }
+
+  double treshold = atof(m_ui->inputCloudTreshold->value());
+
+  // process selected files
+  bool found = false;
+  int index = -1;
+  count = file_chooser->count();
+  if (count > 0)
+  {
+
+    for (i = 1; i <= count; i ++)
+    {
+      if (!file_chooser->value(i))
+        break;
+
+      // get the relative path
+      fl_filename_relative(relative, sizeof(relative), file_chooser->value(i));
+
+
+      // Parse out motion capture data
+      ifstream c_in(relative);
+      try
+      {
+         Motion mocap = parseBVH(c_in).convert_quat();
+
+         if(motion_graph.frames.size() == 0)
+         {
+            motion_graph.skeleton = mocap.skeleton;
+	        motion_graph.frame_time = mocap.frame_time;
+         }
+
+         motion_graph.insert_motion(mocap, treshold, motion_graph.frame_time * 5.,  5, hann_window);
+      }
+      catch(...)
+      {
+        
+        fl_message("Error: An error occured trying to read the file %s", relative);
+        continue;
+      }
+
+    }
+
+    update_mg_info();
+  }
+
+
+  
+}
+
+void glView::synthesize_motion()
+{
+    if(motion_graph.frames.size() > 0)
+    {
+        mocap_random = motion_graph.random_motion(atoi(m_ui->inputRandomFrames->value()));
+        mocap_selected = &mocap_random;
+
+        
+        // display some info about the active object
+        char text[256];
+        m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1.);
+        m_ui->lbl_name->copy_label("RANDOM MOTION");
+        sprintf(text, "%i", mocap_selected->skeleton.size());
+        m_ui->lbl_joints->copy_label(text);
+        sprintf(text, "%i", mocap_selected->frames.size());
+        m_ui->lbl_frames->copy_label(text);
+        sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
+        m_ui->lbl_fps->copy_label(text);
+        m_ui->mainWindow->redraw();
+    }
+}
+
+void glView::create_mg_files()
+{
+    if(mocap_list.size() == 0) return;
+    double treshold = atof(m_ui->inputCloudTreshold->value());
+   
+    MotionGraph graph(mocap_list[0]->skeleton);
+	graph.frame_time = mocap_list[0]->frame_time;
+
+    for(int i = 0; i < mocap_list.size(); i++)
+    {
+        if(mocap_list[0]->skeleton.size() == mocap_list[i]->skeleton.size())
+            graph.insert_motion(*mocap_list[i], treshold, graph.frame_time * 5.,  5, hann_window);
+
+    }
+
+    //vector<MotionGraph> graph_list = graph.extract_scc();
+    //graph = graphlist[0];
+    motion_graph = graph;
+
+    update_mg_info();
+    
+}
+
+void glView::update_mg_info()
+{
+
+    // display some info about the active object
+    char text[256];
+    sprintf(text, "%i", motion_graph.skeleton.size());
+    m_ui->lbl_joints_mg->copy_label(text);
+    sprintf(text, "%i", motion_graph.frames.size());
+    m_ui->lbl_frames_mg->copy_label(text);
+    sprintf(text, "%i", motion_graph.frames.size() == 0 ? 0 : (int)(1. / motion_graph.frame_time + .5));
+    m_ui->lbl_fps_mg->copy_label(text);
+    m_ui->motionGraphWindow->redraw();
+}
+
+void glView::clear_motion_graph()
+{
+    MotionGraph graph;
+    motion_graph = graph;
+    update_mg_info();
 }

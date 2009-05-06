@@ -16,6 +16,7 @@ class glView;
 //Project includes
 #include <skeleton.hpp>
 #include <skin.hpp>
+#include <mograph.hpp>
 
 
 #include <stdlib.h>
@@ -63,6 +64,7 @@ public:
   void del_animation_list();
   void mode_single();
   void mode_multiple();
+  void mode_motion_graph();
   void update_concat_times();
   void reload_concat_times();
   void debugFunction1();
@@ -70,6 +72,15 @@ public:
   void debugFunction3();
   void debugFunction4();
   void debugFunction5();
+
+  void load_motion_graph();
+  void save_motion_graph();
+  void clear_motion_graph();
+  void recompute_mg();
+  void insert_motion_mg();
+  void synthesize_motion();
+  void create_mg_files();
+  void update_mg_info();
 
 
 public:
@@ -110,6 +121,8 @@ public:
   vector<Motion*> mocap_list;
   Motion* mocap_selected;
   Motion mocap_combine;
+  Motion mocap_random;
+  MotionGraph motion_graph;
 
   GLuint idFloor;
   GLuint idFace;
