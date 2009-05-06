@@ -184,8 +184,8 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
     //Print out matrix for debugging
     //cerr << data << endl;
     
-    for(int i=0; i<n_frames; i++)
-    for(int j=0; j<o_frames + n_frames-1; j++)
+    for(int i=0; i<n_frames - 1; i++)
+    for(int j=0; j<o_frames + i; j++)
     {
     	//Check if i,j is a local minima
     	
@@ -208,9 +208,11 @@ void MotionGraph::insert_motion(const Motion& motion, double threshold, double w
 				goto skip;
 		}
 		
-		//Add edge to graph
-		if(i != j - o_frames)
-			graph[i + o_frames].push_back(j+1);
+		//Add edges to graph
+		graph[j].push_back(i + o_frames + 1);
+		graph[i + o_frames].push_back(j+1);
+		
+		//cerr << "Adding edge: " << j << "," << (i + o_frames) << endl;
     	
 	skip: continue;
     }
@@ -294,35 +296,47 @@ vector<MotionGraph> MotionGraph::extract_scc() const
 		//Throw out 1 node motion graphs because they are stupid
 		if(subgraph.size() == 1)
 			continue;
-		
-		//Compact subgraph and build submotion graph
 		sort(subgraph.begin(), subgraph.end());
 		
 		//Build motion graph
 		MotionGraph mog(skeleton);
 		mog.frame_time = frame_time;
-		mog.graph.resize(subgraph.size());
 		
 		//Put frames back into motion graph
+		map<int, int> frame_indexes;
 		for(int i=0; i<subgraph.size(); i++)
 		{
 			int v = subgraph[i];
+			
+			//Needed for continuitity
+			if(v > 0 && (i == 0) || (subgraph[i-1] != v-1))
+				mog.frames.push_back(frames[v-1]);
+			
+			//Add frame index
+			frame_indexes[v] = mog.frames.size();
 			mog.frames.push_back(frames[v]);
+		}
+		
+		//Put edges back into motion graph
+		mog.graph.resize(mog.frames.size());
+		for(int i=0; i<mog.graph.size(); i++)
+			mog.graph[i].resize(0);
+		
+		for(int i=0; i<subgraph.size(); i++)
+		{
+			int v = subgraph[i];
+			int x = frame_indexes[v];
 			
 			for(int j=0; j<graph[v].size(); j++)
 			{
-				//Check if edge is inside subgraph
 				int u = graph[v][j];
-				vector<int>::iterator it = lower_bound(subgraph.begin(), subgraph.end(), u);
-				
-				//If not, then skip it
-				if(it == subgraph.end() || *it != u)
+			
+				//Check that edge u,v is contained in subgraph
+				if(frame_indexes.find(u) == frame_indexes.end())
 					continue;
-				
-				mog.graph[i].push_back((int)(it - subgraph.begin()));
+				mog.graph[x].push_back(frame_indexes[u]);
 			}
 		}
-		cerr << endl;
 		
 		result.push_back(mog);
 	}
@@ -415,21 +429,37 @@ struct Traversal
 		
 		Transform2f result;
 		result.setIdentity();
-		
-		return result.rotate(rot)
+		result = result.rotate(rot)
 					 .translate(Vector2f(trans.x(), trans.z()));
+		
+		return result;
+	}
+
+	//Extracts the base point for the anim	
+	Vector2f base_pt(int frame, const Transform2f& pose) const
+	{
+		aligned<Vector4d>::vector pcloud = mog->frames[frame].point_cloudw(mog->skeleton);
+		Vector2f pt = Vector2f(pcloud[0].x(), pcloud[0].z());
+		return pose * pt;
 	}
 	
 	bool dfs(int frame, int t, Transform2f pose)
 	{
+		cerr << "Visiting: " << frame << "," << t << endl;
+		
 		//Success!
 		if(t >= visit_frames.size())
 			return true;
 	
 		//Check we are still in bounds
 		double t0 = t * mog->frame_time;
-		Vector2f tpos = path_func(t0);
-		if((tpos - pose.translation()).norm() > max_d)
+		Vector2f tpos = path_func(t0),
+				 cpos = base_pt(frame, pose);
+		
+		cerr << "Target = " << tpos << endl
+			 << "Current = " << cpos << endl;
+		
+		if((tpos - cpos).squaredNorm() > max_d)
 			return false;
 		
 		//Mark frame as visited
@@ -439,7 +469,9 @@ struct Traversal
 		for(int i=0; i<mog->graph[frame].size(); i++)
 		{
 			int n = mog->graph[frame][i];
-			if(dfs(n, t+1, rel2D(frame, n) * pose))
+			Transform2f rel_xform = rel2D(max(n-1, 0), n) * rel2D(frame, max(n-1, 0)) * pose;
+			
+			if(dfs(n, t+1, rel_xform))
 				return true;
 		}
 		
@@ -453,48 +485,67 @@ struct Traversal
 Motion MotionGraph::follow_path(Vector2f (*path_func)(double t), double max_d, double dur) const
 {
 	Vector2f start_pt = path_func(0.);
-	Vector2f heading = (path_func(frame_time) - start_pt).normalized();
-
-	//Construct target pose
-	Matrix2f rot;
-	rot(0,0) =  heading.y();
-	rot(0,1) =  heading.x();
-	rot(1,0) = -heading.x();
-	rot(1,1) =  heading.y();
-	
-	Transform2f target_pose;
-	target_pose.setIdentity();
-	target_pose.rotate(rot)
-			   .translate((Vector2f)start_pt);
 	
 	//Allocate data for traversal
 	Traversal trav;
 	trav.path_func = path_func;
 	trav.visit_frames.resize(dur / frame_time);
 	trav.mog = this;
-	trav.max_d = max_d;
+	trav.max_d = max_d * max_d;
 
 	//Initialize traversal queue	
-	for(int i=0; i<frames.size(); i++)
+	for(int i=0; i<frames.size() - 1; i++)
 	{
-		//Do DFS
-		if(trav.dfs(i, 0, target_pose))
-		{
-			//Convert pose to 3D
-			Matrix3d tmp = Matrix3d::Identity();
-			tmp(0,0) = rot(0,0);
-			tmp(0,2) = rot(0,1);
-			tmp(2,0) = rot(1,0);
-			tmp(2,2) = rot(1,1);
-			
-			Transform3d xform;
-			xform.setIdentity();
-			xform = xform.rotate(tmp).translate(Vector3d(start_pt.x(), 0, start_pt.z()));
+		//Construct target pose vector
+		aligned<Transform3d>::vector target = frames[i].local_xform(skeleton);
+		Transform3d root3d = constrain_xform(Transform3d(target[0].inverse()) );
 		
-			return synthesize_motion(trav.visit_frames, xform);
+		//Convert root3d into 2d 
+		Matrix4d rot3 = root3d.matrix();
+		Matrix3f rot2;
+		rot2.setIdentity();
+		rot2(0,0) = rot3(0,0);
+		rot2(0,1) = rot3(0,2);
+		rot2(0,2) = rot3(0,3);
+		rot2(1,0) = rot3(2,0);
+		rot2(1,1) = rot3(2,2);
+		rot2(1,2) = rot3(2,3);
+		Transform2f root(rot2);
+	
+		for(double theta=0.; theta<=M_PI*2.; theta+=M_PI/4.)
+		{
+			//Set up initial transform
+			Matrix2f rot;
+			rot(0,0) = cos(theta);
+			rot(0,1) = sin(theta);
+			rot(1,0) = -sin(theta);
+			rot(1,1) = cos(theta);
+		
+			//Set up matrix
+			Transform2f rel_target;
+			rel_target.setIdentity();
+			rel_target = rel_target.rotate(rot).translate(start_pt) * root;
+	
+			//Do DFS
+			if(trav.dfs(i, 0, rel_target))
+			{
+				//Convert pose to 3D
+				Matrix3d tmp = Matrix3d::Identity();
+				tmp(0,0) = rot(0,0);
+				tmp(0,2) = rot(0,1);
+				tmp(2,0) = rot(1,0);
+				tmp(2,2) = rot(1,1);
+			
+				Transform3d xform;
+				xform.setIdentity();
+				xform = xform.rotate(tmp);
+				xform = xform.translate(Vector3d(start_pt.x(), 0., start_pt.y()));
+		
+				return synthesize_motion(trav.visit_frames, xform);
+			}
 		}
 	}
-
+	
 	//Did not find, motion return failure
 	return Motion(frame_time, vector<Frame>(0), skeleton);
 }

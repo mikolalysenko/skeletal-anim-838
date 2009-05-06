@@ -29,9 +29,11 @@ void read_control_points(istream& data)
 		
 	control_points.resize(n_points);
 	for(int i=0; i<n_points; i++)
-		if(!(data >> control_points[i].x() >> control_points[i].y() >> control_points[i].z()))
+	{
+		if(!(data >> control_points[i].x() >> control_points[i].y() >> control_points[i].z()) )
 			throw "Invalid control point";
-			
+	}
+	
 	//Validate data (assert that path is monotonic)
 	assert(control_points[0].z() == 0.);
 	for(int i=1; i<n_points; i++)
@@ -44,11 +46,14 @@ void read_control_points(istream& data)
 //deCasteljau's algorithm
 Vector3f eval_spline(float t)
 {
-	aligned<Vector3f>::vector tmp(control_points.begin(), control_points.end());
+	aligned<Vector3f>::vector tmp(control_points.size());
+	copy(control_points.begin(), control_points.end(), tmp.begin());
 	
-	for(int i=control_points.size(); i>0; i--)
+	for(int i=control_points.size()-1; i>0; i--)
 	for(int j=0; j<i; j++)
-		tmp[j] = tmp[j] * (1. - t) + tmp[j+1]*t;
+	{
+		tmp[j] = tmp[j] * (1. - t) + tmp[j+1] * t;
+	}
 
 	return tmp[0];
 }
@@ -61,12 +66,12 @@ Vector2f eval_time_spline(double t)
 	//Do a binary search to find t coordinate for time value
 	float lo = 0., hi = 1.;
 	Vector3f pt;
-	while(abs(lo - hi) > 1e-4)
+	while(abs(lo - hi) > 1e-6)
 	{
 		float m = lo + (hi - lo) * .5;
 		pt = eval_spline(m);
 		
-		if(pt.z() < t)
+		if(pt.z() > t)
 			hi = m;
 		else
 			lo = m;
@@ -141,8 +146,8 @@ void extract_scc(const string& graph_file)
 void process_spline(double max_d, const string& spline_file, const string& graph_file)
 {
 	ifstream sin(spline_file.c_str());
-
 	read_control_points(sin);
+	
 	MotionGraph graph = read_graph(graph_file);
 	Motion motion = graph.follow_path(&eval_time_spline, max_d, t_max);
 	writeBVH(cout, motion);
@@ -152,7 +157,7 @@ void process_spline(double max_d, const string& spline_file, const string& graph
 //Prints out a helpful message
 void print_help()
 {
-	cout << endl
+	cerr << endl
 		 << "motool : Motion Graph Edit Tool" << endl
 		 << "-------------------------------------------------" << endl
 		 << "This program processes BVH format character motions and motion graphs." << endl
@@ -182,7 +187,7 @@ int main(int argc, char** argv)
 {
 	if(argc < 2)
 	{
-		cout << "Incorrect arguments" << endl;
+		cerr << "Incorrect arguments" << endl;
 		print_help();
 		exit(1);
 	}
@@ -217,21 +222,19 @@ int main(int argc, char** argv)
 	}
 	else if(command == "-path")
 	{
-		cout << "Argc = " << argc << endl;
-	
 		assert(argc == 5);
 		process_spline(atof(argv[2]), string(argv[3]), string(argv[4]));
 	}
 	else
 	{
-		cout << "Unknown command: " << command << endl;
+		cerr << "Unknown command: " << command << endl;
 		print_help();
 		exit(1);
 	}
 	}
 	catch(string str)
 	{
-		cout << "Exception: " << str << endl;
+		cerr << "Exception: " << str << endl;
 		exit(1);
 	}
 
