@@ -116,7 +116,7 @@ void add_motion(const string& mo_file, const string& graph_file)
 {
 	Motion motion = read_motion(mo_file);
 	MotionGraph graph = read_graph(graph_file);
-	graph.insert_motion(motion, 15., motion.frame_time * 5.,  5, hann_window);
+	graph.insert_motion_fast(motion, 15., motion.frame_time * 5.,  5, hann_window);
 	writeMotionGraph(cout, graph);
 }
 
@@ -234,6 +234,11 @@ int main(int argc, char** argv)
 		print_help();
 		exit(1);
 	}
+	}
+	catch(const char* str)
+	{
+		cerr << "Exception: " << str << endl;
+		exit(1);
 	}
 	catch(string str)
 	{

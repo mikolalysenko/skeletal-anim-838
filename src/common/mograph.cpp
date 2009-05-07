@@ -150,10 +150,9 @@ struct NewtonSearch
 	const Motion * motion;
 	double threshold, window_size;
 	double (*window_func)(double);
-	int n_samples;	
+	int n_samples, n_frames, o_frames;
 	
-	
-	double eval(Vector2d pt) const
+	float eval(const Vector2f& pt) const
 	{
         //Extract window about t
         aligned<Vector4d>::vector 
@@ -165,17 +164,17 @@ struct NewtonSearch
 		return cloud_distance(pcloud, ncloud, rel);
 	}
 	
-	Vector2d grad(Vector2d pt) const
+	Vector2f grad(const Vector2f& pt) const
 	{
-		Vector2d sum = Vector2d(0., 0.);
-		double g0 = eval(pt);
+		Vector2f sum = Vector2f(0., 0.);
+		float g0 = eval(pt);
 		
 		for(int dx=-2; dx<=2; dx++)
 		for(int dy=-2; dy<=2; dy++)
 		{
 			if(dx == 0 && dy == 0) continue;
 			
-			Vector2d delta(dx, dy);
+			Vector2f delta(dx, dy);
 			sum += delta * ((g0 - eval(pt + delta)) / delta.norm());
 		}
 		
@@ -183,11 +182,91 @@ struct NewtonSearch
 	}
 
 	//Finds a local min	
-	Vector2d find_min(Vector2d guess) const
+	bool find_min(Vector2f& x0) const
 	{
-		return Vector2d(0., 0.);
+		float val = eval(x0);
+		
+		for(int i=0; i<=100; i++)
+		{
+			Vector2f delta = grad(x0);
+			Vector2f x1 = x0 - val * Vector2f(1. / delta.x(), 1. / delta.y());
+			
+			//Enforce boundary constraints
+			x1.x() = max(min(x1.x(), (float)(o_frames + n_frames - 2)), 0.f);
+			x1.y() = max(min(x1.y(), (float)(o_frames + n_frames - 2)), (float)o_frames);
+			
+			float n_val = eval(x1);
+			
+			if(n_val >= val)
+				return val <= threshold;
+			
+			//Update and continue
+			val = n_val;
+			x0 = x1;
+		}
+		
+		return false;
 	}
 };
+
+//Do a fast insertion using Newton's method to find local minima (approx O(n) instead of O(n^2))
+void MotionGraph::insert_motion_fast(const Motion& motion, double threshold, double w, int n, double (*window_func)(double))
+{
+	//Get frame sizes
+	int n_frames = motion.duration() / frame_time;
+	int o_frames = frames.size();
+	
+	int i = 0;
+    for(double t=0., i=0; i<n_frames; i++, t+=frame_time)
+    {
+        //Add frame to frame set
+        frames.push_back(motion.get_frame(t));
+        
+        //Add edges to graph
+        vector<int> edges;
+        if(i < n_frames-1)
+        	edges.push_back(frames.size());
+        graph.push_back(edges);
+    }
+    
+    //Do a fast gradient descent method
+    NewtonSearch search;
+    search.mog = this;
+	search.motion = &motion;
+	search.threshold = threshold;
+	search.window_size = w;
+	search.window_func = window_func;
+	search.n_samples = n;
+	search.n_frames = n_frames;
+	search.o_frames = o_frames;
+    
+    //Do about O(n) iterations
+    for(int i=0; i<motion.frames.size(); i++)
+    {
+    	Vector2f start = Vector2f(rand() % (n_frames + o_frames - 1), (rand() % (n_frames - 1)) +  o_frames);
+    	
+    	if(!search.find_min(start))
+    		continue;
+    	
+    	//Check if edge already exists
+    	int u = start.x(), v = start.y();
+    	if(abs(u - v) <= 3)
+    		continue;
+    	
+		for(int i=0; i<graph[u].size(); i++)
+			if(graph[u][i] == v)
+				goto skip;
+    	
+    	//cerr << "Adding edge: " << u << "," << v << endl;
+    	
+    	//Add edge to graph
+    	graph[u].push_back(v + 1);
+		graph[v].push_back(u + 1);
+
+		skip: continue;
+    }
+}
+
 
 
 //Inserts a motion into the MotionGraph
