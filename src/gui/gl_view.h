@@ -11,6 +11,7 @@
 #include <FL/Fl_Box.H>
 
 class glView;
+class glPointCloud;
 class PointCloudMap;
 #include "ui.h"
 
@@ -158,6 +159,33 @@ public:
 private:
   int pt_x;
   int pt_y;
+};
+
+
+class glPointCloud : public Fl_Gl_Window 
+{
+public:
+    glPointCloud(int x,int y,int w,int h,const char *l=0) 
+      : Fl_Gl_Window(x,y,w,h,l), view(NULL) 
+    {
+        // camera position
+        m_object_center = Vector3d(0, 50, 200);
+        m_camera_rot.setIdentity();    
+    };
+
+    virtual int handle(int);
+    virtual void draw(); 
+    void draw_skeleton();
+
+public:
+    //Camera transformation
+    Vector3d    m_object_center;
+    Quaterniond m_camera_rot;
+    
+    glView* view;
+
+    
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 #endif

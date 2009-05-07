@@ -190,6 +190,8 @@ void glView::initScene()
   m_ui->inputCloudTreshold->value("10.0");
   m_ui->inputRandomFrames->value("2000"); 
   m_ui->boxPointCloudMap->view = this;
+  m_ui->viewPointCloud->view = this;
+  reset_mg_map();
 
   // camera position
   object_center = Vector3d(0, 50, 400);
@@ -1958,7 +1960,9 @@ void glView::reset_mg_map()
     m_ui->boxPointCloudMap->image(imgMap);
     delete imgCloudMap;
     
+    m_ui->lbl_delta->copy_label("");
     m_ui->motionGraphWindow->redraw();
+    m_ui->viewPointCloud->redraw();
 }
 
 void glView::recompute_mg()
@@ -2158,12 +2162,14 @@ void glView::update_mg_info()
     m_ui->lbl_frames_mg->copy_label(text);
     sprintf(text, "%i", motion_graph.frames.size() == 0 ? 0 : (int)(1. / motion_graph.frame_time + .5));
     m_ui->lbl_fps_mg->copy_label(text);
-    m_ui->motionGraphWindow->redraw();
 
     m_ui->edit_x_frame->value(0);
     m_ui->edit_y_frame->value(0);
     m_ui->edit_x_frame->maximum(motion_graph.frames.size());
     m_ui->edit_y_frame->maximum(motion_graph.frames.size());
+    m_ui->boxPointCloudMap->selectPointCloud();
+    
+    m_ui->motionGraphWindow->redraw();
  
 }
 
@@ -2295,9 +2301,235 @@ void PointCloudMap::updatePointCloud()
     // update the cloud info
     view->m_ui->edit_x_frame->value(x_index);
     view->m_ui->edit_y_frame->value(y_index);
+    /*
     if(x_index < view->dataCloudMap.rows() && y_index < view->dataCloudMap.cols())
     {
         sprintf(text, "%.2f", (float)view->dataCloudMap(x_index, y_index));
         view->m_ui->lbl_delta->copy_label(text);
     }
+    */
+    // compute the delta
+    aligned<Vector4d>::vector cloud = 
+        view->motion_graph.point_cloud(x_index, view->motion_graph.frame_time * 5.,  5, hann_window); 
+    aligned<Vector4d>::vector dest_cloud = 
+        view->motion_graph.point_cloud(y_index, view->motion_graph.frame_time * 5.,  5, hann_window);
+    Transform3d rel = relative_xform(dest_cloud, cloud);
+    double delta = cloud_distance(cloud, dest_cloud, rel);
+    sprintf(text, "%.2f", delta);
+    view->m_ui->lbl_delta->copy_label(text);
+
+    view->m_ui->viewPointCloud->redraw();
 }
+
+int glPointCloud::handle(int event)
+{
+
+  // remember what button was used
+  static int last_push;
+
+
+  switch(event) {
+    // handle the mouse down event
+    case FL_PUSH:
+
+        last_push = Fl::event_button();
+        if(last_push == 1)
+        {
+          moving_arcball = true;
+          previous_rotation.setIdentity();
+          rotation_pos[0] = Fl::event_x_root();
+          rotation_pos[1] = Fl::event_y_root();
+          damage(1);
+          return 1;
+        }
+        if(last_push == 3)
+        {
+          pan_camera = true;
+          pan_base[0] = Fl::event_x_root();
+          pan_base[1] = Fl::event_y_root();
+          damage(1);
+          return 1;
+        }
+        if(last_push == 2)
+        {
+          zoom_camera = true;
+          zoom_base[0] = Fl::event_x_root();
+          zoom_base[1] = Fl::event_y_root();
+          damage(1);
+          return 1;
+        }
+
+      break;
+    
+    // handle the mouse up event
+    case FL_RELEASE:
+      
+      if(last_push == 1)
+      {
+        moving_arcball = false;
+      }
+      if(last_push == 3)
+      {
+        pan_camera = false;
+      }
+      if(last_push == 2)
+      {
+        zoom_camera = false;
+      }
+      damage(1);
+      last_push=0;
+      return 1;
+
+    // handle the mouse move event
+    case FL_DRAG:
+      if(moving_arcball)
+      {
+        int x = Fl::event_x_root(),
+            y = Fl::event_y_root();
+        m_camera_rot *= previous_rotation.inverse().normalized();
+        
+        Vector3d A = Vector3d(
+                        -0.5 + (double)x / (double)w(), 
+                         0.5 - (double)y / (double)h(), 0.5),
+                 B = Vector3d(
+                        -0.5 + (double)rotation_pos[0] / (double)w(), 
+                         0.5 - (double)rotation_pos[1] / (double)h(), 0.5);
+                        
+        Quaterniond next;
+        next.setFromTwoVectors(A, B).normalize();
+        m_camera_rot *= next;
+                
+        previous_rotation = next;
+        damage(1);
+        return 1;
+      }
+      
+      if(pan_camera)
+      {
+        int x = Fl::event_x_root(),
+            y = Fl::event_y_root();
+        Vector3d delta = 
+          Vector3d((double)(pan_base[0] - x) / w(), 
+                    -(double)(pan_base[1] - y) / (double)h(),
+                    0.0);
+        
+        m_object_center += delta * PAN_RATE;
+        
+        pan_base[0] = x;
+        pan_base[1] = y;
+        damage(1);
+        return 1;
+      }
+      
+      if(zoom_camera)
+      {
+        int x = Fl::event_x_root(),
+            y = Fl::event_y_root();
+        Vector3d delta = 
+          Vector3d((double)(zoom_base[0] - x) / w(), 
+                    0.,
+                    -(double)(zoom_base[1] - y) / (double)h());
+        
+        m_object_center += delta * PAN_RATE;
+        
+        zoom_base[0] = x;
+        zoom_base[1] = y;
+        damage(1);
+        return 1;
+      }
+
+      break;
+
+    // in order to get keyboard events, we need to accept focus
+    case FL_FOCUS:
+      return 1;
+
+    case FL_ENTER:	// every time the mouse enters this window, aggressively take focus
+      focus(this);
+      break;
+
+  }
+
+  return Fl_Gl_Window::handle(event);
+}
+void glPointCloud::draw()
+{
+    //Set window bounds
+    glViewport(0, 0, w(), h());
+
+
+
+    //Clear buffer
+    glClearColor(0., 0., 0., 0.);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    //Set up camera
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(fov, (double)w() / (double)h(), z_near, z_far);
+
+    //Create base camer matrix from mouse controls
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-m_object_center(0), -m_object_center(1), -m_object_center(2));
+    Matrix4d tr = Transform3d(m_camera_rot).matrix().transpose();
+    glMultMatrixd(tr.data());
+
+    draw_skeleton();
+    glFinish();
+}
+
+
+void glPointCloud::draw_skeleton()
+{
+    
+    if(view == NULL) return;
+    if(view->motion_graph.frames.size() == 0) return;
+
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+    
+    // update the cloud info
+    int x_index = view->m_ui->edit_x_frame->value(),
+        y_index = view->m_ui->edit_y_frame->value();
+    
+       //sprintf(text, "%.2f", (float)view->dataCloudMap(x_index, y_index));
+    Transform3d base_pose;
+    base_pose.setIdentity();
+
+
+    Frame frame_a = view->motion_graph.frames[x_index].apply_transform(view->motion_graph.skeleton, base_pose);
+	
+	Transform3d pxform = base_pose;
+	
+
+	//Compute relative xform
+	aligned<Vector4d>::vector
+		pcloud = view->motion_graph.frames[x_index].point_cloudw(view->motion_graph.skeleton),
+		ncloud = view->motion_graph.frames[y_index].point_cloudw(view->motion_graph.skeleton);
+	Transform3d rel = relative_xform(pcloud, ncloud);
+
+	Frame frame_b = view->motion_graph.frames[y_index].apply_transform(view->motion_graph.skeleton, rel);
+
+    //Extract matrices
+    aligned<Transform3d>::vector xform_a = frame_a.local_xform(view->motion_graph.skeleton);
+    aligned<Transform3d>::vector xform_b = frame_b.local_xform(view->motion_graph.skeleton);
+
+    
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glColor4f(1., 0., 0., .5);
+    draw_line_skeleton(view->motion_graph.skeleton, xform_a.begin(), xform_a.end(), true);
+    
+    glColor4f(0., 0., 1., .5);
+    draw_line_skeleton(view->motion_graph.skeleton, xform_b.begin(), xform_b.end(), true);
+   
+
+
+    glPopAttrib();
+
+
+}
+

@@ -218,6 +218,7 @@ private:
   void cb_22_i(Fl_Button*, void*);
   static void cb_22(Fl_Button*, void*);
 public:
+  glPointCloud *viewPointCloud;
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);
 };
