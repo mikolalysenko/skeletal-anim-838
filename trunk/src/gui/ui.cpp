@@ -30368,8 +30368,17 @@ UserInterface::UserInterface() {
         } // Fl_Button* o
         o->end();
       } // Fl_Group* o
-      { new Fl_Box(10, 265, 225, 170);
-      } // Fl_Box* o
+      { viewPointCloud = new glPointCloud(10, 265, 225, 170);
+        viewPointCloud->box(FL_NO_BOX);
+        viewPointCloud->color(FL_BACKGROUND_COLOR);
+        viewPointCloud->selection_color(FL_BACKGROUND_COLOR);
+        viewPointCloud->labeltype(FL_NORMAL_LABEL);
+        viewPointCloud->labelfont(0);
+        viewPointCloud->labelsize(14);
+        viewPointCloud->labelcolor(FL_FOREGROUND_COLOR);
+        viewPointCloud->align(FL_ALIGN_CENTER);
+        viewPointCloud->when(FL_WHEN_RELEASE);
+      } // glPointCloud* viewPointCloud
       o->end();
     } // Fl_Group* o
     motionGraphWindow->end();

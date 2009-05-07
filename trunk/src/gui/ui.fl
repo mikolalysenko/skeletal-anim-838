@@ -461,7 +461,7 @@ motionGraphWindow->hide();}
             label {@->}
             callback {int value = min((int)edit_x_frame->value() + 1,(int)edit_x_frame->maximum());
 edit_x_frame->value(value);
-boxPointCloudMap->selectPointCloud();} selected
+boxPointCloudMap->selectPointCloud();}
             xywh {194 490 22 22} labelsize 10
           }
           Fl_Button {} {
@@ -486,8 +486,9 @@ boxPointCloudMap->selectPointCloud();}
             xywh {170 490 22 22} labelsize 10
           }
         }
-        Fl_Box {} {
+        Fl_Box viewPointCloud {selected
           xywh {10 265 225 170}
+          class glPointCloud
         }
       }
     }
