@@ -29988,6 +29988,20 @@ void UserInterface::cb_Synthesize1(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Synthesize1_i(o,v);
 }
 
+void UserInterface::cb_Apply_i(Fl_Button*, void*) {
+  view->apply_changes_spline();
+}
+void UserInterface::cb_Apply(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Apply_i(o,v);
+}
+
+void UserInterface::cb_Save2_i(Fl_Button*, void*) {
+  view->save_spline_file();
+}
+void UserInterface::cb_Save2(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Save2_i(o,v);
+}
+
 UserInterface::UserInterface() {
   { mainWindow = new Fl_Double_Window(600, 704, "Skeletal Anim");
     mainWindow->user_data((void*)(this));
@@ -30424,7 +30438,7 @@ UserInterface::UserInterface() {
     } // Fl_Group* o
     motionGraphWindow->end();
   } // Fl_Double_Window* motionGraphWindow
-  { pathFindingWindow = new Fl_Double_Window(351, 351, "Path Finding");
+  { pathFindingWindow = new Fl_Double_Window(351, 445, "Path Finding");
     pathFindingWindow->user_data((void*)(this));
     { Fl_Group* o = new Fl_Group(0, 0, 715, 550);
       { Fl_Button* o = new Fl_Button(10, 8, 165, 22, "Load motion graph");
@@ -30489,11 +30503,11 @@ UserInterface::UserInterface() {
         o->align(FL_ALIGN_RIGHT);
         o->hide();
       } // Fl_Progress* o
-      { Fl_Button* o = new Fl_Button(5, 323, 165, 22, "Synthesize motion along path");
+      { Fl_Button* o = new Fl_Button(5, 418, 165, 22, "Synthesize motion along path");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Synthesize1);
       } // Fl_Button* o
-      { inputDistanceSpline = new Fl_Float_Input(75, 300, 95, 20, "Max Distance");
+      { inputDistanceSpline = new Fl_Float_Input(75, 395, 95, 20, "Max Distance");
         inputDistanceSpline->box(FL_DOWN_BOX);
         inputDistanceSpline->color(FL_BACKGROUND2_COLOR);
         inputDistanceSpline->selection_color(FL_SELECTION_COLOR);
@@ -30505,6 +30519,20 @@ UserInterface::UserInterface() {
         inputDistanceSpline->align(FL_ALIGN_LEFT);
         inputDistanceSpline->when(FL_WHEN_RELEASE);
       } // Fl_Float_Input* inputDistanceSpline
+      { editorSpline = new Fl_Text_Editor(9, 101, 336, 224, "Spline File");
+        editorSpline->labelsize(10);
+        editorSpline->textfont(4);
+        editorSpline->textsize(12);
+        editorSpline->align(FL_ALIGN_TOP_LEFT);
+      } // Fl_Text_Editor* editorSpline
+      { Fl_Button* o = new Fl_Button(10, 328, 165, 22, "Apply changes");
+        o->labelsize(10);
+        o->callback((Fl_Callback*)cb_Apply);
+      } // Fl_Button* o
+      { Fl_Button* o = new Fl_Button(180, 328, 165, 22, "Save spline file");
+        o->labelsize(10);
+        o->callback((Fl_Callback*)cb_Save2);
+      } // Fl_Button* o
       o->end();
     } // Fl_Group* o
     pathFindingWindow->end();

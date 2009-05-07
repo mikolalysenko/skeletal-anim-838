@@ -15,6 +15,7 @@
 #include <FL/Fl_Float_Input.H>
 #include <FL/Fl_Int_Input.H>
 #include <FL/Fl_Progress.H>
+#include <FL/Fl_Text_Editor.H>
 
 class UserInterface {
 public:
@@ -240,6 +241,13 @@ private:
   static void cb_Synthesize1(Fl_Button*, void*);
 public:
   Fl_Float_Input *inputDistanceSpline;
+  Fl_Text_Editor *editorSpline;
+private:
+  void cb_Apply_i(Fl_Button*, void*);
+  static void cb_Apply(Fl_Button*, void*);
+  void cb_Save2_i(Fl_Button*, void*);
+  static void cb_Save2(Fl_Button*, void*);
+public:
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);
 };
