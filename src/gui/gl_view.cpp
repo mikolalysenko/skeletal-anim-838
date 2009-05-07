@@ -468,7 +468,11 @@ void glView::drawScene()
     drawFloor(true);
     glFrontFace(GL_CCW);
 
+    
+    glEnable(GL_DEPTH_TEST);
     drawFloor();
+
+    draw_spline();
 
     return;
   }
@@ -779,6 +783,9 @@ return;
   glEnable(GL_DEPTH_TEST);
   drawFloor(true);
   glFrontFace(GL_CCW);
+
+  // draw the spline
+  draw_spline();
 
   // draw the skeleton
   //glColor4f(.2, 1., .2, 1.);
@@ -1233,7 +1240,7 @@ void glView::remove_file()
 void glView::update_selection()
 {
 
-  if(m_ui->radio_mutliple->value() == 1) return;
+  if(m_ui->radio_single->value() != 1) return;
   int index = m_ui->m_browser_file->value() - 1;
   select_animation(index);
 
@@ -2418,6 +2425,54 @@ void glView::load_spline_file()
   }
 
 
+}
+
+void glView::draw_spline()
+{
+  if(control_points.size() == 0) return;
+  glColor3f(1., 1., 0.);
+  glLineWidth(5.);
+  float height = floorHeight + 1.;
+
+  
+  
+  glPushAttrib(GL_ALL_ATTRIB_BITS);
+  glDisable(GL_LIGHTING);
+
+  // draw the path
+  glBegin(GL_LINES);
+  float interval = 1. / 30.;
+  Vector2f last_pos, pos;
+  last_pos = eval_time_spline(0);
+  for(float time = interval; time < t_max; time += interval)
+  {
+    pos = eval_time_spline(time);
+    glVertex3f(last_pos[0], height, last_pos[1]);
+    glVertex3f(pos[0], height, pos[1]);
+    last_pos = pos;
+  }
+  glEnd();
+
+  /* 
+  // draw the control points
+  glColor3f(0., 1., 1.);
+  glEnable(GL_POINT_SMOOTH);
+  glPointSize(7.);
+  for(int i = 0; i < control_points.size(); i++)
+  {
+    glBegin(GL_POINTS);
+      glVertex3d(control_points[i].x(), height, control_points[i].y());
+    glEnd();
+  }
+  */
+ 
+  glPopAttrib();
+}
+
+void glView::clear_spline()
+{
+  control_points.clear();
+  textSpline.text("");
 }
 
 void glView::follow_path()
