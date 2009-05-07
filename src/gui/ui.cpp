@@ -29899,6 +29899,63 @@ void UserInterface::cb_Clear(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Clear_i(o,v);
 }
 
+void UserInterface::cb_Prune_i(Fl_Button*, void*) {
+  view->mg_extract_ssc();
+}
+void UserInterface::cb_Prune(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Prune_i(o,v);
+}
+
+void UserInterface::cb_edit_x_frame_i(Fl_Spinner*, void*) {
+  boxPointCloudMap->selectPointCloud();
+}
+void UserInterface::cb_edit_x_frame(Fl_Spinner* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_edit_x_frame_i(o,v);
+}
+
+void UserInterface::cb_edit_y_frame_i(Fl_Spinner*, void*) {
+  boxPointCloudMap->selectPointCloud();
+}
+void UserInterface::cb_edit_y_frame(Fl_Spinner* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_edit_y_frame_i(o,v);
+}
+
+void UserInterface::cb_3_i(Fl_Button*, void*) {
+  int value = min((int)edit_x_frame->value() + 1,(int)edit_x_frame->maximum());
+edit_x_frame->value(value);
+boxPointCloudMap->selectPointCloud();
+}
+void UserInterface::cb_3(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_3_i(o,v);
+}
+
+void UserInterface::cb_4_i(Fl_Button*, void*) {
+  int value = max((int)edit_x_frame->value() - 1,0);
+edit_x_frame->value(value);
+boxPointCloudMap->selectPointCloud();
+}
+void UserInterface::cb_4(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_4_i(o,v);
+}
+
+void UserInterface::cb_21_i(Fl_Button*, void*) {
+  int value = min((int)edit_y_frame->value() + 1,(int)edit_y_frame->maximum());
+edit_y_frame->value(value);
+boxPointCloudMap->selectPointCloud();
+}
+void UserInterface::cb_21(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_21_i(o,v);
+}
+
+void UserInterface::cb_22_i(Fl_Button*, void*) {
+  int value = max((int)edit_y_frame->value() - 1,0);
+edit_y_frame->value(value);
+boxPointCloudMap->selectPointCloud();
+}
+void UserInterface::cb_22(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_22_i(o,v);
+}
+
 UserInterface::UserInterface() {
   { mainWindow = new Fl_Double_Window(600, 704, "Skeletal Anim");
     mainWindow->user_data((void*)(this));
@@ -30147,20 +30204,20 @@ UserInterface::UserInterface() {
     mainWindow->end();
     mainWindow->resizable(mainWindow);
   } // Fl_Double_Window* mainWindow
-  { motionGraphWindow = new Fl_Double_Window(646, 546, "Motion Graph");
+  { motionGraphWindow = new Fl_Double_Window(651, 550, "Motion Graph");
     motionGraphWindow->user_data((void*)(this));
     { Fl_Group* o = new Fl_Group(0, 0, 715, 550);
-      { boxPoitCloudMap = new PointCloudMap(245, 145, 400, 400);
-        boxPoitCloudMap->box(FL_UP_FRAME);
-        boxPoitCloudMap->color(FL_BACKGROUND_COLOR);
-        boxPoitCloudMap->selection_color(FL_BACKGROUND_COLOR);
-        boxPoitCloudMap->labeltype(FL_NORMAL_LABEL);
-        boxPoitCloudMap->labelfont(0);
-        boxPoitCloudMap->labelsize(10);
-        boxPoitCloudMap->labelcolor(FL_FOREGROUND_COLOR);
-        boxPoitCloudMap->align(FL_ALIGN_CLIP|FL_ALIGN_INSIDE);
-        boxPoitCloudMap->when(FL_WHEN_RELEASE);
-      } // PointCloudMap* boxPoitCloudMap
+      { boxPointCloudMap = new PointCloudMap(245, 145, 400, 400);
+        boxPointCloudMap->box(FL_UP_FRAME);
+        boxPointCloudMap->color(FL_BACKGROUND_COLOR);
+        boxPointCloudMap->selection_color(FL_BACKGROUND_COLOR);
+        boxPointCloudMap->labeltype(FL_NORMAL_LABEL);
+        boxPointCloudMap->labelfont(0);
+        boxPointCloudMap->labelsize(10);
+        boxPointCloudMap->labelcolor(FL_FOREGROUND_COLOR);
+        boxPointCloudMap->align(FL_ALIGN_CLIP|FL_ALIGN_INSIDE);
+        boxPointCloudMap->when(FL_WHEN_RELEASE);
+      } // PointCloudMap* boxPointCloudMap
       { Fl_Button* o = new Fl_Button(10, 8, 165, 22, "Load motion graph");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Load);
@@ -30177,7 +30234,7 @@ UserInterface::UserInterface() {
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Save1);
       } // Fl_Button* o
-      { Fl_Button* o = new Fl_Button(245, 118, 200, 22, "Compute Cloud Distance Map");
+      { Fl_Button* o = new Fl_Button(245, 118, 200, 22, "Compute Point Cloud Map");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Compute);
       } // Fl_Button* o
@@ -30193,8 +30250,8 @@ UserInterface::UserInterface() {
         inputCloudTreshold->align(FL_ALIGN_LEFT);
         inputCloudTreshold->when(FL_WHEN_RELEASE);
       } // Fl_Float_Input* inputCloudTreshold
-      { Fl_Group* o = new Fl_Group(240, 60, 400, 45);
-        { Fl_Box* o = new Fl_Box(243, 62, 397, 41, "Motion Graph");
+      { Fl_Group* o = new Fl_Group(240, 60, 405, 45);
+        { Fl_Box* o = new Fl_Box(243, 62, 402, 41, "Motion Graph");
           o->box(FL_ENGRAVED_FRAME);
           o->labelsize(10);
           o->align(FL_ALIGN_TOP_LEFT);
@@ -30228,7 +30285,7 @@ UserInterface::UserInterface() {
         } // Fl_Box* lbl_fps_mg
         o->end();
       } // Fl_Group* o
-      { inputRandomFrames = new Fl_Int_Input(105, 185, 85, 20, "# of random frames");
+      { inputRandomFrames = new Fl_Int_Input(105, 210, 85, 20, "# of random frames");
         inputRandomFrames->box(FL_DOWN_BOX);
         inputRandomFrames->color(FL_BACKGROUND2_COLOR);
         inputRandomFrames->selection_color(FL_SELECTION_COLOR);
@@ -30240,7 +30297,7 @@ UserInterface::UserInterface() {
         inputRandomFrames->align(FL_ALIGN_LEFT);
         inputRandomFrames->when(FL_WHEN_RELEASE);
       } // Fl_Int_Input* inputRandomFrames
-      { Fl_Button* o = new Fl_Button(10, 208, 200, 22, "Synthesize random motion");
+      { Fl_Button* o = new Fl_Button(10, 233, 200, 22, "Synthesize random motion");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Synthesize);
       } // Fl_Button* o
@@ -30258,6 +30315,61 @@ UserInterface::UserInterface() {
         o->align(FL_ALIGN_RIGHT);
         o->hide();
       } // Fl_Progress* o
+      { Fl_Button* o = new Fl_Button(10, 143, 200, 22, "Prune dead ends");
+        o->labelsize(10);
+        o->callback((Fl_Callback*)cb_Prune);
+      } // Fl_Button* o
+      { Fl_Group* o = new Fl_Group(10, 444, 235, 101);
+        { Fl_Box* o = new Fl_Box(10, 460, 230, 85, "Point Cloud");
+          o->box(FL_ENGRAVED_FRAME);
+          o->labelsize(10);
+          o->align(FL_ALIGN_TOP_LEFT);
+        } // Fl_Box* o
+        { Fl_Box* o = new Fl_Box(25, 517, 40, 13, "delta");
+          o->labelsize(10);
+          o->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* o
+        { lbl_delta = new Fl_Box(60, 514, 60, 20);
+          lbl_delta->box(FL_DOWN_FRAME);
+          lbl_delta->labelsize(10);
+          lbl_delta->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* lbl_delta
+        { edit_x_frame = new Fl_Spinner(60, 465, 60, 19, "x frame");
+          edit_x_frame->labelsize(10);
+          edit_x_frame->minimum(0);
+          edit_x_frame->maximum(0);
+          edit_x_frame->textsize(10);
+          edit_x_frame->callback((Fl_Callback*)cb_edit_x_frame);
+          edit_x_frame->when(FL_WHEN_CHANGED);
+        } // Fl_Spinner* edit_x_frame
+        { edit_y_frame = new Fl_Spinner(60, 490, 60, 19, "y frame");
+          edit_y_frame->labelsize(10);
+          edit_y_frame->minimum(0);
+          edit_y_frame->maximum(0);
+          edit_y_frame->textsize(10);
+          edit_y_frame->callback((Fl_Callback*)cb_edit_y_frame);
+          edit_y_frame->when(FL_WHEN_CHANGED);
+        } // Fl_Spinner* edit_y_frame
+        { Fl_Button* o = new Fl_Button(194, 490, 22, 22, "@->");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_3);
+        } // Fl_Button* o
+        { Fl_Button* o = new Fl_Button(146, 490, 22, 22, "@<-");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_4);
+        } // Fl_Button* o
+        { Fl_Button* o = new Fl_Button(170, 466, 22, 22, "@2<-");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_21);
+        } // Fl_Button* o
+        { Fl_Button* o = new Fl_Button(170, 490, 22, 22, "@2->");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_22);
+        } // Fl_Button* o
+        o->end();
+      } // Fl_Group* o
+      { new Fl_Box(10, 265, 225, 170);
+      } // Fl_Box* o
       o->end();
     } // Fl_Group* o
     motionGraphWindow->end();

@@ -173,7 +173,7 @@ public:
   Fl_Box *lbl_fps;
   Fl_Box *boxImageLogo;
   Fl_Double_Window *motionGraphWindow;
-  PointCloudMap *boxPoitCloudMap;
+  PointCloudMap *boxPointCloudMap;
 private:
   void cb_Load_i(Fl_Button*, void*);
   static void cb_Load(Fl_Button*, void*);
@@ -196,6 +196,27 @@ private:
   static void cb_Synthesize(Fl_Button*, void*);
   void cb_Clear_i(Fl_Button*, void*);
   static void cb_Clear(Fl_Button*, void*);
+  void cb_Prune_i(Fl_Button*, void*);
+  static void cb_Prune(Fl_Button*, void*);
+public:
+  Fl_Box *lbl_delta;
+  Fl_Spinner *edit_x_frame;
+private:
+  void cb_edit_x_frame_i(Fl_Spinner*, void*);
+  static void cb_edit_x_frame(Fl_Spinner*, void*);
+public:
+  Fl_Spinner *edit_y_frame;
+private:
+  void cb_edit_y_frame_i(Fl_Spinner*, void*);
+  static void cb_edit_y_frame(Fl_Spinner*, void*);
+  void cb_3_i(Fl_Button*, void*);
+  static void cb_3(Fl_Button*, void*);
+  void cb_4_i(Fl_Button*, void*);
+  static void cb_4(Fl_Button*, void*);
+  void cb_21_i(Fl_Button*, void*);
+  static void cb_21(Fl_Button*, void*);
+  void cb_22_i(Fl_Button*, void*);
+  static void cb_22(Fl_Button*, void*);
 public:
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);

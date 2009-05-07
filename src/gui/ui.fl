@@ -337,12 +337,12 @@ motionGraphWindow->hide();}
     }
     Fl_Window motionGraphWindow {
       label {Motion Graph} open
-      xywh {890 238 646 546} type Double visible
+      xywh {583 154 651 550} type Double visible
     } {
-      Fl_Group {} {open selected
+      Fl_Group {} {open
         xywh {0 0 715 550}
       } {
-        Fl_Box boxPoitCloudMap {
+        Fl_Box boxPointCloudMap {
           xywh {245 145 400 400} box UP_FRAME labelsize 10 align 80
           class PointCloudMap
         }
@@ -367,7 +367,7 @@ motionGraphWindow->hide();}
           xywh {180 8 165 22} labelsize 10
         }
         Fl_Button {} {
-          label {Compute Cloud Distance Map}
+          label {Compute Point Cloud Map}
           callback {view->recompute_mg();}
           xywh {245 118 200 22} labelsize 10
         }
@@ -378,11 +378,11 @@ motionGraphWindow->hide();}
           class Fl_Float_Input
         }
         Fl_Group {} {open
-          xywh {240 60 400 45}
+          xywh {240 60 405 45}
         } {
           Fl_Box {} {
             label {Motion Graph}
-            xywh {243 62 397 41} box ENGRAVED_FRAME labelsize 10 align 5
+            xywh {243 62 402 41} box ENGRAVED_FRAME labelsize 10 align 5
           }
           Fl_Box {} {
             label {\# Joints}
@@ -408,14 +408,14 @@ motionGraphWindow->hide();}
         }
         Fl_Input inputRandomFrames {
           label {\# of random frames}
-          xywh {105 185 85 20} labelsize 10 textsize 10
+          xywh {105 210 85 20} labelsize 10 textsize 10
           code0 {\#include <FL/Fl_Int_Input.H>}
           class Fl_Int_Input
         }
         Fl_Button {} {
           label {Synthesize random motion}
           callback {view->synthesize_motion();}
-          xywh {10 208 200 22} labelsize 10
+          xywh {10 233 200 22} labelsize 10
         }
         Fl_Button {} {
           label {Clear motion graph}
@@ -427,6 +427,67 @@ motionGraphWindow->hide();}
         }
         Fl_Progress {} {
           xywh {450 112 185 13} labelsize 10 align 8 hide
+        }
+        Fl_Button {} {
+          label {Prune dead ends}
+          callback {view->mg_extract_ssc();}
+          xywh {10 143 200 22} labelsize 10
+        }
+        Fl_Group {} {open
+          xywh {10 444 235 101}
+        } {
+          Fl_Box {} {
+            label {Point Cloud}
+            xywh {10 460 230 85} box ENGRAVED_FRAME labelsize 10 align 5
+          }
+          Fl_Box {} {
+            label delta
+            xywh {25 517 40 13} labelsize 10 align 16
+          }
+          Fl_Box lbl_delta {
+            xywh {60 514 60 20} box DOWN_FRAME labelsize 10 align 16
+          }
+          Fl_Spinner edit_x_frame {
+            label {x frame}
+            callback {boxPointCloudMap->selectPointCloud();}
+            xywh {60 465 60 19} labelsize 10 when 1 minimum 0 maximum 0 textsize 10
+          }
+          Fl_Spinner edit_y_frame {
+            label {y frame}
+            callback {boxPointCloudMap->selectPointCloud();}
+            xywh {60 490 60 19} labelsize 10 when 1 minimum 0 maximum 0 textsize 10
+          }
+          Fl_Button {} {
+            label {@->}
+            callback {int value = min((int)edit_x_frame->value() + 1,(int)edit_x_frame->maximum());
+edit_x_frame->value(value);
+boxPointCloudMap->selectPointCloud();} selected
+            xywh {194 490 22 22} labelsize 10
+          }
+          Fl_Button {} {
+            label {@<-}
+            callback {int value = max((int)edit_x_frame->value() - 1,0);
+edit_x_frame->value(value);
+boxPointCloudMap->selectPointCloud();}
+            xywh {146 490 22 22} labelsize 10
+          }
+          Fl_Button {} {
+            label {@2<-}
+            callback {int value = min((int)edit_y_frame->value() + 1,(int)edit_y_frame->maximum());
+edit_y_frame->value(value);
+boxPointCloudMap->selectPointCloud();}
+            xywh {170 466 22 22} labelsize 10
+          }
+          Fl_Button {} {
+            label {@2->}
+            callback {int value = max((int)edit_y_frame->value() - 1,0);
+edit_y_frame->value(value);
+boxPointCloudMap->selectPointCloud();}
+            xywh {170 490 22 22} labelsize 10
+          }
+        }
+        Fl_Box {} {
+          xywh {10 265 225 170}
         }
       }
     }

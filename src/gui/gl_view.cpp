@@ -2,6 +2,7 @@
 #include <FL/fl_ask.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Image.H>
+#include <FL/fl_draw.H>
 
 //STL includes
 #include <iostream>
@@ -188,6 +189,7 @@ void glView::initScene()
   m_ui->motionGraphWindow->callback(motionGraphWindow_callback);
   m_ui->inputCloudTreshold->value("10.0");
   m_ui->inputRandomFrames->value("2000"); 
+  m_ui->boxPointCloudMap->view = this;
 
   // camera position
   object_center = Vector3d(0, 50, 400);
@@ -1953,7 +1955,7 @@ void glView::reset_mg_map()
     imgCloudMapData[2] = 0;
     Fl_RGB_Image* imgCloudMap = new Fl_RGB_Image(&imgCloudMapData[0], 1, 1);
     imgMap = imgCloudMap->copy(400, 400);
-    m_ui->boxPoitCloudMap->image(imgMap);
+    m_ui->boxPointCloudMap->image(imgMap);
     delete imgCloudMap;
     
     m_ui->motionGraphWindow->redraw();
@@ -1964,7 +1966,7 @@ void glView::recompute_mg()
 
     
 
-    m_ui->boxPoitCloudMap->image(NULL);
+    m_ui->boxPointCloudMap->image(NULL);
     if(imgMap)
     {
       delete imgMap;
@@ -2001,7 +2003,7 @@ void glView::recompute_mg()
 
     Fl_RGB_Image* imgCloudMap = new Fl_RGB_Image(&imgCloudMapData[0], rows, cols);
     imgMap = imgCloudMap->copy(400, 400);
-    m_ui->boxPoitCloudMap->image(imgMap);
+    m_ui->boxPointCloudMap->image(imgMap);
 
     delete imgCloudMap;
     m_ui->motionGraphWindow->redraw();
@@ -2076,12 +2078,27 @@ void glView::insert_motion_mg()
 
     }
 
+    
     reset_mg_map();
     update_mg_info();
   }
 
 
   
+}
+
+void glView::mg_extract_ssc()
+{
+    if(motion_graph.frames.size() == 0) return;
+
+    // use the first motion graph from the list
+    vector<MotionGraph> motion_list = motion_graph.extract_scc();
+    if(motion_list.size() > 0)
+    {
+        motion_graph = motion_list[0];
+        reset_mg_map();
+        update_mg_info();
+    }
 }
 
 void glView::synthesize_motion()
@@ -2142,6 +2159,12 @@ void glView::update_mg_info()
     sprintf(text, "%i", motion_graph.frames.size() == 0 ? 0 : (int)(1. / motion_graph.frame_time + .5));
     m_ui->lbl_fps_mg->copy_label(text);
     m_ui->motionGraphWindow->redraw();
+
+    m_ui->edit_x_frame->value(0);
+    m_ui->edit_y_frame->value(0);
+    m_ui->edit_x_frame->maximum(motion_graph.frames.size());
+    m_ui->edit_y_frame->maximum(motion_graph.frames.size());
+ 
 }
 
 void glView::clear_motion_graph()
@@ -2153,6 +2176,16 @@ void glView::clear_motion_graph()
 }
 
 
+void PointCloudMap::draw()
+{
+    Fl_Box::draw();
+    fl_color(FL_RED); 
+    fl_rect(this->x() + pt_x - 3,
+            this->y() + pt_y - 3,
+            5,
+            5);
+    //fl_line(
+}
 
 // FlTk Event handler for the window
 int PointCloudMap::handle(int event)
@@ -2168,6 +2201,7 @@ int PointCloudMap::handle(int event)
         {
             pt_x = Fl::event_x()-this->x();
             pt_y = Fl::event_y()-this->y();
+            updatePointCloud();
         } 
         return 1;
     
@@ -2181,6 +2215,7 @@ int PointCloudMap::handle(int event)
         {
             pt_x = Fl::event_x()-this->x();
             pt_y = Fl::event_y()-this->y();
+            updatePointCloud();
         }
         return 1;
 
@@ -2195,21 +2230,22 @@ int PointCloudMap::handle(int event)
           switch (Fl::event_key()) 
           {
               case FL_Up:
-                  pt_y = min(h()-1, pt_y+1);
+                  pt_y = max(0, pt_y-1);
                   break;
 
               case FL_Down:
-                  pt_y = max(0, pt_y-1);
+                  pt_y = min(h()-1, pt_y+1);
                   break;
 
               case FL_Left:
                   pt_x = max(0, pt_x-1);
                   break;
 
-	            case FL_Right:
+              case FL_Right:
                   pt_x = min(w()-1, pt_x+1);
                   break;
           }
+          updatePointCloud();
        }
        return 1;
 
@@ -2217,4 +2253,51 @@ int PointCloudMap::handle(int event)
   }
 
   return Fl_Box::handle(event);
+}
+
+void PointCloudMap::selectPointCloud()
+{
+    if(view == NULL) return;
+    if(view->motion_graph.frames.size() == 0) return;
+
+    // compute the equivalent point position
+    float x_scale = (float)w() / (float)view->motion_graph.frames.size(),
+          y_scale = (float)h() / (float)view->motion_graph.frames.size();
+    int x_frame = view->m_ui->edit_x_frame->value(),
+        y_frame = view->m_ui->edit_y_frame->value();
+    pt_x = (int)((float)x_frame * x_scale);
+    pt_y = this->h() - (int)((float)y_frame * y_scale) - 1;
+    updatePointCloud();
+}
+
+void PointCloudMap::updatePointCloud()
+{
+    if(view == NULL) return;
+    
+    // draw the current position of the red square
+    pt_y = max(0, pt_y);
+    pt_y = min(h()-1, pt_y);
+    pt_x = max(0, pt_x);
+    pt_x = min(w()-1, pt_x);
+    view->m_ui->motionGraphWindow->redraw();
+    
+    if(view->motion_graph.frames.size() == 0) return;
+    char text[256];
+
+    // compute the frame index
+    int x_index = pt_x,
+        y_index = this->h() - pt_y - 1;
+    float x_scale = (float)w() / (float)view->motion_graph.frames.size(),
+          y_scale = (float)h() / (float)view->motion_graph.frames.size();
+    x_index = (int)((float)x_index / x_scale);
+    y_index = (int)((float)y_index / y_scale);
+
+    // update the cloud info
+    view->m_ui->edit_x_frame->value(x_index);
+    view->m_ui->edit_y_frame->value(y_index);
+    if(x_index < view->dataCloudMap.rows() && y_index < view->dataCloudMap.cols())
+    {
+        sprintf(text, "%.2f", (float)view->dataCloudMap(x_index, y_index));
+        view->m_ui->lbl_delta->copy_label(text);
+    }
 }
