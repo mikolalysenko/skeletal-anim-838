@@ -167,6 +167,11 @@ private:
   void cb_radio_motion_graph_i(Fl_Button*, void*);
   static void cb_radio_motion_graph(Fl_Button*, void*);
 public:
+  Fl_Button *radio_path_finding;
+private:
+  void cb_radio_path_finding_i(Fl_Button*, void*);
+  static void cb_radio_path_finding(Fl_Button*, void*);
+public:
   Fl_Box *lbl_name;
   Fl_Box *lbl_joints;
   Fl_Box *lbl_frames;
@@ -219,6 +224,22 @@ private:
   static void cb_22(Fl_Button*, void*);
 public:
   glPointCloud *viewPointCloud;
+  Fl_Double_Window *pathFindingWindow;
+private:
+  void cb_Load1_i(Fl_Button*, void*);
+  static void cb_Load1(Fl_Button*, void*);
+  void cb_Load2_i(Fl_Button*, void*);
+  static void cb_Load2(Fl_Button*, void*);
+public:
+  Fl_Box *lbl_joints_spline;
+  Fl_Box *lbl_frames_spline;
+  Fl_Box *lbl_fps_spline;
+  Fl_Box *lbl_file_spline;
+private:
+  void cb_Synthesize1_i(Fl_Button*, void*);
+  static void cb_Synthesize1(Fl_Button*, void*);
+public:
+  Fl_Float_Input *inputDistanceSpline;
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);
 };

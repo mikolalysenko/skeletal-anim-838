@@ -67,6 +67,7 @@ public:
   void mode_single();
   void mode_multiple();
   void mode_motion_graph();
+  void mode_path_finding();
   void update_concat_times();
   void reload_concat_times();
   void debugFunction1();
@@ -85,6 +86,10 @@ public:
   void update_mg_info();
   void reset_mg_map();
   void mg_extract_ssc();
+
+  void load_motion_graph_path();
+  void load_spline_file();
+  void follow_path();
 
 
 public:
@@ -127,6 +132,9 @@ public:
   Motion mocap_combine;
   Motion mocap_random;
   MotionGraph motion_graph;
+
+  Motion mocap_path;
+  MotionGraph motion_graph_path;
 
   GLuint idFloor;
   GLuint idFace;

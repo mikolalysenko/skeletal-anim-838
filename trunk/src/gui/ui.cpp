@@ -258,6 +258,7 @@ void UserInterface::cb_1(Fl_Button* o, void* v) {
 void UserInterface::cb_radio_single_i(Fl_Button*, void*) {
   view->mode_single();
 motionGraphWindow->hide();
+pathFindingWindow->hide();
 }
 void UserInterface::cb_radio_single(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_radio_single_i(o,v);
@@ -266,6 +267,7 @@ void UserInterface::cb_radio_single(Fl_Button* o, void* v) {
 void UserInterface::cb_radio_mutliple_i(Fl_Button*, void*) {
   view->mode_multiple();
 motionGraphWindow->hide();
+pathFindingWindow->hide();
 }
 void UserInterface::cb_radio_mutliple(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_radio_mutliple_i(o,v);
@@ -319,9 +321,18 @@ void UserInterface::cb_Save(Fl_Button* o, void* v) {
 
 void UserInterface::cb_radio_motion_graph_i(Fl_Button*, void*) {
   view->mode_motion_graph();
+pathFindingWindow->hide();
 }
 void UserInterface::cb_radio_motion_graph(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_radio_motion_graph_i(o,v);
+}
+
+void UserInterface::cb_radio_path_finding_i(Fl_Button*, void*) {
+  view->mode_path_finding();
+motionGraphWindow->hide();
+}
+void UserInterface::cb_radio_path_finding(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_radio_path_finding_i(o,v);
 }
 
 #include <FL/Fl_Image.H>
@@ -29956,6 +29967,27 @@ void UserInterface::cb_22(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_22_i(o,v);
 }
 
+void UserInterface::cb_Load1_i(Fl_Button*, void*) {
+  view->load_motion_graph_path();
+}
+void UserInterface::cb_Load1(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Load1_i(o,v);
+}
+
+void UserInterface::cb_Load2_i(Fl_Button*, void*) {
+  view->load_spline_file();
+}
+void UserInterface::cb_Load2(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Load2_i(o,v);
+}
+
+void UserInterface::cb_Synthesize1_i(Fl_Button*, void*) {
+  view->follow_path();
+}
+void UserInterface::cb_Synthesize1(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Synthesize1_i(o,v);
+}
+
 UserInterface::UserInterface() {
   { mainWindow = new Fl_Double_Window(600, 704, "Skeletal Anim");
     mainWindow->user_data((void*)(this));
@@ -30088,14 +30120,14 @@ UserInterface::UserInterface() {
               o->labelsize(10);
               o->callback((Fl_Callback*)cb_1);
             } // Fl_Button* o
-            { radio_single = new Fl_Button(215, 495, 70, 22, "Single File");
+            { radio_single = new Fl_Button(212, 495, 70, 22, "Single File");
               radio_single->type(102);
               radio_single->value(1);
               radio_single->selection_color((Fl_Color)231);
               radio_single->labelsize(10);
               radio_single->callback((Fl_Callback*)cb_radio_single);
             } // Fl_Button* radio_single
-            { radio_mutliple = new Fl_Button(290, 495, 70, 22, "Multiple Files");
+            { radio_mutliple = new Fl_Button(284, 495, 70, 22, "Multiple Files");
               radio_mutliple->type(102);
               radio_mutliple->selection_color((Fl_Color)231);
               radio_mutliple->labelsize(10);
@@ -30158,16 +30190,23 @@ UserInterface::UserInterface() {
               o->labelsize(10);
               o->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
             } // Fl_Box* o
-            { Fl_Button* o = new Fl_Button(495, 498, 55, 22, "Save");
+            { Fl_Button* o = new Fl_Button(505, 498, 45, 22, "Save");
+              o->labelfont(1);
               o->labelsize(10);
               o->callback((Fl_Callback*)cb_Save);
             } // Fl_Button* o
-            { radio_motion_graph = new Fl_Button(365, 495, 70, 22, "Motion Graph");
+            { radio_motion_graph = new Fl_Button(357, 495, 70, 22, "Motion Graph");
               radio_motion_graph->type(102);
               radio_motion_graph->selection_color((Fl_Color)231);
               radio_motion_graph->labelsize(10);
               radio_motion_graph->callback((Fl_Callback*)cb_radio_motion_graph);
             } // Fl_Button* radio_motion_graph
+            { radio_path_finding = new Fl_Button(430, 495, 70, 22, "Path Finding");
+              radio_path_finding->type(102);
+              radio_path_finding->selection_color((Fl_Color)231);
+              radio_path_finding->labelsize(10);
+              radio_path_finding->callback((Fl_Callback*)cb_radio_path_finding);
+            } // Fl_Button* radio_path_finding
             o->end();
           } // Fl_Group* o
           { lbl_name = new Fl_Box(10, 450, 195, 20);
@@ -30338,6 +30377,7 @@ UserInterface::UserInterface() {
           edit_x_frame->labelsize(10);
           edit_x_frame->minimum(0);
           edit_x_frame->maximum(0);
+          edit_x_frame->value(1);
           edit_x_frame->textsize(10);
           edit_x_frame->callback((Fl_Callback*)cb_edit_x_frame);
           edit_x_frame->when(FL_WHEN_CHANGED);
@@ -30346,6 +30386,7 @@ UserInterface::UserInterface() {
           edit_y_frame->labelsize(10);
           edit_y_frame->minimum(0);
           edit_y_frame->maximum(0);
+          edit_y_frame->value(1);
           edit_y_frame->textsize(10);
           edit_y_frame->callback((Fl_Callback*)cb_edit_y_frame);
           edit_y_frame->when(FL_WHEN_CHANGED);
@@ -30383,6 +30424,91 @@ UserInterface::UserInterface() {
     } // Fl_Group* o
     motionGraphWindow->end();
   } // Fl_Double_Window* motionGraphWindow
+  { pathFindingWindow = new Fl_Double_Window(351, 351, "Path Finding");
+    pathFindingWindow->user_data((void*)(this));
+    { Fl_Group* o = new Fl_Group(0, 0, 715, 550);
+      { Fl_Button* o = new Fl_Button(10, 8, 165, 22, "Load motion graph");
+        o->labelsize(10);
+        o->callback((Fl_Callback*)cb_Load1);
+      } // Fl_Button* o
+      { Fl_Button* o = new Fl_Button(180, 8, 165, 22, "Load spline file");
+        o->labelsize(10);
+        o->callback((Fl_Callback*)cb_Load2);
+      } // Fl_Button* o
+      { Fl_Group* o = new Fl_Group(6, 45, 405, 45);
+        { Fl_Box* o = new Fl_Box(9, 47, 336, 41, "Motion Graph");
+          o->box(FL_ENGRAVED_FRAME);
+          o->labelsize(10);
+          o->align(FL_ALIGN_TOP_LEFT);
+        } // Fl_Box* o
+        { Fl_Box* o = new Fl_Box(185, 49, 50, 13, "# Joints");
+          o->labelsize(10);
+          o->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* o
+        { Fl_Box* o = new Fl_Box(235, 49, 50, 13, "# Frames");
+          o->labelsize(10);
+          o->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* o
+        { Fl_Box* o = new Fl_Box(285, 49, 50, 13, "FPS");
+          o->labelsize(10);
+          o->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* o
+        { lbl_joints_spline = new Fl_Box(189, 61, 45, 20);
+          lbl_joints_spline->box(FL_DOWN_FRAME);
+          lbl_joints_spline->labelsize(10);
+          lbl_joints_spline->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* lbl_joints_spline
+        { lbl_frames_spline = new Fl_Box(238, 61, 45, 20);
+          lbl_frames_spline->box(FL_DOWN_FRAME);
+          lbl_frames_spline->labelsize(10);
+          lbl_frames_spline->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* lbl_frames_spline
+        { lbl_fps_spline = new Fl_Box(287, 61, 45, 20);
+          lbl_fps_spline->box(FL_DOWN_FRAME);
+          lbl_fps_spline->labelsize(10);
+          lbl_fps_spline->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* lbl_fps_spline
+        { Fl_Box* o = new Fl_Box(14, 49, 50, 13, "Filename");
+          o->labelsize(10);
+          o->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
+        } // Fl_Box* o
+        { lbl_file_spline = new Fl_Box(16, 61, 169, 20);
+          lbl_file_spline->box(FL_DOWN_FRAME);
+          lbl_file_spline->labelsize(10);
+          lbl_file_spline->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+        } // Fl_Box* lbl_file_spline
+        o->end();
+      } // Fl_Group* o
+      { Fl_Progress* o = new Fl_Progress(10, 35, 335, 15);
+        o->labelsize(10);
+        o->align(FL_ALIGN_RIGHT);
+        o->hide();
+      } // Fl_Progress* o
+      { Fl_Progress* o = new Fl_Progress(450, 112, 185, 13);
+        o->labelsize(10);
+        o->align(FL_ALIGN_RIGHT);
+        o->hide();
+      } // Fl_Progress* o
+      { Fl_Button* o = new Fl_Button(5, 323, 165, 22, "Synthesize motion along path");
+        o->labelsize(10);
+        o->callback((Fl_Callback*)cb_Synthesize1);
+      } // Fl_Button* o
+      { inputDistanceSpline = new Fl_Float_Input(75, 300, 95, 20, "Max Distance");
+        inputDistanceSpline->box(FL_DOWN_BOX);
+        inputDistanceSpline->color(FL_BACKGROUND2_COLOR);
+        inputDistanceSpline->selection_color(FL_SELECTION_COLOR);
+        inputDistanceSpline->labeltype(FL_NORMAL_LABEL);
+        inputDistanceSpline->labelfont(0);
+        inputDistanceSpline->labelsize(10);
+        inputDistanceSpline->labelcolor(FL_FOREGROUND_COLOR);
+        inputDistanceSpline->textsize(10);
+        inputDistanceSpline->align(FL_ALIGN_LEFT);
+        inputDistanceSpline->when(FL_WHEN_RELEASE);
+      } // Fl_Float_Input* inputDistanceSpline
+      o->end();
+    } // Fl_Group* o
+    pathFindingWindow->end();
+  } // Fl_Double_Window* pathFindingWindow
 }
 
 void UserInterface::show(int argc, char **argv) {
