@@ -30002,6 +30002,13 @@ void UserInterface::cb_Save2(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Save2_i(o,v);
 }
 
+void UserInterface::cb_Clear1_i(Fl_Button*, void*) {
+  view->clear_spline();
+}
+void UserInterface::cb_Clear1(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Clear1_i(o,v);
+}
+
 UserInterface::UserInterface() {
   { mainWindow = new Fl_Double_Window(600, 704, "Skeletal Anim");
     mainWindow->user_data((void*)(this));
@@ -30441,11 +30448,11 @@ UserInterface::UserInterface() {
   { pathFindingWindow = new Fl_Double_Window(351, 445, "Path Finding");
     pathFindingWindow->user_data((void*)(this));
     { Fl_Group* o = new Fl_Group(0, 0, 715, 550);
-      { Fl_Button* o = new Fl_Button(10, 8, 165, 22, "Load motion graph");
+      { Fl_Button* o = new Fl_Button(10, 8, 108, 22, "Load motion graph");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Load1);
       } // Fl_Button* o
-      { Fl_Button* o = new Fl_Button(180, 8, 165, 22, "Load spline file");
+      { Fl_Button* o = new Fl_Button(123, 8, 108, 22, "Load spline file");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Load2);
       } // Fl_Button* o
@@ -30532,6 +30539,10 @@ UserInterface::UserInterface() {
       { Fl_Button* o = new Fl_Button(180, 328, 165, 22, "Save spline file");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Save2);
+      } // Fl_Button* o
+      { Fl_Button* o = new Fl_Button(236, 8, 108, 22, "Clear spline");
+        o->labelsize(10);
+        o->callback((Fl_Callback*)cb_Clear1);
       } // Fl_Button* o
       o->end();
     } // Fl_Group* o

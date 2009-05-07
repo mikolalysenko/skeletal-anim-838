@@ -247,6 +247,8 @@ private:
   static void cb_Apply(Fl_Button*, void*);
   void cb_Save2_i(Fl_Button*, void*);
   static void cb_Save2(Fl_Button*, void*);
+  void cb_Clear1_i(Fl_Button*, void*);
+  static void cb_Clear1(Fl_Button*, void*);
 public:
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);

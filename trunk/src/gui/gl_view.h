@@ -91,8 +91,10 @@ public:
   void load_motion_graph_path();
   void load_spline_file();
   void save_spline_file();
+  void clear_spline();
   void follow_path();
   bool apply_changes_spline();
+  void draw_spline();
 
 
 public:
