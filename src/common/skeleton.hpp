@@ -108,8 +108,11 @@ namespace Skeletal
     //Extracts a point cloud for this skeleton
     aligned<Vector3d>::vector point_cloud(const Joint& skeleton) const;
 
-	//Extracts a point cloud with contant weights
+	  //Extracts a point cloud with contant weights
     aligned<Vector4d>::vector point_cloudw(const Joint& skeleton) const;
+
+    //Computes bounding sphere radius
+    double bound_sphere_radius(const Joint& skeleton) const;
  
   };
 
@@ -158,8 +161,11 @@ namespace Skeletal
     //Returns the frame at time t, with optional looping
     Frame get_frame(double t, bool loop = false) const;
     
-    //Computes bounding sphere radius
+    //Computes bounding sphere radius for the motion
     double bound_sphere_radius() const;
+
+    //Computes bounding sphere radius for the skeleton
+    double bound_sphere_radius_skeleton() const;
     
     //Constructs the bounding box
     void bounding_box(Vector3d& lo, Vector3d& hi) const;

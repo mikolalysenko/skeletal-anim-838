@@ -355,4 +355,29 @@ aligned<Vector4d>::vector Frame::point_cloudw(const Joint& skel) const
 }
 
 
+//Recovers the bounding sphere radius for frame
+double Frame::bound_sphere_radius(const Joint& skeleton) const
+{
+  Vector3d avg(0.,0.,0.);
+  int n = 0;
+  
+
+  aligned<Vector3d>::vector cloud = point_cloud(skeleton);
+  for(int j=0; j<cloud.size(); j++)
+  {
+    avg += cloud[j];
+    n++;
+  }
+  avg /= n;
+  
+  double r = 0.;
+  for(int j=0; j<cloud.size(); j++)
+  {
+    r = max(r, (avg - cloud[j]).norm());
+  }
+
+  return r;
+}
+
+
 }

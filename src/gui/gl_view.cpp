@@ -192,7 +192,7 @@ void glView::initScene()
   m_ui->pathFindingWindow->callback(childWindow_callback);
   m_ui->inputCloudTreshold->value("10.0");
   m_ui->inputRandomFrames->value("2000"); 
-  m_ui->inputDistanceSpline->value("1000.0");
+  m_ui->inputDistanceSpline->value("10.0");
   m_ui->boxPointCloudMap->view = this;
   m_ui->viewPointCloud->view = this;
   m_ui->editorSpline->buffer(textSpline);
@@ -267,20 +267,20 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
     break;
 
   case STYLE_STICK2:
-    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius());
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius_skeleton());
     break;
 
   case STYLE_STICK2_NO_FACE:
-    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius(), 0);
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius_skeleton(), 0);
     break;
 
   case STYLE_STICK2_EDGES:
-    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius(), 1, true);
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius_skeleton(), 1, true);
     break;
 
   case STYLE_STICK2_CUSTOM_FACE:
     glBindTexture(GL_TEXTURE_2D, idFace);
-    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius(), 2);
+    draw_stick_skeleton2(mocap_selected->skeleton, xform.begin(), xform.end(), disable_color, alpha, mocap_selected->bound_sphere_radius_skeleton(), 2);
     break;
 
   case STYLE_LINES:
@@ -299,7 +299,7 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
   glPopAttrib();
 
 
-/*
+
   //display the bounding sphere
   Transform3d xform2;
   xform2.setIdentity();
@@ -311,9 +311,9 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
   glMultMatrixd(tr.data());
   glDisable(GL_LIGHTING);
   glColor3f(1., 1., 0.);
-  glutWireSphere(mocap_selected->bound_sphere_radius(), 8, 8);
+  glutWireSphere(mocap_selected->bound_sphere_radius_skeleton(), 8, 8);
   glPopMatrix();
-*/
+
 
 /*
   //display the bounding box
@@ -522,36 +522,7 @@ void glView::drawScene()
     }
   }
   
-/*
-// reflect the scene on the y axis so that we can draw the skeleton upside down
-glPushMatrix();
-glScalef(1.0, -1.0, 1.0);
-//glRotatef(180., 1, 0, 0);
-glTranslatef(0.0, -floorHeight * 2., 0.0);
 
-glEnable(GL_NORMALIZE);
-glCullFace(GL_FRONT);
-
-  glFrontFace(GL_CW);
-  glDisable(GL_LIGHTING);
-  glEnable(GL_DEPTH_TEST);
-  draw_skeleton(m_time);
-
-  glFrontFace(GL_CCW);
-
-glDisable(GL_BLEND);
-glDisable(GL_NORMALIZE);
-glCullFace(GL_BACK);
-
-
-glPopMatrix();
-
-
-  glDisable(GL_LIGHTING);
-  glEnable(GL_DEPTH_TEST);
-  draw_skeleton(m_time);
-return;
-*/
   // if we need to draw the reflection
   if(m_draw_reflection) 
   {
@@ -1504,23 +1475,6 @@ void glView::mode_multiple()
 void glView::updateCamera()
 {
 
-  // temporarily disable updating the camera since it looks like the radius
-  // return is being calculated differently 
-  {
-      // update the floor height
-      Vector3d min_pt = Vector3d(0., 0., 0.);
-      Vector3d max_pt = Vector3d(0., 0., 0.);
-      
-      mocap_selected->bounding_box(min_pt, max_pt);
-
-      floorHeight = min_pt[1];
-      floorVertex[0][1] = floorHeight;
-      floorVertex[1][1] = floorHeight;
-      floorVertex[2][1] = floorHeight;
-  }
-  return;
-
-
   if(!mocap_selected) return;
 
 
@@ -1544,7 +1498,7 @@ void glView::updateCamera()
     // move the z back 5 times the bounding sphere
     Vector3d offset = xform_sphere.translation();
     
-    offset[2] += mocap_selected->bound_sphere_radius() * 5.;
+    offset[2] += mocap_selected->bound_sphere_radius_skeleton() * 5.;
     
     // update the object center and camera rotation
     object_center = offset;
@@ -1569,7 +1523,7 @@ void glView::updateCamera()
 
     // move the z back 5 times the bounding sphere + radius
     Vector3d offset = xform_sphere.translation();
-    offset[2] += mocap_selected->bound_sphere_radius() * 5.;
+    offset[2] += mocap_selected->bound_sphere_radius_skeleton() * 5.;
    
     // update the object center and camera rotation
     object_center = offset;
@@ -1632,12 +1586,12 @@ void glView::updateAutoCamera()
 
     // move the z back 5 times the bounding sphere
     Vector3d offset = xform_sphere.translation();
-    offset[2] += mocap_selected->bound_sphere_radius() * 5.;
+    offset[2] += mocap_selected->bound_sphere_radius_skeleton() * 5.;
     
     // update the object center and camera rotation
     Vector3d diff = offset - object_center;
     float diff_length = sqrt(diff.dot(diff));
-    float radius = mocap_selected->bound_sphere_radius();
+    float radius = mocap_selected->bound_sphere_radius_skeleton();
     if(diff_length > radius)
     {
       // add the difference from the offset to the point on the sphere
@@ -2115,11 +2069,17 @@ void glView::mg_extract_ssc()
 {
     if(motion_graph.frames.size() == 0) return;
 
-    // use the first motion graph from the list
+    // use the motion graph with the most frames
     vector<MotionGraph> motion_list = motion_graph.extract_scc();
     if(motion_list.size() > 0)
     {
-        motion_graph = motion_list[0];
+      	int max_graph = 0;
+	
+	      for(int i=1; i<motion_list.size(); i++)
+		      if(motion_list[i].frames.size() > motion_list[max_graph].frames.size())
+			      max_graph = i;
+
+        motion_graph = motion_list[max_graph];
         reset_mg_map();
         update_mg_info();
     }
@@ -2182,6 +2142,24 @@ void glView::update_mg_info()
     m_ui->lbl_frames_mg->copy_label(text);
     sprintf(text, "%i", motion_graph.frames.size() == 0 ? 0 : (int)(1. / motion_graph.frame_time + .5));
     m_ui->lbl_fps_mg->copy_label(text);
+
+    // update the camera pos
+    if(motion_graph.frames.size() > 0)
+    {
+      // compute the camera position to be 5 * radius of bounding sphere of skeleton
+      Transform3d base_pose;
+      base_pose.setIdentity();
+      Frame frame = motion_graph.frames[0].apply_transform(motion_graph.skeleton, base_pose);
+      aligned<Transform3d>::vector xform = frame.local_xform(motion_graph.skeleton);
+      base_pose.translate(motion_graph.skeleton.offset);
+      base_pose = base_pose * xform[0];
+      Vector3d offset = base_pose.translation();
+      offset[2] += motion_graph.frames[0].bound_sphere_radius(motion_graph.skeleton) * 5.;
+      
+      // update the object center and camera rotation
+      m_ui->viewPointCloud->m_object_center = offset;
+      m_ui->viewPointCloud->m_camera_rot.setIdentity();
+    }
 
     m_ui->edit_x_frame->value(0);
     m_ui->edit_y_frame->value(0);
@@ -2430,14 +2408,14 @@ void glView::load_spline_file()
 void glView::draw_spline()
 {
   if(control_points.size() == 0) return;
-  glColor3f(1., 1., 0.);
-  glLineWidth(5.);
   float height = floorHeight + 1.;
 
   
   
   glPushAttrib(GL_ALL_ATTRIB_BITS);
   glDisable(GL_LIGHTING);
+  glColor3f(1., 1., 0.);
+  glLineWidth(5.);
 
   // draw the path
   glBegin(GL_LINES);
@@ -2849,7 +2827,7 @@ void glPointCloud::draw_skeleton()
     int x_index = view->m_ui->edit_x_frame->value(),
         y_index = view->m_ui->edit_y_frame->value();
     
-       //sprintf(text, "%.2f", (float)view->dataCloudMap(x_index, y_index));
+
     Transform3d base_pose;
     base_pose.setIdentity();
 
