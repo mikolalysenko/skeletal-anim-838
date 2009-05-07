@@ -83,6 +83,7 @@ public:
   void create_mg_files();
   void update_mg_info();
   void reset_mg_map();
+  void mg_extract_ssc();
 
 
 public:
@@ -144,9 +145,16 @@ class PointCloudMap : public Fl_Box
 {
 public:
   PointCloudMap(int x,int y,int w,int h,const char *l=0) 
-    : Fl_Box(x,y,w,h,l), pt_x(0), pt_y(0) {};
+    : Fl_Box(x,y,w,h,l), pt_x(0), pt_y(h-1), view(NULL) {};
 
   virtual int handle(int);
+  virtual void draw(); 
+  void updatePointCloud();
+  void selectPointCloud();
+
+public:
+  glView* view;
+
 private:
   int pt_x;
   int pt_y;
