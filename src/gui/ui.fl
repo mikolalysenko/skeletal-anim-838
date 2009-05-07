@@ -242,14 +242,16 @@ class UserInterface {open
               Fl_Button radio_single {
                 label {Single File}
                 callback {view->mode_single();
-motionGraphWindow->hide();}
-                xywh {215 495 70 22} type Radio value 1 selection_color 231 labelsize 10
+motionGraphWindow->hide();
+pathFindingWindow->hide();}
+                xywh {212 495 70 22} type Radio value 1 selection_color 231 labelsize 10
               }
               Fl_Button radio_mutliple {
                 label {Multiple Files}
                 callback {view->mode_multiple();
-motionGraphWindow->hide();}
-                xywh {290 495 70 22} type Radio selection_color 231 labelsize 10
+motionGraphWindow->hide();
+pathFindingWindow->hide();}
+                xywh {284 495 70 22} type Radio selection_color 231 labelsize 10
               }
               Fl_Spinner edit_start_frame {
                 label {start frame}
@@ -308,12 +310,19 @@ motionGraphWindow->hide();}
               Fl_Button {} {
                 label Save
                 callback {view->save_file();}
-                xywh {495 498 55 22} labelsize 10
+                xywh {505 498 45 22} labelfont 1 labelsize 10
               }
               Fl_Button radio_motion_graph {
                 label {Motion Graph}
-                callback {view->mode_motion_graph();}
-                xywh {365 495 70 22} type Radio selection_color 231 labelsize 10
+                callback {view->mode_motion_graph();
+pathFindingWindow->hide();}
+                xywh {357 495 70 22} type Radio selection_color 231 labelsize 10
+              }
+              Fl_Button radio_path_finding {
+                label {Path Finding}
+                callback {view->mode_path_finding();
+motionGraphWindow->hide();}
+                xywh {430 495 70 22} type Radio selection_color 231 labelsize 10
               }
             }
             Fl_Box lbl_name {
@@ -336,8 +345,8 @@ motionGraphWindow->hide();}
       }
     }
     Fl_Window motionGraphWindow {
-      label {Motion Graph} open
-      xywh {583 154 651 550} type Double visible
+      label {Motion Graph}
+      xywh {583 154 651 550} type Double hide
     } {
       Fl_Group {} {open
         xywh {0 0 715 550}
@@ -450,12 +459,12 @@ motionGraphWindow->hide();}
           Fl_Spinner edit_x_frame {
             label {x frame}
             callback {boxPointCloudMap->selectPointCloud();}
-            xywh {60 465 60 19} labelsize 10 when 1 minimum 0 maximum 0 textsize 10
+            xywh {60 465 60 19} labelsize 10 when 1 minimum 0 maximum 0 value 1 textsize 10
           }
           Fl_Spinner edit_y_frame {
             label {y frame}
             callback {boxPointCloudMap->selectPointCloud();}
-            xywh {60 490 60 19} labelsize 10 when 1 minimum 0 maximum 0 textsize 10
+            xywh {60 490 60 19} labelsize 10 when 1 minimum 0 maximum 0 value 1 textsize 10
           }
           Fl_Button {} {
             label {@->}
@@ -486,9 +495,80 @@ boxPointCloudMap->selectPointCloud();}
             xywh {170 490 22 22} labelsize 10
           }
         }
-        Fl_Box viewPointCloud {selected
+        Fl_Box viewPointCloud {
           xywh {10 265 225 170}
           class glPointCloud
+        }
+      }
+    }
+    Fl_Window pathFindingWindow {
+      label {Path Finding} open
+      xywh {593 164 351 351} type Double visible
+    } {
+      Fl_Group {} {open selected
+        xywh {0 0 715 550}
+      } {
+        Fl_Button {} {
+          label {Load motion graph}
+          callback {view->load_motion_graph_path();}
+          xywh {10 8 165 22} labelsize 10
+        }
+        Fl_Button {} {
+          label {Load spline file}
+          callback {view->load_spline_file();}
+          xywh {180 8 165 22} labelsize 10
+        }
+        Fl_Group {} {open
+          xywh {6 45 405 45}
+        } {
+          Fl_Box {} {
+            label {Motion Graph}
+            xywh {9 47 336 41} box ENGRAVED_FRAME labelsize 10 align 5
+          }
+          Fl_Box {} {
+            label {\# Joints}
+            xywh {185 49 50 13} labelsize 10 align 16
+          }
+          Fl_Box {} {
+            label {\# Frames}
+            xywh {235 49 50 13} labelsize 10 align 16
+          }
+          Fl_Box {} {
+            label FPS
+            xywh {285 49 50 13} labelsize 10 align 16
+          }
+          Fl_Box lbl_joints_spline {
+            xywh {189 61 45 20} box DOWN_FRAME labelsize 10 align 16
+          }
+          Fl_Box lbl_frames_spline {
+            xywh {238 61 45 20} box DOWN_FRAME labelsize 10 align 16
+          }
+          Fl_Box lbl_fps_spline {
+            xywh {287 61 45 20} box DOWN_FRAME labelsize 10 align 16
+          }
+          Fl_Box {} {
+            label Filename
+            xywh {14 49 50 13} labelsize 10 align 16
+          }
+          Fl_Box lbl_file_spline {
+            xywh {16 61 169 20} box DOWN_FRAME labelsize 10 align 20
+          }
+        }
+        Fl_Progress {} {
+          xywh {10 35 335 15} labelsize 10 align 8 hide
+        }
+        Fl_Progress {} {
+          xywh {450 112 185 13} labelsize 10 align 8 hide
+        }
+        Fl_Button {} {
+          label {Synthesize motion along path}
+          callback {view->follow_path();}
+          xywh {5 323 165 22} labelsize 10
+        }
+        Fl_Input inputDistanceSpline {
+          label {Max Distance}
+          xywh {75 300 95 20} labelsize 10 textsize 10
+          class Fl_Float_Input
         }
       }
     }

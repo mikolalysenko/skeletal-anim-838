@@ -86,8 +86,10 @@ static GLfloat floorVertex[4][3] = {
 Vector3d    object_center;
 Quaterniond camera_rot;
 
-//Motion capture data
-//Motion mocap_quat;
+
+//Spline stuff
+aligned<Vector3f>::vector control_points;
+double t_max;
 
 //Arcball parameters
 bool moving_arcball = false, zoom_camera = false, pan_camera = false;
@@ -176,7 +178,7 @@ void mainWindow_callback(Fl_Widget* widget, void*)
 {
   exit(0);
 }
-void motionGraphWindow_callback(Fl_Widget* widget, void*) 
+void childWindow_callback(Fl_Widget* widget, void*) 
 {
   // do nothing
   ((Fl_Double_Window*)widget)->iconize();
@@ -186,9 +188,11 @@ void motionGraphWindow_callback(Fl_Widget* widget, void*)
 void glView::initScene()
 {
   m_ui->mainWindow->callback(mainWindow_callback);
-  m_ui->motionGraphWindow->callback(motionGraphWindow_callback);
+  m_ui->motionGraphWindow->callback(childWindow_callback);
+  m_ui->pathFindingWindow->callback(childWindow_callback);
   m_ui->inputCloudTreshold->value("10.0");
   m_ui->inputRandomFrames->value("2000"); 
+  m_ui->inputDistanceSpline->value("1.0");
   m_ui->boxPointCloudMap->view = this;
   m_ui->viewPointCloud->view = this;
   reset_mg_map();
@@ -1867,10 +1871,18 @@ void glView::mode_motion_graph()
     m_ui->motionGraphWindow->show();
 }
 
+void glView::mode_path_finding()
+{
+    mocap_selected = NULL;
+    m_time = 0.;
+    m_frame_num = 0;
+    m_play = false;
+    m_ui->btn_play->clear();
+    m_ui->pathFindingWindow->show();
+}
+
 void glView::load_motion_graph()
 {
-
-  int	i;			            // Looping var
   int	count;			        // Number of files selected
   char	relative[1024];		    // Relative filename
 
@@ -2154,7 +2166,7 @@ void glView::create_mg_files()
 void glView::update_mg_info()
 {
 
-    // display some info about the active object
+    // display some info about the motion graph
     char text[256];
     sprintf(text, "%i", motion_graph.skeleton.size());
     m_ui->lbl_joints_mg->copy_label(text);
@@ -2182,6 +2194,203 @@ void glView::clear_motion_graph()
 }
 
 
+//Spline stuff
+void read_control_points(istream& data)
+{
+	int n_points;
+	if(!(data >> n_points) || n_points <= 0)
+		throw "Invalid number of control points for spline curve";
+		
+	control_points.resize(n_points);
+	for(int i=0; i<n_points; i++)
+	{
+		if(!(data >> control_points[i].x() >> control_points[i].y() >> control_points[i].z()) )
+			throw "Invalid control point";
+	}
+	
+	//Validate data (assert that path is monotonic)
+	assert(control_points[0].z() == 0.);
+	for(int i=1; i<n_points; i++)
+		assert(control_points[i].z() >= control_points[i-1].z());
+		
+	t_max = control_points[control_points.size() - 1].z();
+}
+
+
+//deCasteljau's algorithm
+Vector3f eval_spline(float t)
+{
+	aligned<Vector3f>::vector tmp(control_points.size());
+	copy(control_points.begin(), control_points.end(), tmp.begin());
+	
+	for(int i=control_points.size()-1; i>0; i--)
+	for(int j=0; j<i; j++)
+	{
+		tmp[j] = tmp[j] * (1. - t) + tmp[j+1] * t;
+	}
+
+	return tmp[0];
+}
+
+//Evaluates the spline at some point in time
+Vector2f eval_time_spline(double t)
+{
+	assert(t >= 0. && t <= t_max);
+	
+	//Do a binary search to find t coordinate for time value
+	float lo = 0., hi = 1.;
+	Vector3f pt;
+	while(abs(lo - hi) > 1e-6)
+	{
+		float m = lo + (hi - lo) * .5;
+		pt = eval_spline(m);
+		
+		if(pt.z() > t)
+			hi = m;
+		else
+			lo = m;
+	}
+	
+	//Return the value of the spline at this time
+	return Vector2f(pt.x(), pt.y());
+}
+
+
+
+void glView::load_motion_graph_path()
+{
+  int	count;			        // Number of files selected
+  char	relative[1024];		    // Relative filename
+
+
+  // apply filter
+  const char filters[] = "Motion Graph Files (*)\t";
+  file_chooser->filter(filters);
+
+  // allow single file
+  file_chooser->type(Fl_File_Chooser::SINGLE);
+  file_chooser->label("Select Motion Graph");
+
+  // display dialog until it is closed
+  file_chooser->show();
+  while (file_chooser->visible()) {
+    Fl::wait();
+  }
+
+  // process selected file
+  int index = -1;
+  count = file_chooser->count();
+  if (count > 0)
+  {
+
+      // get the relative path
+      fl_filename_relative(relative, sizeof(relative), file_chooser->value());
+
+      // Parse out motion graph
+      ifstream c_in(relative);
+      try
+      {
+         motion_graph_path = parseMotionGraph(c_in);
+
+         // display some info about the motion graph
+         char text[256];
+         m_ui->lbl_file_spline->copy_label(fl_filename_name(file_chooser->value()));
+         sprintf(text, "%i", motion_graph_path.skeleton.size());
+         m_ui->lbl_joints_spline->copy_label(text);
+         sprintf(text, "%i", motion_graph_path.frames.size());
+         m_ui->lbl_frames_spline->copy_label(text);
+         sprintf(text, "%i", motion_graph_path.frames.size() == 0 ? 0 : (int)(1. / motion_graph_path.frame_time + .5));
+         m_ui->lbl_fps_spline->copy_label(text);
+      }
+      catch(...)
+      {
+        fl_message("Error: An error occured trying to read the file %s", relative);
+      }
+
+  }
+
+}
+
+void glView::load_spline_file()
+{
+
+  int	count;			        // Number of files selected
+  char	relative[1024];		    // Relative filename
+
+
+  // apply filter
+  const char filters[] = "Motion Graph Files (*)\t";
+  file_chooser->filter(filters);
+
+  // allow single file
+  file_chooser->type(Fl_File_Chooser::SINGLE);
+  file_chooser->label("Select Motion Graph");
+
+  // display dialog until it is closed
+  file_chooser->show();
+  while (file_chooser->visible()) {
+    Fl::wait();
+  }
+
+  // process selected file
+  int index = -1;
+  count = file_chooser->count();
+  if (count > 0)
+  {
+
+      // get the relative path
+      fl_filename_relative(relative, sizeof(relative), file_chooser->value());
+
+      // Parse out spline file
+      ifstream c_in(relative);
+      try
+      {
+         read_control_points(c_in);
+
+      }
+      catch(...)
+      {
+        fl_message("Error: An error occured trying to read the file %s", relative);
+      }
+
+  }
+
+
+}
+
+void glView::follow_path()
+{
+
+    if(control_points.size() == 0) return;
+    if(motion_graph_path.frames.size() == 0) return;
+
+    double max_d = atof(m_ui->inputDistanceSpline->value());
+	mocap_path = motion_graph_path.follow_path(&eval_time_spline, max_d, t_max);
+
+    if(mocap_path.frames.size() == 0)
+    {
+        fl_message("No path could be generated.");
+        return;
+    }
+    mocap_selected = &mocap_path;
+
+    
+    // display some info about the active object
+    char text[256];
+    m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1.);
+    m_ui->lbl_name->copy_label("PATH FINDING MOTION");
+    sprintf(text, "%i", mocap_selected->skeleton.size());
+    m_ui->lbl_joints->copy_label(text);
+    sprintf(text, "%i", mocap_selected->frames.size());
+    m_ui->lbl_frames->copy_label(text);
+    sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
+    m_ui->lbl_fps->copy_label(text);
+    m_ui->mainWindow->redraw();
+}
+
+
+
+// ***** PointCloudMap ******
 void PointCloudMap::draw()
 {
     Fl_Box::draw();
@@ -2349,6 +2558,8 @@ void PointCloudMap::updatePointCloud()
     view->m_ui->viewPointCloud->redraw();
 }
 
+
+// ***** glPointCloud ******
 int glPointCloud::handle(int event)
 {
 
