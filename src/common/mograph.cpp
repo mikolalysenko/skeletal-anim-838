@@ -143,6 +143,52 @@ aligned<Vector4d>::vector MotionGraph::point_cloud(int f, double w, int n, doubl
 	return result;	
 }
 
+//New idea: Building motion graphs is too slow.  Try using Newton's method to find local minima instead of brute force search
+struct NewtonSearch
+{
+	const MotionGraph * mog;
+	const Motion * motion;
+	double threshold, window_size;
+	double (*window_func)(double);
+	int n_samples;	
+	
+	
+	double eval(Vector2d pt) const
+	{
+        //Extract window about t
+        aligned<Vector4d>::vector 
+        	pcloud = mog->point_cloud((int)pt.x(), window_size, n_samples, window_func),
+        	ncloud = mog->point_cloud((int)pt.y(), window_size, n_samples, window_func);
+        	
+        Transform3d rel = relative_xform(ncloud, pcloud);
+        
+		return cloud_distance(pcloud, ncloud, rel);
+	}
+	
+	Vector2d grad(Vector2d pt) const
+	{
+		Vector2d sum = Vector2d(0., 0.);
+		double g0 = eval(pt);
+		
+		for(int dx=-2; dx<=2; dx++)
+		for(int dy=-2; dy<=2; dy++)
+		{
+			if(dx == 0 && dy == 0) continue;
+			
+			Vector2d delta(dx, dy);
+			sum += delta * ((g0 - eval(pt + delta)) / delta.norm());
+		}
+		
+		return sum;
+	}
+
+	//Finds a local min	
+	Vector2d find_min(Vector2d guess) const
+	{
+		return Vector2d(0., 0.);
+	}
+};
+
 
 //Inserts a motion into the MotionGraph
 void MotionGraph::insert_motion(const Motion& motion, double threshold, double w, int n, double (*window_func)(double))
