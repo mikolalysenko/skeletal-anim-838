@@ -192,9 +192,10 @@ void glView::initScene()
   m_ui->pathFindingWindow->callback(childWindow_callback);
   m_ui->inputCloudTreshold->value("10.0");
   m_ui->inputRandomFrames->value("2000"); 
-  m_ui->inputDistanceSpline->value("1.0");
+  m_ui->inputDistanceSpline->value("1000.0");
   m_ui->boxPointCloudMap->view = this;
   m_ui->viewPointCloud->view = this;
+  m_ui->editorSpline->buffer(textSpline);
   reset_mg_map();
 
   // camera position
@@ -2198,21 +2199,24 @@ void glView::clear_motion_graph()
 void read_control_points(istream& data)
 {
 	int n_points;
+  aligned<Vector3f>::vector control_points_tmp;
 	if(!(data >> n_points) || n_points <= 0)
 		throw "Invalid number of control points for spline curve";
 		
-	control_points.resize(n_points);
+	control_points_tmp.resize(n_points);
 	for(int i=0; i<n_points; i++)
 	{
-		if(!(data >> control_points[i].x() >> control_points[i].y() >> control_points[i].z()) )
+		if(!(data >> control_points_tmp[i].x() >> control_points_tmp[i].y() >> control_points_tmp[i].z()) )
 			throw "Invalid control point";
 	}
 	
 	//Validate data (assert that path is monotonic)
-	assert(control_points[0].z() == 0.);
+	assert(control_points_tmp[0].z() == 0.);
 	for(int i=1; i<n_points; i++)
-		assert(control_points[i].z() >= control_points[i-1].z());
+		assert(control_points_tmp[i].z() >= control_points_tmp[i-1].z());
 		
+  
+  control_points = control_points_tmp;
 	t_max = control_points[control_points.size() - 1].z();
 }
 
@@ -2311,6 +2315,63 @@ void glView::load_motion_graph_path()
 
 }
 
+bool glView::apply_changes_spline()
+{
+  // try to read in the changes
+  string text(textSpline.text());
+  istringstream iss(text,istringstream::in);
+
+  try
+  {
+     read_control_points(iss);
+     m_ui->pathFindingWindow->redraw();
+  }
+  catch(...)
+  {
+    fl_message("Error: The spline file is invalid.");
+    return false;
+  }
+  
+  return true;
+}
+
+void glView::save_spline_file()
+{
+  // make sure the spline file is valid before saving
+  bool valid = apply_changes_spline();
+  if(!valid) return;
+
+
+  // snippet take from fltk example
+  const char *c = NULL;
+  fl_file_chooser_ok_label("Save");
+  c=fl_file_chooser("Save To:", "Motion Spline Files (*)\t", c);
+  fl_file_chooser_ok_label(NULL);
+  if (!c) return;
+
+  if (!access(c, 0))
+  {
+    const char *basename;
+    if ((basename = strrchr(c, '/')) != NULL)
+      basename ++;
+#if defined(WIN32)
+    if ((basename = strrchr(c, '\\')) != NULL)
+      basename ++;
+#endif 
+    else
+      basename = c;
+
+    if (fl_choice("The file \"%s\" already exists.\n"
+                  "Do you want to replace it?", "Cancel",
+	    "Replace", NULL, basename) == 0) return;
+  }
+
+  // save the spline file
+  textSpline.savefile(c);
+
+
+}
+
 void glView::load_spline_file()
 {
 
@@ -2319,12 +2380,12 @@ void glView::load_spline_file()
 
 
   // apply filter
-  const char filters[] = "Motion Graph Files (*)\t";
+  const char filters[] = "Spline Files (*)\t";
   file_chooser->filter(filters);
 
   // allow single file
   file_chooser->type(Fl_File_Chooser::SINGLE);
-  file_chooser->label("Select Motion Graph");
+  file_chooser->label("Select Spline File");
 
   // display dialog until it is closed
   file_chooser->show();
@@ -2346,7 +2407,8 @@ void glView::load_spline_file()
       try
       {
          read_control_points(c_in);
-
+         textSpline.loadfile(relative);
+         m_ui->pathFindingWindow->redraw();
       }
       catch(...)
       {

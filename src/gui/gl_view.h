@@ -9,6 +9,7 @@
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Text_Buffer.H>
 
 class glView;
 class glPointCloud;
@@ -89,7 +90,9 @@ public:
 
   void load_motion_graph_path();
   void load_spline_file();
+  void save_spline_file();
   void follow_path();
+  bool apply_changes_spline();
 
 
 public:
@@ -135,6 +138,7 @@ public:
 
   Motion mocap_path;
   MotionGraph motion_graph_path;
+  Fl_Text_Buffer textSpline;
 
   GLuint idFloor;
   GLuint idFace;
