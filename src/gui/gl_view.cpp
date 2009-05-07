@@ -2165,8 +2165,8 @@ void glView::update_mg_info()
 
     m_ui->edit_x_frame->value(0);
     m_ui->edit_y_frame->value(0);
-    m_ui->edit_x_frame->maximum(motion_graph.frames.size());
-    m_ui->edit_y_frame->maximum(motion_graph.frames.size());
+    m_ui->edit_x_frame->maximum(motion_graph.frames.size()-1);
+    m_ui->edit_y_frame->maximum(motion_graph.frames.size()-1);
     m_ui->boxPointCloudMap->selectPointCloud();
     
     m_ui->motionGraphWindow->redraw();
@@ -2236,22 +2236,34 @@ int PointCloudMap::handle(int event)
           switch (Fl::event_key()) 
           {
               case FL_Up:
-                  pt_y = max(0, pt_y-1);
+                  {
+                      int value = min((int)view->m_ui->edit_y_frame->value() + 1,(int)view->m_ui->edit_y_frame->maximum());
+                      view->m_ui->edit_y_frame->value(value);
+                  }
                   break;
 
               case FL_Down:
-                  pt_y = min(h()-1, pt_y+1);
+                  {
+                      int value = max((int)view->m_ui->edit_y_frame->value() - 1,0);
+                      view->m_ui->edit_y_frame->value(value);
+                  }
                   break;
 
               case FL_Left:
-                  pt_x = max(0, pt_x-1);
+                  {
+                      int value = max((int)view->m_ui->edit_x_frame->value() - 1,0);
+                      view->m_ui->edit_x_frame->value(value);
+                  }
                   break;
 
               case FL_Right:
-                  pt_x = min(w()-1, pt_x+1);
+                  {
+                      int value = min((int)view->m_ui->edit_x_frame->value() + 1,(int)view->m_ui->edit_x_frame->maximum());
+                      view->m_ui->edit_x_frame->value(value);
+                  }
                   break;
           }
-          updatePointCloud();
+          selectPointCloud();
        }
        return 1;
 
@@ -2259,6 +2271,23 @@ int PointCloudMap::handle(int event)
   }
 
   return Fl_Box::handle(event);
+}
+
+void PointCloudMap::updateDelta()
+{
+    int x_frame = view->m_ui->edit_x_frame->value(),
+        y_frame = view->m_ui->edit_y_frame->value();
+
+    // compute the delta
+    aligned<Vector4d>::vector cloud = 
+        view->motion_graph.point_cloud(x_frame, view->motion_graph.frame_time * 5.,  5, hann_window); 
+    aligned<Vector4d>::vector dest_cloud = 
+        view->motion_graph.point_cloud(y_frame, view->motion_graph.frame_time * 5.,  5, hann_window);
+    Transform3d rel = relative_xform(dest_cloud, cloud);
+    double delta = cloud_distance(cloud, dest_cloud, rel);
+    char text[256];
+    sprintf(text, "%.2f", delta);
+    view->m_ui->lbl_delta->copy_label(text);
 }
 
 void PointCloudMap::selectPointCloud()
@@ -2273,7 +2302,14 @@ void PointCloudMap::selectPointCloud()
         y_frame = view->m_ui->edit_y_frame->value();
     pt_x = (int)((float)x_frame * x_scale);
     pt_y = this->h() - (int)((float)y_frame * y_scale) - 1;
-    updatePointCloud();
+ 
+
+    updateDelta();
+
+
+    
+    view->m_ui->motionGraphWindow->redraw();
+    view->m_ui->viewPointCloud->redraw();
 }
 
 void PointCloudMap::updatePointCloud()
@@ -2288,7 +2324,7 @@ void PointCloudMap::updatePointCloud()
     view->m_ui->motionGraphWindow->redraw();
     
     if(view->motion_graph.frames.size() == 0) return;
-    char text[256];
+    
 
     // compute the frame index
     int x_index = pt_x,
@@ -2308,15 +2344,7 @@ void PointCloudMap::updatePointCloud()
         view->m_ui->lbl_delta->copy_label(text);
     }
     */
-    // compute the delta
-    aligned<Vector4d>::vector cloud = 
-        view->motion_graph.point_cloud(x_index, view->motion_graph.frame_time * 5.,  5, hann_window); 
-    aligned<Vector4d>::vector dest_cloud = 
-        view->motion_graph.point_cloud(y_index, view->motion_graph.frame_time * 5.,  5, hann_window);
-    Transform3d rel = relative_xform(dest_cloud, cloud);
-    double delta = cloud_distance(cloud, dest_cloud, rel);
-    sprintf(text, "%.2f", delta);
-    view->m_ui->lbl_delta->copy_label(text);
+    updateDelta();
 
     view->m_ui->viewPointCloud->redraw();
 }

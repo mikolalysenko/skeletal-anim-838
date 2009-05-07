@@ -152,6 +152,7 @@ public:
   virtual void draw(); 
   void updatePointCloud();
   void selectPointCloud();
+  void updateDelta();
 
 public:
   glView* view;
