@@ -129,8 +129,17 @@ Motion combine_motions(
   return result;	
 }
 
+//Recovers the bounding sphere radius for the skeleton
+double Motion::bound_sphere_radius_skeleton() const
+{
+  if(frames.size() == 0) return 0.;
 
-//Recovers the bounding sphere radius
+  // HACK this is not the bounding sphere for the skeleton but the first frame
+  // but that should be good enough
+  return frames[0].bound_sphere_radius(skeleton);
+}
+
+//Recovers the bounding sphere radius for the motion
 double Motion::bound_sphere_radius() const
 {
   Vector3d avg(0.,0.,0.);
