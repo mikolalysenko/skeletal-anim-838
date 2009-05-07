@@ -299,7 +299,7 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
   glPopAttrib();
 
 
-
+/*
   //display the bounding sphere
   Transform3d xform2;
   xform2.setIdentity();
@@ -313,7 +313,7 @@ void glView::draw_skeleton(double t, bool disable_color, float alpha)
   glColor3f(1., 1., 0.);
   glutWireSphere(mocap_selected->bound_sphere_radius_skeleton(), 8, 8);
   glPopMatrix();
-
+*/
 
 /*
   //display the bounding box
