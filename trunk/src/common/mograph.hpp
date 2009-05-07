@@ -56,6 +56,14 @@ namespace Skeletal
       double window_size, 
       int window_res, 
       double (*window_func)(double));
+
+	//Does an approximate insertion in O(n) time
+    void insert_motion_fast(const Motion& motion, 
+      double threshold,
+      double window_size, 
+      int window_res, 
+      double (*window_func)(double));
+
       
     //Removes all dead ends from the motion graph, returning a list of strongly connected components
     vector<MotionGraph> extract_scc() const;
