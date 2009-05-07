@@ -10,10 +10,8 @@
 
 ./motool -scc tmp/walk12.mog > tmp/walk_final.mog
 
-
-
 ./motool -s 1000 tmp/walk_final.mog > test.bvh
-#./motool -path 10 data/test.spline tmp/walk_final.mog > test2.bvh
+./motool -path 10 data/test.spline tmp/walk_final.mog > test2.bvh
 
 #./motool -a data/EAStrafe/straight/FABMGWK01-marking_walk_forward.bvh tmp/walk12.mog > tmp/walk2.mog
 #./motool -a data/EAStrafe/straight/FABMGJOG1-marking_jog_forward.bvh  tmp/walk2.mog > tmp/walk3.mog

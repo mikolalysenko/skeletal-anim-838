@@ -241,7 +241,7 @@ void MotionGraph::insert_motion_fast(const Motion& motion, double threshold, dou
 	search.o_frames = o_frames;
     
     //Do about O(n) iterations
-    for(int i=0; i<motion.frames.size(); i++)
+    for(int i=0; i<motion.frames.size() * 2; i++)
     {
     	Vector2f start = Vector2f(rand() % (n_frames + o_frames - 1), (rand() % (n_frames - 1)) +  o_frames);
     	
@@ -494,6 +494,9 @@ Motion MotionGraph::synthesize_motion(const vector<int> frame_seq, const Transfo
 		Transform3d rel = relative_xform(pcloud, ncloud);
 		Frame next = frames[frame_seq[i]].apply_transform(skeleton, rel);
 		
+		//Smooth animation slightly
+		result[i-1] = interpolate_frames(skeleton, result[i-1], frames[frame_seq[i]-1].apply_transform(skeleton, rel), 0.5);
+		
 		//Store result
 		result.push_back(next);
 		pxform = rel;
@@ -569,10 +572,13 @@ struct Traversal
 		return pose * pt;
 	}
 	
+	Vector2f vel(int frame, const Transform2f& pose) const
+	{
+		return base_pt(frame, pose) - base_pt(max(frame-1, 0), pose);
+	}
+	
 	bool dfs(int frame, int t, Transform2f pose)
 	{
-		//cerr << "Visiting: " << frame << "," << t << ", pose = " << endl << pose.matrix() << endl;
-		
 		//Success!
 		if(t >= visit_frames.size())
 			return true;
@@ -582,13 +588,10 @@ struct Traversal
 		Vector2f tpos = path_func(t0),
 				 cpos = base_pt(frame, pose);
 		
-		/*
-		cerr << "Target = " << tpos << endl
-			 << "Current = " << cpos << endl;
-		*/
-		
 		if((tpos - cpos).squaredNorm() > max_d)
 			return false;
+		
+		//assert(frame < 100);
 		
 		//Mark frame as visited
 		visit_frames[t] = frame;
@@ -613,6 +616,8 @@ struct Traversal
 Motion MotionGraph::follow_path(Vector2f (*path_func)(double t), double max_d, double dur) const
 {
 	Vector2f start_pt = path_func(0.);
+	Vector2f heading = (path_func(frame_time) - start_pt).normalized();
+	double base_theta = atan2(heading.y(), heading.x());
 	
 	//Allocate data for traversal
 	Traversal trav;
@@ -622,7 +627,7 @@ Motion MotionGraph::follow_path(Vector2f (*path_func)(double t), double max_d, d
 	trav.max_d = max_d * max_d;
 
 	//Initialize traversal queue	
-	for(int i=0; i<frames.size() - 1; i++)
+	for(int i=1; i<frames.size() - 1; i++)
 	{
 		//Construct target pose vector
 		aligned<Transform3d>::vector target = frames[i].local_xform(skeleton);
@@ -640,35 +645,48 @@ Motion MotionGraph::follow_path(Vector2f (*path_func)(double t), double max_d, d
 		rot2(1,2) = rot3(2,3);
 		Transform2f root(rot2);
 	
-		for(double theta=0.; theta<=M_PI*2.; theta+=M_PI/4.)
-		{
-			//Set up initial transform
-			Matrix2f rot;
-			rot(0,0) = cos(theta);
-			rot(0,1) = sin(theta);
-			rot(1,0) = -sin(theta);
-			rot(1,1) = cos(theta);
-		
-			//Set up matrix
-			Transform2f rel_target;
-			rel_target.setIdentity();
-			rel_target = rel_target.translate(start_pt).rotate(rot) * root;
-	
-			//Do DFS
-			if(trav.dfs(i, 0, rel_target))
-			{
-				//Convert pose to 3D
-				Matrix3f rel = rel_target.matrix();
-				Matrix4d tmp = Matrix4d::Identity();
-				tmp(0,0) = rel(0,0);
-				tmp(0,2) = rel(0,1);
-				tmp(0,3) = rel(0,2);
-				tmp(2,0) = rel(1,0);
-				tmp(2,2) = rel(1,1);
-				tmp(2,3) = rel(1,2);
+		//Set up initial transform
+		Vector2f mesh_vel = trav.vel(i, root);
+		double mesh_theta = atan2(mesh_vel.y(), mesh_vel.x());
+		if(mesh_vel.squaredNorm() <= 1e-6)
+			mesh_theta = 0.;
 			
-				return synthesize_motion(trav.visit_frames, Transform3d(tmp));
-			}
+		/*
+		cerr << "Heading = " << heading << endl;
+		cerr << "Base theta = " << base_theta << endl;
+		cerr << "Mesh vel = " << mesh_vel << endl;
+		cerr << "Mesh theta = " << mesh_theta << endl;
+		*/
+		
+		double ang = mesh_theta - base_theta;
+		
+		Matrix2f rot;
+		rot(0,0) = cos(ang);
+		rot(0,1) = sin(ang);
+		rot(1,0) = -sin(ang);
+		rot(1,1) = cos(ang);
+	
+		//Set up matrix
+		Transform2f rel_target;
+		rel_target.setIdentity();
+		rel_target = rel_target.translate(start_pt).rotate(rot) * root;
+		
+		//cerr << "Initial velocity: " << trav.vel(i, rel_target) << endl;
+		
+		//Do DFS
+		if(trav.dfs(i, 0, rel_target))
+		{
+			//Convert pose to 3D
+			Matrix3f rel = rel_target.matrix();
+			Matrix4d tmp = Matrix4d::Identity();
+			tmp(0,0) = rel(0,0);
+			tmp(0,2) = rel(0,1);
+			tmp(0,3) = rel(0,2);
+			tmp(2,0) = rel(1,0);
+			tmp(2,2) = rel(1,1);
+			tmp(2,3) = rel(1,2);
+		
+			return synthesize_motion(trav.visit_frames, Transform3d(tmp));
 		}
 	}
 	
