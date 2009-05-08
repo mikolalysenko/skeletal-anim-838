@@ -156,6 +156,18 @@ void process_spline(double max_d, const string& spline_file, const string& graph
 	writeBVH(cout, motion);
 }
 
+void seg_path(const Vector2f& start, const Vector2f finish, int f, const string& graph_file)
+{
+	MotionGraph graph = read_graph(graph_file);
+	
+	Transform2f xform;
+	xform.setIdentity();
+	Motion motion = graph.path_segment(xform.translate(start), finish, f);
+	
+	writeBVH(cout, motion);
+}
+
+
 
 //Prints out a helpful message
 void print_help()
@@ -181,6 +193,9 @@ void print_help()
 		 << endl
 		 << "  Walk along a path:" << endl
 		 << "     motool -path <max_distance> <path_file.spline> <graph.mog>" << endl
+		 << endl
+		 << "  Synthesize a path along a segment:" << endl
+		 << "     motool -seg <start_x, start_y> <finish_x, finish_y> [optional frame} <graph.mog>" << endl
 		 << endl
 		 << endl;
 }
@@ -227,6 +242,26 @@ int main(int argc, char** argv)
 	{
 		assert(argc == 5);
 		process_spline(atof(argv[2]), string(argv[3]), string(argv[4]));
+	}
+	else if(command == "-seg")
+	{
+		assert(argc == 7 || argc == 8);
+	
+	
+		int f = -1;
+		Vector2f a = Vector2f(atof(argv[2]), atof(argv[3])),
+				 b = Vector2f(atof(argv[4]), atof(argv[5]));
+		string filename;
+		
+		if(argc == 7)
+			filename = string(argv[6]);
+		else
+		{
+			f = atoi(argv[6]);
+			filename = string(argv[7]);
+		}	
+		
+		seg_path(a, b, f, filename);
 	}
 	else
 	{
