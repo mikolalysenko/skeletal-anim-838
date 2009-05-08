@@ -241,7 +241,7 @@ void MotionGraph::insert_motion_fast(const Motion& motion, double threshold, dou
 	search.o_frames = o_frames;
     
     //Do about O(n) iterations
-    for(int i=0; i<motion.frames.size() * 2; i++)
+    for(int i=0; i<motion.frames.size() * 5; i++)
     {
     	Vector2f start = Vector2f(rand() % (n_frames + o_frames - 1), (rand() % (n_frames - 1)) +  o_frames);
     	
@@ -250,11 +250,8 @@ void MotionGraph::insert_motion_fast(const Motion& motion, double threshold, dou
     	
     	//Check if edge already exists
     	int u = start.x(), v = start.y();
-    	if(abs(u - v) <= 3)
-    		continue;
-    	
 		for(int i=0; i<graph[u].size(); i++)
-			if(graph[u][i] == v)
+			if(abs(graph[u][i] - v) <= 3)
 				goto skip;
     	
     	//cerr << "Adding edge: " << u << "," << v << endl;
@@ -694,6 +691,203 @@ Motion MotionGraph::follow_path(Vector2f (*path_func)(double t), double max_d, d
 	return Motion(frame_time, vector<Frame>(0), skeleton);
 }
 
+
+//A visit state in the traversal
+struct State
+{
+	static Vector2f target;
+	static const MotionGraph* mog;
+
+	Transform2f xform;
+	double distance;
+	int frame;
+	State * prev;
+	
+	Vector2f base_pt() const
+	{
+		Transform3d t3d;
+		t3d.setIdentity();
+		t3d(0,0) = xform(0,0);
+		t3d(0,2) = xform(0,1);
+		t3d(0,3) = xform(0,2);
+		t3d(2,0) = xform(1,0);
+	 	t3d(2,2) = xform(1,1);
+		t3d(2,3) = xform(1,2);
+	
+		aligned<Vector4d>::vector pcloud = mog->frames[frame].apply_transform(mog->skeleton, t3d).point_cloudw(mog->skeleton);
+		return Vector2f(pcloud[0].x(), pcloud[0].z());
+	}
+	
+	State() {}
+	State(const State& other) : xform(other.xform), distance(other.distance), frame(other.frame), prev(other.prev) {}
+	State(const Transform2f& xf, int f, State* p) : xform(xf), frame(f), prev(p)
+	{
+		distance = (target - base_pt()).squaredNorm();
+		
+		/*
+		cerr << "pt = " << pt << endl
+			 << "target = " << target << endl
+			 << "dist = " << distance << endl;
+		*/
+	}
+	
+	State operator=(const State& other)
+	{
+		xform = other.xform;
+		distance = other.distance;
+		frame = other.frame;
+		prev = other.prev;
+		return *this;
+	}
+	
+	bool operator<(const State& other)
+	{
+		return distance < other.distance;
+	}
+	
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+};
+
+Vector2f State::target;
+const MotionGraph* State::mog;
+
+//Comparison function
+struct StateCompare
+{
+	bool operator()(State* first, State* second) const
+	{
+		return first->distance > second->distance;
+	}
+};
+
+//Handles scoped resource deallocation
+struct AStarResources
+{
+	priority_queue<State*, vector<State*>, StateCompare> to_visit;
+	vector<State*> visited;
+	
+	~AStarResources()
+	{
+		for(int i=0; i<visited.size(); i++)
+			delete visited[i];
+		
+		while(!to_visit.empty())
+		{
+			delete to_visit.top();
+			to_visit.pop();
+		}
+	}
+};
+
+//Walks along a path over a segment, start from point a going to point b
+Motion MotionGraph::path_segment(const Transform2f& a, const Vector2f& b, int frame) const
+{
+	//Set up resource managers
+	AStarResources res;
+	State::target = b;
+	State::mog = this;
+
+	//Initialize heap
+	if(frame == -1)
+	{
+		for(int i=0; i<frames.size(); i++)
+		{
+			aligned<Transform3d>::vector xf = frames[i].local_xform(skeleton);
+			Matrix4d x3d = constrain_xform(Transform3d(xf[0].inverse())).matrix();
+			Matrix3f mat = Matrix3f::Identity();
+			mat(0,0) = x3d(0,0);
+			mat(0,1) = x3d(0,2);
+			mat(0,2) = x3d(0,3);
+			mat(1,0) = x3d(2,0);
+			mat(1,1) = x3d(2,2);
+			mat(1,2) = x3d(2,3);
+		
+			res.to_visit.push(new State(a * Transform2f(mat), i, NULL));
+		}
+	}
+	else
+		res.to_visit.push(new State(a, frame, NULL));
+	
+	//Compute bounding frame
+	double r = frames[0].bound_sphere_radius(skeleton);
+
+	//Perform A* search
+	while(!res.to_visit.empty())
+	{
+		State* st = res.to_visit.top();
+		res.to_visit.pop();
+		res.visited.push_back(st);
+		
+		//cerr << "Visiting: " << "dist = " << st->distance  << " frame = " << st->frame << "," << st->xform.matrix() << endl;
+		
+		if(st->distance < r)
+		{
+			//Generate frames and done
+			State * last;
+			vector<int> frame_seq;
+			for(State* cur = st; cur!=NULL; cur=cur->prev)
+			{
+				frame_seq.push_back(cur->frame);
+				/*
+				cerr << "xf = " << cur->xform.matrix() << endl
+					 << "base_pt = " << cur->base_pt() << endl;
+				*/
+				last = cur;
+			}
+			reverse(frame_seq.begin(), frame_seq.end());
+			
+			Matrix4d mat = Matrix4d::Identity();
+			mat(0,0) = last->xform(0,0);
+			mat(0,2) = last->xform(0,1);
+			mat(0,3) = last->xform(0,2);
+			mat(2,0) = last->xform(1,0);
+			mat(2,2) = last->xform(1,1);
+			mat(2,3) = last->xform(1,2);
+			
+			return synthesize_motion(frame_seq, Transform3d(mat));
+		}
+		
+		int c = st->frame;
+		
+		Transform3d t3d;
+		t3d.setIdentity();
+		t3d(0,0) = st->xform(0,0);
+		t3d(0,2) = st->xform(0,1);
+		t3d(0,3) = st->xform(0,2);
+		t3d(2,0) = st->xform(1,0);
+	 	t3d(2,2) = st->xform(1,1);
+		t3d(2,3) = st->xform(1,2);
+		
+		aligned<Vector4d>::vector pcloud = frames[c].apply_transform(skeleton, t3d).point_cloudw(skeleton);
+		
+		for(int i=0; i<graph[c].size(); i++)
+		{
+			int n = graph[c][i];
+			
+			//Extract point clouds
+			aligned<Vector4d>::vector ncloud = frames[n - 1].point_cloudw(skeleton);
+		
+			//Compute relative xform
+			Matrix4d x3d = relative_xform(pcloud, ncloud).matrix();
+			
+			//cerr << "x3d = " << x3d << endl;
+		
+			//Extract x-z component
+			Matrix3f mat;
+			mat.setIdentity();
+			mat(0,0) = x3d(0,0);
+			mat(0,1) = x3d(0,2);
+			mat(0,2) = x3d(0,3);
+			mat(1,0) = x3d(2,0);
+			mat(1,1) = x3d(2,2);
+			mat(1,2) = x3d(2,3);
+		
+			res.to_visit.push(new State(Transform2f(mat), n, st));
+		}
+	}
+	
+	throw "No valid path";
+}
 
 extern void assert_token(istream& file, const string& tok);
 

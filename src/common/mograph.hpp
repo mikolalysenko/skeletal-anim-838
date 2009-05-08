@@ -63,7 +63,6 @@ namespace Skeletal
       double window_size, 
       int window_res, 
       double (*window_func)(double));
-
       
     //Removes all dead ends from the motion graph, returning a list of strongly connected components
     vector<MotionGraph> extract_scc() const;
@@ -76,6 +75,9 @@ namespace Skeletal
     
     //Synthesizes a motion which follows a path
     Motion follow_path(Vector2f (*path_func)(double), double max_d, double dur) const;
+    
+    //Finds a path along a segment
+    Motion path_segment(const Transform2f& start_pt, const Vector2f& finish_pt, int start_f = -1) const;
     
     //Extracts a linear submotion from the motion graph
     Motion submotion(int start, int end) const;    
