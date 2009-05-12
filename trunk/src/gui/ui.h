@@ -14,7 +14,7 @@
 #include <FL/Fl_Browser.H>
 #include <FL/Fl_Float_Input.H>
 #include <FL/Fl_Int_Input.H>
-#include <FL/Fl_Progress.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Text_Editor.H>
 
 class UserInterface {
@@ -225,12 +225,11 @@ private:
   static void cb_22(Fl_Button*, void*);
 public:
   glPointCloud *viewPointCloud;
+  Fl_Check_Button *checkGradientDescent;
   Fl_Double_Window *pathFindingWindow;
 private:
   void cb_Load1_i(Fl_Button*, void*);
   static void cb_Load1(Fl_Button*, void*);
-  void cb_Load2_i(Fl_Button*, void*);
-  static void cb_Load2(Fl_Button*, void*);
 public:
   Fl_Box *lbl_joints_spline;
   Fl_Box *lbl_frames_spline;
@@ -249,7 +248,15 @@ private:
   static void cb_Save2(Fl_Button*, void*);
   void cb_Clear1_i(Fl_Button*, void*);
   static void cb_Clear1(Fl_Button*, void*);
+  void cb_Load2_i(Fl_Button*, void*);
+  static void cb_Load2(Fl_Button*, void*);
+  void cb_Synthesize2_i(Fl_Button*, void*);
+  static void cb_Synthesize2(Fl_Button*, void*);
 public:
+  Fl_Int_Input *inputStartX;
+  Fl_Int_Input *inputStartY;
+  Fl_Int_Input *inputEndX;
+  Fl_Int_Input *inputEndY;
   void show(int argc, char **argv);
   static void idleCB(UserInterface* gv);
 };

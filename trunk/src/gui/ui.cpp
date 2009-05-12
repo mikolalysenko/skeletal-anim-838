@@ -29974,43 +29974,50 @@ void UserInterface::cb_Load1(Fl_Button* o, void* v) {
   ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Load1_i(o,v);
 }
 
-void UserInterface::cb_Load2_i(Fl_Button*, void*) {
-  view->load_spline_file();
-}
-void UserInterface::cb_Load2(Fl_Button* o, void* v) {
-  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Load2_i(o,v);
-}
-
 void UserInterface::cb_Synthesize1_i(Fl_Button*, void*) {
   view->follow_path();
 }
 void UserInterface::cb_Synthesize1(Fl_Button* o, void* v) {
-  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Synthesize1_i(o,v);
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Synthesize1_i(o,v);
 }
 
 void UserInterface::cb_Apply_i(Fl_Button*, void*) {
   view->apply_changes_spline();
 }
 void UserInterface::cb_Apply(Fl_Button* o, void* v) {
-  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Apply_i(o,v);
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Apply_i(o,v);
 }
 
 void UserInterface::cb_Save2_i(Fl_Button*, void*) {
   view->save_spline_file();
 }
 void UserInterface::cb_Save2(Fl_Button* o, void* v) {
-  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Save2_i(o,v);
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Save2_i(o,v);
 }
 
 void UserInterface::cb_Clear1_i(Fl_Button*, void*) {
   view->clear_spline();
 }
 void UserInterface::cb_Clear1(Fl_Button* o, void* v) {
-  ((UserInterface*)(o->parent()->parent()->user_data()))->cb_Clear1_i(o,v);
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Clear1_i(o,v);
+}
+
+void UserInterface::cb_Load2_i(Fl_Button*, void*) {
+  view->load_spline_file();
+}
+void UserInterface::cb_Load2(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Load2_i(o,v);
+}
+
+void UserInterface::cb_Synthesize2_i(Fl_Button*, void*) {
+  view->follow_path_segment();
+}
+void UserInterface::cb_Synthesize2(Fl_Button* o, void* v) {
+  ((UserInterface*)(o->parent()->parent()->parent()->user_data()))->cb_Synthesize2_i(o,v);
 }
 
 UserInterface::UserInterface() {
-  { mainWindow = new Fl_Double_Window(600, 704, "Skeletal Anim");
+  { mainWindow = new Fl_Double_Window(600, 711, "Skeletal Anim");
     mainWindow->user_data((void*)(this));
     { Fl_Group* o = new Fl_Group(-5, 0, 830, 709);
       { Fl_Group* o = new Fl_Group(0, 0, 800, 401);
@@ -30095,7 +30102,7 @@ UserInterface::UserInterface() {
             o->labelsize(10);
             o->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
           } // Fl_Box* o
-          { Fl_Group* o = new Fl_Group(3, 487, 557, 222);
+          { Fl_Group* o = new Fl_Group(3, 448, 557, 261);
             { Fl_Box* o = new Fl_Box(3, 489, 557, 216, "Animation Files");
               o->box(FL_ENGRAVED_FRAME);
               o->labelsize(10);
@@ -30211,7 +30218,7 @@ UserInterface::UserInterface() {
               o->labelsize(10);
               o->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
             } // Fl_Box* o
-            { Fl_Button* o = new Fl_Button(505, 498, 45, 22, "Save");
+            { Fl_Button* o = new Fl_Button(365, 448, 45, 22, "Save");
               o->labelfont(1);
               o->labelsize(10);
               o->callback((Fl_Callback*)cb_Save);
@@ -30365,16 +30372,6 @@ UserInterface::UserInterface() {
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Clear);
       } // Fl_Button* o
-      { Fl_Progress* o = new Fl_Progress(10, 35, 335, 15);
-        o->labelsize(10);
-        o->align(FL_ALIGN_RIGHT);
-        o->hide();
-      } // Fl_Progress* o
-      { Fl_Progress* o = new Fl_Progress(450, 112, 185, 13);
-        o->labelsize(10);
-        o->align(FL_ALIGN_RIGHT);
-        o->hide();
-      } // Fl_Progress* o
       { Fl_Button* o = new Fl_Button(10, 143, 200, 22, "Prune dead ends");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Prune);
@@ -30441,20 +30438,21 @@ UserInterface::UserInterface() {
         viewPointCloud->align(FL_ALIGN_CENTER);
         viewPointCloud->when(FL_WHEN_RELEASE);
       } // glPointCloud* viewPointCloud
+      { checkGradientDescent = new Fl_Check_Button(10, 165, 200, 25, "Use gradient descent to find local min");
+        checkGradientDescent->down_box(FL_DOWN_BOX);
+        checkGradientDescent->value(1);
+        checkGradientDescent->labelsize(10);
+      } // Fl_Check_Button* checkGradientDescent
       o->end();
     } // Fl_Group* o
     motionGraphWindow->end();
   } // Fl_Double_Window* motionGraphWindow
-  { pathFindingWindow = new Fl_Double_Window(351, 445, "Path Finding");
+  { pathFindingWindow = new Fl_Double_Window(563, 474, "Path Finding");
     pathFindingWindow->user_data((void*)(this));
     { Fl_Group* o = new Fl_Group(0, 0, 715, 550);
       { Fl_Button* o = new Fl_Button(10, 8, 108, 22, "Load motion graph");
         o->labelsize(10);
         o->callback((Fl_Callback*)cb_Load1);
-      } // Fl_Button* o
-      { Fl_Button* o = new Fl_Button(123, 8, 108, 22, "Load spline file");
-        o->labelsize(10);
-        o->callback((Fl_Callback*)cb_Load2);
       } // Fl_Button* o
       { Fl_Group* o = new Fl_Group(6, 45, 405, 45);
         { Fl_Box* o = new Fl_Box(9, 47, 336, 41, "Motion Graph");
@@ -30500,50 +30498,108 @@ UserInterface::UserInterface() {
         } // Fl_Box* lbl_file_spline
         o->end();
       } // Fl_Group* o
-      { Fl_Progress* o = new Fl_Progress(10, 35, 335, 15);
+      { Fl_Group* o = new Fl_Group(8, 105, 357, 361, "Walk along a path");
+        o->box(FL_ENGRAVED_FRAME);
         o->labelsize(10);
-        o->align(FL_ALIGN_RIGHT);
-        o->hide();
-      } // Fl_Progress* o
-      { Fl_Progress* o = new Fl_Progress(450, 112, 185, 13);
+        o->align(FL_ALIGN_TOP_LEFT);
+        { Fl_Button* o = new Fl_Button(15, 433, 170, 22, "Synthesize motion along path");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_Synthesize1);
+        } // Fl_Button* o
+        { inputDistanceSpline = new Fl_Float_Input(85, 410, 95, 20, "Max Distance");
+          inputDistanceSpline->box(FL_DOWN_BOX);
+          inputDistanceSpline->color(FL_BACKGROUND2_COLOR);
+          inputDistanceSpline->selection_color(FL_SELECTION_COLOR);
+          inputDistanceSpline->labeltype(FL_NORMAL_LABEL);
+          inputDistanceSpline->labelfont(0);
+          inputDistanceSpline->labelsize(10);
+          inputDistanceSpline->labelcolor(FL_FOREGROUND_COLOR);
+          inputDistanceSpline->textsize(10);
+          inputDistanceSpline->align(FL_ALIGN_LEFT);
+          inputDistanceSpline->when(FL_WHEN_RELEASE);
+        } // Fl_Float_Input* inputDistanceSpline
+        { editorSpline = new Fl_Text_Editor(19, 156, 336, 224, "Spline File");
+          editorSpline->labelsize(10);
+          editorSpline->textfont(4);
+          editorSpline->textsize(12);
+          editorSpline->align(FL_ALIGN_TOP_LEFT);
+        } // Fl_Text_Editor* editorSpline
+        { Fl_Button* o = new Fl_Button(20, 383, 165, 22, "Apply changes");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_Apply);
+        } // Fl_Button* o
+        { Fl_Button* o = new Fl_Button(190, 383, 165, 22, "Save spline file");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_Save2);
+        } // Fl_Button* o
+        { Fl_Button* o = new Fl_Button(190, 118, 165, 22, "Clear spline");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_Clear1);
+        } // Fl_Button* o
+        { Fl_Button* o = new Fl_Button(20, 118, 165, 22, "Load spline file");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_Load2);
+        } // Fl_Button* o
+        o->end();
+      } // Fl_Group* o
+      { Fl_Group* o = new Fl_Group(370, 104, 185, 361, "Synthesize a path along a segment");
+        o->box(FL_EMBOSSED_FRAME);
         o->labelsize(10);
-        o->align(FL_ALIGN_RIGHT);
-        o->hide();
-      } // Fl_Progress* o
-      { Fl_Button* o = new Fl_Button(5, 418, 165, 22, "Synthesize motion along path");
-        o->labelsize(10);
-        o->callback((Fl_Callback*)cb_Synthesize1);
-      } // Fl_Button* o
-      { inputDistanceSpline = new Fl_Float_Input(75, 395, 95, 20, "Max Distance");
-        inputDistanceSpline->box(FL_DOWN_BOX);
-        inputDistanceSpline->color(FL_BACKGROUND2_COLOR);
-        inputDistanceSpline->selection_color(FL_SELECTION_COLOR);
-        inputDistanceSpline->labeltype(FL_NORMAL_LABEL);
-        inputDistanceSpline->labelfont(0);
-        inputDistanceSpline->labelsize(10);
-        inputDistanceSpline->labelcolor(FL_FOREGROUND_COLOR);
-        inputDistanceSpline->textsize(10);
-        inputDistanceSpline->align(FL_ALIGN_LEFT);
-        inputDistanceSpline->when(FL_WHEN_RELEASE);
-      } // Fl_Float_Input* inputDistanceSpline
-      { editorSpline = new Fl_Text_Editor(9, 101, 336, 224, "Spline File");
-        editorSpline->labelsize(10);
-        editorSpline->textfont(4);
-        editorSpline->textsize(12);
-        editorSpline->align(FL_ALIGN_TOP_LEFT);
-      } // Fl_Text_Editor* editorSpline
-      { Fl_Button* o = new Fl_Button(10, 328, 165, 22, "Apply changes");
-        o->labelsize(10);
-        o->callback((Fl_Callback*)cb_Apply);
-      } // Fl_Button* o
-      { Fl_Button* o = new Fl_Button(180, 328, 165, 22, "Save spline file");
-        o->labelsize(10);
-        o->callback((Fl_Callback*)cb_Save2);
-      } // Fl_Button* o
-      { Fl_Button* o = new Fl_Button(236, 8, 108, 22, "Clear spline");
-        o->labelsize(10);
-        o->callback((Fl_Callback*)cb_Clear1);
-      } // Fl_Button* o
+        o->align(FL_ALIGN_TOP_LEFT);
+        { Fl_Button* o = new Fl_Button(378, 218, 167, 22, "Synthesize path");
+          o->labelsize(10);
+          o->callback((Fl_Callback*)cb_Synthesize2);
+        } // Fl_Button* o
+        { inputStartX = new Fl_Int_Input(460, 115, 85, 20, "Start x point");
+          inputStartX->box(FL_DOWN_BOX);
+          inputStartX->color(FL_BACKGROUND2_COLOR);
+          inputStartX->selection_color(FL_SELECTION_COLOR);
+          inputStartX->labeltype(FL_NORMAL_LABEL);
+          inputStartX->labelfont(0);
+          inputStartX->labelsize(10);
+          inputStartX->labelcolor(FL_FOREGROUND_COLOR);
+          inputStartX->textsize(10);
+          inputStartX->align(FL_ALIGN_LEFT);
+          inputStartX->when(FL_WHEN_RELEASE);
+        } // Fl_Int_Input* inputStartX
+        { inputStartY = new Fl_Int_Input(460, 140, 85, 20, "Start y point");
+          inputStartY->box(FL_DOWN_BOX);
+          inputStartY->color(FL_BACKGROUND2_COLOR);
+          inputStartY->selection_color(FL_SELECTION_COLOR);
+          inputStartY->labeltype(FL_NORMAL_LABEL);
+          inputStartY->labelfont(0);
+          inputStartY->labelsize(10);
+          inputStartY->labelcolor(FL_FOREGROUND_COLOR);
+          inputStartY->textsize(10);
+          inputStartY->align(FL_ALIGN_LEFT);
+          inputStartY->when(FL_WHEN_RELEASE);
+        } // Fl_Int_Input* inputStartY
+        { inputEndX = new Fl_Int_Input(460, 165, 85, 20, "End x point");
+          inputEndX->box(FL_DOWN_BOX);
+          inputEndX->color(FL_BACKGROUND2_COLOR);
+          inputEndX->selection_color(FL_SELECTION_COLOR);
+          inputEndX->labeltype(FL_NORMAL_LABEL);
+          inputEndX->labelfont(0);
+          inputEndX->labelsize(10);
+          inputEndX->labelcolor(FL_FOREGROUND_COLOR);
+          inputEndX->textsize(10);
+          inputEndX->align(FL_ALIGN_LEFT);
+          inputEndX->when(FL_WHEN_RELEASE);
+        } // Fl_Int_Input* inputEndX
+        { inputEndY = new Fl_Int_Input(460, 190, 85, 20, "End y point");
+          inputEndY->box(FL_DOWN_BOX);
+          inputEndY->color(FL_BACKGROUND2_COLOR);
+          inputEndY->selection_color(FL_SELECTION_COLOR);
+          inputEndY->labeltype(FL_NORMAL_LABEL);
+          inputEndY->labelfont(0);
+          inputEndY->labelsize(10);
+          inputEndY->labelcolor(FL_FOREGROUND_COLOR);
+          inputEndY->textsize(10);
+          inputEndY->align(FL_ALIGN_LEFT);
+          inputEndY->when(FL_WHEN_RELEASE);
+        } // Fl_Int_Input* inputEndY
+        o->end();
+      } // Fl_Group* o
       o->end();
     } // Fl_Group* o
     pathFindingWindow->end();

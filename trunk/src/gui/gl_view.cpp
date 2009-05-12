@@ -196,6 +196,10 @@ void glView::initScene()
   m_ui->boxPointCloudMap->view = this;
   m_ui->viewPointCloud->view = this;
   m_ui->editorSpline->buffer(textSpline);
+  m_ui->inputStartX->value("0.0");
+  m_ui->inputStartY->value("0.0");
+  m_ui->inputEndX->value("50.0");
+  m_ui->inputEndY->value("0.0");
   reset_mg_map();
 
   // camera position
@@ -1754,60 +1758,11 @@ double hann_window(double t)
 void glView::debugFunction1()
 {
   
-	MotionGraph graph(mocap_selected->skeleton);
-	graph.frame_time = mocap_selected->frame_time;
-	graph.insert_motion(*mocap_selected, 10., mocap_selected->frame_time * 5.,  5, hann_window);
-    ofstream graph_file("graph_file.txt");
-    writeMotionGraph(graph_file, graph);
-
-    mocap_combine = graph.random_motion(2000);
-    mocap_selected = &mocap_combine;
-
-
-  // display some info about the active object
-  char text[256];
-  m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1.);
-  m_ui->lbl_name->copy_label("RANDOM MOTION");
-  sprintf(text, "%i", mocap_selected->skeleton.size());
-  m_ui->lbl_joints->copy_label(text);
-  sprintf(text, "%i", mocap_selected->frames.size());
-  m_ui->lbl_frames->copy_label(text);
-  sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
-  m_ui->lbl_fps->copy_label(text);
-  m_ui->mainWindow->redraw();
 }
 
 void glView::debugFunction2()
 {
-    if(mocap_list.size() == 0) return;
-    MotionGraph graph(mocap_list[0]->skeleton);
-	graph.frame_time = mocap_list[0]->frame_time;
-
-    for(int i = 0; i < mocap_list.size(); i++)
-    {
-        if(mocap_list[0]->skeleton.size() == mocap_list[i]->skeleton.size())
-            graph.insert_motion(*mocap_list[i], 10., mocap_selected->frame_time * 5.,  5, hann_window);
-    }
-//vector<MotionGraph> graph_list = graph.extract_scc();
-//graph = graph_list[0];    
-    ofstream graph_file("graph_file.txt");
-    writeMotionGraph(graph_file, graph);
-
-    mocap_combine = graph.random_motion(2000);
-    mocap_selected = &mocap_combine;
-
-    // display some info about the active object
-    char text[256];
-    m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1.);
-    m_ui->lbl_name->copy_label("RANDOM MOTION");
-    sprintf(text, "%i", mocap_selected->skeleton.size());
-    m_ui->lbl_joints->copy_label(text);
-    sprintf(text, "%i", mocap_selected->frames.size());
-    m_ui->lbl_frames->copy_label(text);
-    sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
-    m_ui->lbl_fps->copy_label(text);
-    m_ui->mainWindow->redraw();
-
+  
 }
 
 void glView::debugFunction3()
@@ -2045,7 +2000,11 @@ void glView::insert_motion_mg()
 	        motion_graph.frame_time = mocap.frame_time;
          }
 
-         motion_graph.insert_motion(mocap, treshold, motion_graph.frame_time * 5.,  5, hann_window);
+         if(m_ui->checkGradientDescent->value() == 1)
+           motion_graph.insert_motion_fast(mocap, treshold, motion_graph.frame_time * 5.,  5, hann_window);
+         else
+           motion_graph.insert_motion(mocap, treshold, motion_graph.frame_time * 5.,  5, hann_window);
+
       }
       catch(...)
       {
@@ -2118,7 +2077,12 @@ void glView::create_mg_files()
     for(int i = 0; i < mocap_list.size(); i++)
     {
         if(mocap_list[0]->skeleton.size() == mocap_list[i]->skeleton.size())
+        {
+          if(m_ui->checkGradientDescent->value() == 1)
+            graph.insert_motion_fast(*mocap_list[i], treshold, graph.frame_time * 5.,  5, hann_window);
+          else
             graph.insert_motion(*mocap_list[i], treshold, graph.frame_time * 5.,  5, hann_window);
+        }
 
     }
 
@@ -2483,6 +2447,41 @@ void glView::follow_path()
     m_ui->mainWindow->redraw();
 }
 
+
+void glView::follow_path_segment()
+{
+    
+    if(motion_graph_path.frames.size() == 0) return;
+
+    Vector2f start = Vector2f(atof(m_ui->inputStartX->value()), atof(m_ui->inputStartY->value())),
+             finish = Vector2f(atof(m_ui->inputEndX->value()), atof(m_ui->inputEndY->value()));
+	
+	
+	Transform2f xform;
+	xform.setIdentity();
+	mocap_path = motion_graph_path.path_segment(xform.translate(start), finish);
+
+
+    if(mocap_path.frames.size() == 0)
+    {
+        fl_message("No path could be generated.");
+        return;
+    }
+    mocap_selected = &mocap_path;
+
+    
+    // display some info about the active object
+    char text[256];
+    m_ui->m_slider->range(0., (double)mocap_selected->frames.size()-1.);
+    m_ui->lbl_name->copy_label("PATH FINDING MOTION");
+    sprintf(text, "%i", mocap_selected->skeleton.size());
+    m_ui->lbl_joints->copy_label(text);
+    sprintf(text, "%i", mocap_selected->frames.size());
+    m_ui->lbl_frames->copy_label(text);
+    sprintf(text, "%i", (int)(1. / mocap_selected->frame_time + .5));
+    m_ui->lbl_fps->copy_label(text);
+    m_ui->mainWindow->redraw();
+}
 
 
 // ***** PointCloudMap ******
