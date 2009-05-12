@@ -8,7 +8,7 @@ class UserInterface {open
   } {
     Fl_Window mainWindow {
       label {Skeletal Anim}
-      xywh {460 28 600 704} type Double hide resizable size_range {600 710 0 0}
+      xywh {456 13 600 711} type Double hide resizable size_range {600 710 0 0}
     } {
       Fl_Group {} {open
         xywh {-5 0 830 709}
@@ -197,7 +197,7 @@ class UserInterface {open
               xywh {305 438 50 13} labelsize 10 align 16
             }
             Fl_Group {} {open
-              xywh {3 487 557 222}
+              xywh {3 448 557 261}
             } {
               Fl_Box {} {
                 label {Animation Files}
@@ -310,7 +310,7 @@ pathFindingWindow->hide();}
               Fl_Button {} {
                 label Save
                 callback {view->save_file();}
-                xywh {505 498 45 22} labelfont 1 labelsize 10
+                xywh {365 448 45 22} labelfont 1 labelsize 10
               }
               Fl_Button radio_motion_graph {
                 label {Motion Graph}
@@ -346,7 +346,7 @@ motionGraphWindow->hide();}
     }
     Fl_Window motionGraphWindow {
       label {Motion Graph}
-      xywh {583 154 651 550} type Double hide
+      xywh {379 181 651 550} type Double hide
     } {
       Fl_Group {} {open
         xywh {0 0 715 550}
@@ -431,12 +431,6 @@ motionGraphWindow->hide();}
           callback {view->clear_motion_graph();}
           xywh {350 8 165 22} labelsize 10
         }
-        Fl_Progress {} {
-          xywh {10 35 335 15} labelsize 10 align 8 hide
-        }
-        Fl_Progress {} {
-          xywh {450 112 185 13} labelsize 10 align 8 hide
-        }
         Fl_Button {} {
           label {Prune dead ends}
           callback {view->mg_extract_ssc();}
@@ -499,24 +493,23 @@ boxPointCloudMap->selectPointCloud();}
           xywh {10 265 225 170}
           class glPointCloud
         }
+        Fl_Check_Button checkGradientDescent {
+          label {Use gradient descent to find local min}
+          xywh {10 165 200 25} down_box DOWN_BOX value 1 labelsize 10
+        }
       }
     }
     Fl_Window pathFindingWindow {
       label {Path Finding} open
-      xywh {1299 338 351 445} type Double visible
+      xywh {431 196 563 474} type Double visible
     } {
-      Fl_Group {} {open selected
+      Fl_Group {} {open
         xywh {0 0 715 550}
       } {
         Fl_Button {} {
           label {Load motion graph}
           callback {view->load_motion_graph_path();}
           xywh {10 8 108 22} labelsize 10
-        }
-        Fl_Button {} {
-          label {Load spline file}
-          callback {view->load_spline_file();}
-          xywh {123 8 108 22} labelsize 10
         }
         Fl_Group {} {open
           xywh {6 45 405 45}
@@ -554,40 +547,78 @@ boxPointCloudMap->selectPointCloud();}
             xywh {16 61 169 20} box DOWN_FRAME labelsize 10 align 20
           }
         }
-        Fl_Progress {} {
-          xywh {10 35 335 15} labelsize 10 align 8 hide
+        Fl_Group {} {
+          label {Walk along a path} open
+          xywh {8 105 357 361} box ENGRAVED_FRAME labelsize 10 align 5
+        } {
+          Fl_Button {} {
+            label {Synthesize motion along path}
+            callback {view->follow_path();}
+            xywh {15 433 170 22} labelsize 10
+          }
+          Fl_Input inputDistanceSpline {
+            label {Max Distance}
+            xywh {85 410 95 20} labelsize 10 textsize 10
+            class Fl_Float_Input
+          }
+          Fl_Text_Editor editorSpline {
+            label {Spline File}
+            xywh {19 156 336 224} labelsize 10 align 5 textfont 4 textsize 12
+          }
+          Fl_Button {} {
+            label {Apply changes}
+            callback {view->apply_changes_spline();}
+            xywh {20 383 165 22} labelsize 10
+          }
+          Fl_Button {} {
+            label {Save spline file}
+            callback {view->save_spline_file();}
+            xywh {190 383 165 22} labelsize 10
+          }
+          Fl_Button {} {
+            label {Clear spline}
+            callback {view->clear_spline();}
+            xywh {190 118 165 22} labelsize 10
+          }
+          Fl_Button {} {
+            label {Load spline file}
+            callback {view->load_spline_file();}
+            xywh {20 118 165 22} labelsize 10
+          }
         }
-        Fl_Progress {} {
-          xywh {450 112 185 13} labelsize 10 align 8 hide
-        }
-        Fl_Button {} {
-          label {Synthesize motion along path}
-          callback {view->follow_path();}
-          xywh {5 418 165 22} labelsize 10
-        }
-        Fl_Input inputDistanceSpline {
-          label {Max Distance}
-          xywh {75 395 95 20} labelsize 10 textsize 10
-          class Fl_Float_Input
-        }
-        Fl_Text_Editor editorSpline {
-          label {Spline File}
-          xywh {9 101 336 224} labelsize 10 align 5 textfont 4 textsize 12
-        }
-        Fl_Button {} {
-          label {Apply changes}
-          callback {view->apply_changes_spline();}
-          xywh {10 328 165 22} labelsize 10
-        }
-        Fl_Button {} {
-          label {Save spline file}
-          callback {view->save_spline_file();}
-          xywh {180 328 165 22} labelsize 10
-        }
-        Fl_Button {} {
-          label {Clear spline}
-          callback {view->clear_spline();}
-          xywh {236 8 108 22} labelsize 10
+        Fl_Group {} {
+          label {Synthesize a path along a segment} open
+          xywh {370 104 185 361} box EMBOSSED_FRAME labelsize 10 align 5
+        } {
+          Fl_Button {} {
+            label {Synthesize path}
+            callback {view->follow_path_segment();} selected
+            xywh {378 218 167 22} labelsize 10
+          }
+          Fl_Input inputStartX {
+            label {Start x point}
+            xywh {460 115 85 20} labelsize 10 textsize 10
+            code0 {\#include <FL/Fl_Int_Input.H>}
+            class Fl_Int_Input
+          }
+          Fl_Input inputStartY {
+            label {Start y point}
+            xywh {460 140 85 20} labelsize 10 textsize 10
+            code0 {\#include <FL/Fl_Int_Input.H>}
+            class Fl_Int_Input
+          }
+          Fl_Input inputEndX {
+            label {End x point}
+            xywh {460 165 85 20} labelsize 10 textsize 10
+            code0 {\#include <FL/Fl_Int_Input.H>}
+            class Fl_Int_Input
+          }
+          Fl_Input inputEndY {
+            label {End y point}
+            xywh {460 190 85 20} labelsize 10 textsize 10
+            code0 {\#include <FL/Fl_Int_Input.H>}
+            class Fl_Int_Input
+          }
         }
       }
     }

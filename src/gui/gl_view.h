@@ -95,6 +95,7 @@ public:
   void follow_path();
   bool apply_changes_spline();
   void draw_spline();
+  void follow_path_segment();
 
 
 public:
